@@ -1,7 +1,11 @@
-import { currentUser, redirectToSignIn } from "@clerk/nextjs";
-
+import { currentUser, redirectToSignIn } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+/**
+ * Get or create the initial profile for the current user
+ * 
+ * TODO: Update to use Matrix user data
+ */
 export const initialProfile = async () => {
   const user = await currentUser();
 

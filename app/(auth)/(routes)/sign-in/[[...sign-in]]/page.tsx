@@ -1,5 +1,46 @@
-import { SignIn } from "@clerk/nextjs";
+"use client";
 
-export default function Page() {
-  return <SignIn />;
+/**
+ * Sign In Page
+ * 
+ * TODO: Implement Matrix login form
+ * - Username/password or SSO
+ * - Homeserver selection
+ * - Device verification
+ */
+
+export default function SignInPage() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#313338]">
+      <div className="bg-[#1e1f22] p-8 rounded-lg shadow-lg max-w-md w-full">
+        <h1 className="text-2xl font-bold text-white mb-6 text-center">
+          Welcome to HAOS
+        </h1>
+        <p className="text-zinc-400 text-center mb-6">
+          Matrix authentication coming soon
+        </p>
+        {/* TODO: Add Matrix login form */}
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Username"
+            disabled
+            className="w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            disabled
+            className="w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500"
+          />
+          <button
+            disabled
+            className="w-full p-3 rounded bg-indigo-500 text-white font-medium opacity-50 cursor-not-allowed"
+          >
+            Sign In (Coming Soon)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -8,14 +8,12 @@ import { QueryProvider } from "@/components/providers/query-provider";
 
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 
 const openSans = Open_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Discord Clone",
-  description:
-    "Discord Clone with Next.js, React.js, TailWindCSS & TypeScript."
+  title: "HAOS",
+  description: "Home Automation OS - Discord-style interface for Matrix"
 };
 
 export default function RootLayout({
@@ -24,24 +22,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body
-          className={cn(openSans.className, "bg-white dark:bg-[#313338]")}
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn(openSans.className, "bg-white dark:bg-[#313338]")}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          storageKey="haos-theme"
         >
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            storageKey="discord-clone-theme"
-          >
-            <SocketProvider>
-              <ModalProvider />
-              <QueryProvider>{children}</QueryProvider>
-            </SocketProvider>
-          </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+          <SocketProvider>
+            <ModalProvider />
+            <QueryProvider>{children}</QueryProvider>
+          </SocketProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

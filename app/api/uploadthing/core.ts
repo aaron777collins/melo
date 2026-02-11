@@ -1,8 +1,13 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@/lib/auth";
 
 const f = createUploadthing();
 
+/**
+ * File upload authentication handler
+ * 
+ * TODO: Use Matrix session for auth
+ */
 const handleAuth = () => {
   const { userId } = auth();
   if (!userId) throw new Error("Unauthorized!");

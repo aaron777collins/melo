@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Channel, ChannelType, Server } from "@prisma/client";
+import { MatrixSpace, SpaceChannel } from "@/lib/matrix/types/space";
 
 export type ModalType =
   | "createServer"
@@ -7,18 +8,32 @@ export type ModalType =
   | "editServer"
   | "members"
   | "createChannel"
+  | "createCategory"
   | "leaveServer"
   | "deleteServer"
   | "deleteChannel"
   | "editChannel"
   | "messageFile"
   | "deleteMessage"
-  | "userSettings";
+  | "userSettings"
+  | "serverBoost"
+  | "notificationSettings"
+  | "editServerProfile"
+  // Matrix Space modals
+  | "createSpace"
+  | "editSpace"
+  | "leaveSpace"
+  | "deleteSpace";
 
 interface ModalData {
+  // Legacy Prisma types (for transition period)
   server?: Server;
   channel?: Channel;
   channelType?: ChannelType;
+  // Matrix types
+  space?: MatrixSpace;
+  spaceChannel?: SpaceChannel;
+  // Common
   apiUrl?: string;
   query?: Record<string, any>;
 }

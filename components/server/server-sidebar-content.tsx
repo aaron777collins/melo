@@ -5,7 +5,7 @@ import { ChannelType, MemberRole, Channel, Member, Profile } from "@prisma/clien
 import { Hash, Mic, ShieldAlert, ShieldCheck, Video, Users, Eye, EyeOff } from "lucide-react";
 
 import { ServerWithMembersWithProfiles } from "@/types";
-import { ServerHeader } from "@/components/server/server-header";
+import { ServerHeader, fromPrismaServer, ServerRole } from "@/components/server/server-header";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ServerSearch } from "@/components/server/server-search";
 import { Separator } from "@/components/ui/separator";
@@ -47,9 +47,12 @@ export function ServerSidebarContent({
 }: ServerSidebarContentProps) {
   const [showMembers, setShowMembers] = useState(true);
 
+  // Convert Prisma server data to new ServerHeader format
+  const headerData = fromPrismaServer(server, role);
+
   return (
     <div className="flex flex-col h-full text-primary w-full dark:bg-[#2b2d31] bg-[#f2f3f5]">
-      <ServerHeader server={server} role={role} />
+      <ServerHeader server={headerData.server} role={headerData.role} />
       <ScrollArea className="flex-1 px-3">
         <div className="mt-2">
           <ServerSearch

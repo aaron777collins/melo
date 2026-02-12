@@ -5,12 +5,11 @@ import React from "react";
 import { NavigationAction } from "@/components/navigation/navigation-action";
 import { NavigationDM } from "@/components/navigation/navigation-dm";
 import { NavigationItem } from "@/components/navigation/navigation-item";
+import { UserPanel } from "@/components/navigation/user-panel";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ModeToggle } from "@/components/mode-toggle";
-import { UserAvatar } from "@/components/user-avatar";
 import { useSpaces, useUnreadDMCount } from "@/hooks/use-spaces";
-import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 import { cn } from "@/lib/utils";
 
 /**
@@ -37,11 +36,6 @@ import { cn } from "@/lib/utils";
 export function NavigationSidebar() {
   const { spaces, isLoading } = useSpaces();
   const unreadDMCount = useUnreadDMCount();
-  const { user, isLoading: authLoading } = useMatrixAuth();
-
-  // Convert user avatar mxc to http if needed
-  // TODO: Use mxcToHttp once homeserver URL is available
-  const userAvatarUrl = user?.avatarUrl || undefined;
 
   return (
     <div
@@ -98,24 +92,14 @@ export function NavigationSidebar() {
         </div>
       </ScrollArea>
 
-      {/* Bottom section - Mode toggle and user */}
-      <div className="pb-3 mt-auto flex items-center flex-col gap-y-4">
-        <ModeToggle />
+      {/* Bottom section - Mode toggle and user panel */}
+      <div className="pb-3 mt-auto w-full">
+        <div className="flex justify-center mb-4">
+          <ModeToggle />
+        </div>
 
-        {/* User Avatar */}
-        {authLoading ? (
-          <div className="h-[48px] w-[48px] rounded-full bg-zinc-700/50 animate-pulse" />
-        ) : user ? (
-          <UserAvatar
-            src={userAvatarUrl}
-            className="h-[48px] w-[48px] cursor-pointer"
-          />
-        ) : (
-          // Placeholder when not logged in
-          <div className="h-[48px] w-[48px] rounded-full bg-zinc-600 flex items-center justify-center">
-            <span className="text-zinc-400 text-sm">?</span>
-          </div>
-        )}
+        {/* User Panel */}
+        <UserPanel />
       </div>
     </div>
   );

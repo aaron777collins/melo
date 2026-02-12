@@ -489,6 +489,432 @@ export async function discoverHomeserver(domain: string): Promise<string> {
 }
 
 // =============================================================================
+// Registration Functions
+// =============================================================================
+
+/**
+ * Registration options for creating new Matrix accounts
+ */
+export interface RegisterOptions {
+  /** Homeserver URL to register on (defaults to env variable or matrix.org) */
+  homeserverUrl?: string;
+  /** Device display name shown in session list */
+  deviceDisplayName?: string;
+  /** Whether to inhibit the welcome message from the server */
+  inhibitLogin?: boolean;
+}
+
+/**
+ * Response from Matrix registration endpoint
+ */
+interface RegistrationResponse {
+  user_id: string;
+  access_token?: string;
+  device_id?: string;
+  home_server?: string;
+}
+
+/**
+ * UIAA (User Interactive Authentication API) response
+ * Returned when registration requires additional auth stages
+ */
+interface UiaaResponse {
+  session: string;
+  flows: Array<{
+    stages: string[];
+  }>;
+  params?: Record<string, Record<string, unknown>>;
+  completed?: string[];
+  error?: string;
+  errcode?: string;
+}
+
+/**
+ * Check if a username is available for registration
+ *
+ * Queries the homeserver to determine if the specified username
+ * can be used for a new account.
+ *
+ * @param username - The localpart to check (without the @user:server.com format)
+ * @param homeserverUrl - Optional homeserver URL to check against
+ * @returns Promise resolving to true if available, false if taken
+ * @throws MatrixAuthError on server errors (not for "username taken")
+ *
+ * @example
+ * ```typescript
+ * const available = await checkUsernameAvailable('alice');
+ * if (available) {
+ *   console.log('Username is available!');
+ * } else {
+ *   console.log('Username is already taken');
+ * }
+ * ```
+ */
+export async function checkUsernameAvailable(
+  username: string,
+  homeserverUrl: string = DEFAULT_HOMESERVER_URL
+): Promise<boolean> {
+  // Strip @ prefix and server suffix if provided
+  const localpart = username.startsWith('@')
+    ? username.slice(1).split(':')[0]
+    : username.split(':')[0];
+
+  const url = `${homeserverUrl}${API_PREFIX}/register/available?username=${encodeURIComponent(localpart)}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      // Username is available
+      const data: { available?: boolean } = await response.json();
+      return data.available !== false;
+    }
+
+    // Check for "username taken" error codes
+    const errorBody: { errcode?: string; error?: string } = await response.json().catch(() => ({}));
+
+    if (
+      errorBody.errcode === 'M_USER_IN_USE' ||
+      errorBody.errcode === 'M_EXCLUSIVE' ||
+      errorBody.errcode === 'M_INVALID_USERNAME'
+    ) {
+      return false;
+    }
+
+    // Other errors should be thrown
+    throw new MatrixAuthError({
+      code: errorBody.errcode || 'M_UNKNOWN',
+      message: errorBody.error || `Failed to check username availability`,
+      httpStatus: response.status,
+      details: errorBody,
+    });
+  } catch (error) {
+    if (error instanceof MatrixAuthError) {
+      throw error;
+    }
+
+    throw new MatrixAuthError({
+      code: 'M_UNKNOWN',
+      message: `Failed to check username availability: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    });
+  }
+}
+
+/**
+ * Register a new Matrix account
+ *
+ * Creates a new user account on the specified homeserver. The registration
+ * flow may require completing User Interactive Authentication (UIAA) stages
+ * depending on the homeserver's configuration.
+ *
+ * Note: Many public homeservers require email verification or CAPTCHA.
+ * This function handles the basic "dummy" auth flow which works for
+ * homeservers with open registration or development environments.
+ *
+ * @param username - The desired username (localpart only, e.g., "alice")
+ * @param password - The password for the new account
+ * @param email - Optional email address for account recovery
+ * @param options - Optional registration configuration
+ * @returns Promise resolving to MatrixSession on success
+ * @throws MatrixAuthError on registration failure
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const session = await register('newuser', 'securePassword123', 'user@example.com');
+ *   console.log('Registered as:', session.userId);
+ * } catch (error) {
+ *   if (error instanceof MatrixAuthError) {
+ *     switch (error.code) {
+ *       case 'M_USER_IN_USE':
+ *         console.log('Username already taken');
+ *         break;
+ *       case 'M_WEAK_PASSWORD':
+ *         console.log('Password is too weak');
+ *         break;
+ *       case 'M_INVALID_USERNAME':
+ *         console.log('Invalid username format');
+ *         break;
+ *       case 'M_REGISTRATION_DISABLED':
+ *         console.log('Registration is disabled on this server');
+ *         break;
+ *       default:
+ *         console.log('Registration failed:', error.message);
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export async function register(
+  username: string,
+  password: string,
+  email?: string,
+  options: RegisterOptions = {}
+): Promise<MatrixSession> {
+  const homeserverUrl = options.homeserverUrl || DEFAULT_HOMESERVER_URL;
+  const deviceDisplayName = options.deviceDisplayName || 'HAOS Web';
+
+  // Strip @ prefix and server suffix if provided
+  const localpart = username.startsWith('@')
+    ? username.slice(1).split(':')[0]
+    : username.split(':')[0];
+
+  // Build initial registration request
+  const registerBody: Record<string, unknown> = {
+    username: localpart,
+    password,
+    initial_device_display_name: deviceDisplayName,
+    inhibit_login: options.inhibitLogin ?? false,
+  };
+
+  // First attempt - may return 401 with UIAA requirements
+  const firstResponse = await attemptRegistration(homeserverUrl, registerBody);
+
+  // If we got a direct success, return the session
+  if ('userId' in firstResponse) {
+    return firstResponse;
+  }
+
+  // We got a UIAA response - need to complete auth stages
+  const uiaaResponse = firstResponse as UiaaResponse;
+
+  // Find a flow we can complete
+  // Look for "dummy" flow (no auth required) or "m.login.email.identity" if email provided
+  const completableFlow = findCompletableFlow(uiaaResponse.flows, !!email);
+
+  if (!completableFlow) {
+    throw new MatrixAuthError({
+      code: 'M_FORBIDDEN',
+      message: 'Registration requires authentication stages that are not supported (e.g., CAPTCHA, email verification)',
+      details: {
+        availableFlows: uiaaResponse.flows,
+        session: uiaaResponse.session,
+      },
+    });
+  }
+
+  // Complete the auth stages
+  return completeRegistrationFlow(
+    homeserverUrl,
+    registerBody,
+    uiaaResponse.session,
+    completableFlow,
+    email
+  );
+}
+
+/**
+ * Attempt a registration request
+ * Returns either a MatrixSession (success) or UiaaResponse (need more auth)
+ */
+async function attemptRegistration(
+  homeserverUrl: string,
+  body: Record<string, unknown>
+): Promise<MatrixSession | UiaaResponse> {
+  const url = `${homeserverUrl}${API_PREFIX}/register`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = await response.json();
+
+  // Success - registration complete
+  if (response.ok) {
+    return createSessionFromRegistration(data as RegistrationResponse, homeserverUrl);
+  }
+
+  // 401 with session means UIAA flow required
+  if (response.status === 401 && data.session) {
+    return data as UiaaResponse;
+  }
+
+  // Handle specific error codes
+  throw new MatrixAuthError({
+    code: data.errcode || 'M_UNKNOWN',
+    message: data.error || 'Registration failed',
+    httpStatus: response.status,
+    details: data,
+  });
+}
+
+/**
+ * Find an authentication flow we can complete
+ */
+function findCompletableFlow(
+  flows: Array<{ stages: string[] }>,
+  hasEmail: boolean = false
+): string[] | null {
+  // Priority order for flows we can handle
+  const preferences = [
+    // Empty flow = no auth needed
+    (stages: string[]) => stages.length === 0,
+    // Dummy auth = no actual auth needed
+    (stages: string[]) => stages.length === 1 && stages[0] === 'm.login.dummy',
+    // Terms only = just need to accept terms
+    (stages: string[]) => stages.length === 1 && stages[0] === 'm.login.terms',
+    // Email identity (if email provided)
+    (stages: string[]) =>
+      hasEmail &&
+      stages.length === 1 &&
+      stages[0] === 'm.login.email.identity',
+  ];
+
+  for (const preference of preferences) {
+    const flow = flows.find((f) => preference(f.stages));
+    if (flow) {
+      return flow.stages;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Complete a UIAA registration flow
+ */
+async function completeRegistrationFlow(
+  homeserverUrl: string,
+  baseBody: Record<string, unknown>,
+  session: string,
+  stages: string[],
+  email?: string
+): Promise<MatrixSession> {
+  let currentBody = { ...baseBody };
+
+  for (const stage of stages) {
+    const auth = buildAuthStage(stage, session, email);
+    currentBody = {
+      ...currentBody,
+      auth,
+    };
+
+    const result = await attemptRegistration(homeserverUrl, currentBody);
+
+    // If we got a session back, we're done
+    if ('userId' in result) {
+      return result;
+    }
+
+    // Otherwise continue with next stage
+    // Update session in case it changed
+    if (result.session) {
+      currentBody.auth = {
+        ...(currentBody.auth as Record<string, unknown>),
+        session: result.session,
+      };
+    }
+  }
+
+  // If we completed all stages but didn't get a session, try one more time with dummy
+  const finalBody = {
+    ...currentBody,
+    auth: {
+      type: 'm.login.dummy',
+      session,
+    },
+  };
+
+  const finalResult = await attemptRegistration(homeserverUrl, finalBody);
+
+  if ('userId' in finalResult) {
+    return finalResult;
+  }
+
+  throw new MatrixAuthError({
+    code: 'M_FORBIDDEN',
+    message: 'Failed to complete registration flow',
+    details: finalResult as unknown as Record<string, unknown>,
+  });
+}
+
+/**
+ * Build auth object for a specific UIAA stage
+ */
+function buildAuthStage(
+  stageType: string,
+  session: string,
+  email?: string
+): Record<string, unknown> {
+  const base = {
+    session,
+    type: stageType,
+  };
+
+  switch (stageType) {
+    case 'm.login.dummy':
+      return base;
+
+    case 'm.login.terms':
+      // Accept terms of service
+      return base;
+
+    case 'm.login.email.identity':
+      if (!email) {
+        throw new MatrixAuthError({
+          code: 'M_MISSING_PARAM',
+          message: 'Email required for m.login.email.identity stage',
+        });
+      }
+      return {
+        ...base,
+        threepid_creds: {
+          sid: '', // Would need actual email verification flow
+          client_secret: '',
+        },
+        threepidCreds: {
+          sid: '',
+          client_secret: '',
+        },
+      };
+
+    default:
+      // Unknown stage type - try with just the base
+      return base;
+  }
+}
+
+/**
+ * Create a MatrixSession from registration response
+ */
+function createSessionFromRegistration(
+  response: RegistrationResponse,
+  homeserverUrl: string
+): MatrixSession {
+  const now = new Date().toISOString();
+
+  // If inhibit_login was true, we won't have an access token
+  if (!response.access_token || !response.device_id) {
+    throw new MatrixAuthError({
+      code: 'M_MISSING_TOKEN',
+      message:
+        'Registration successful but no access token returned. Login separately to obtain a session.',
+      details: { userId: response.user_id },
+    });
+  }
+
+  return {
+    sessionId: `${response.device_id}-${Date.now()}`,
+    userId: response.user_id,
+    accessToken: response.access_token,
+    deviceId: response.device_id,
+    homeserverUrl,
+    createdAt: now,
+    lastActiveAt: now,
+    isValid: true,
+  };
+}
+
+// =============================================================================
 // Exports
 // =============================================================================
 

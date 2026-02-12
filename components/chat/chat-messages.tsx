@@ -5,6 +5,7 @@ import { Loader2, ServerCrash, ArrowDown } from "lucide-react";
 import { format, isToday, isYesterday, isSameDay } from "date-fns";
 
 import { ChatWelcome } from "@/components/chat/chat-welcome";
+import { ChatItem } from "@/components/chat/chat-item";
 import { useRoomMessages } from "@/hooks/use-room-messages";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -57,17 +58,10 @@ interface DateSeparatorProps {
   date: Date;
 }
 
-interface MessageItemProps {
-  event: MatrixEvent;
-  isFirstInGroup: boolean;
-  isCurrentUser: boolean;
-}
-
 // =============================================================================
 // Constants
 // =============================================================================
 
-const DATE_FORMAT = "d MMM yyyy, HH:mm";
 const DATE_SEPARATOR_FORMAT = "EEEE, MMMM d, yyyy";
 const MESSAGE_GROUP_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
 const NEW_MESSAGE_THRESHOLD = 50; // Show "new messages" indicator after 50 messages
@@ -133,58 +127,6 @@ function formatDateSeparator(date: Date): string {
   }
 }
 
-/**
- * Gets display name for a Matrix user
- */
-function getDisplayName(event: MatrixEvent): string {
-  const sender = event.getSender();
-  if (!sender) return "Unknown User";
-  
-  // Try to get display name from event content or sender
-  const displayName = event.getStateKey() || sender;
-  
-  // Extract username from Matrix ID (@username:domain.com -> username)
-  if (displayName.startsWith("@")) {
-    const username = displayName.split(":")[0].substring(1);
-    return username;
-  }
-  
-  return displayName;
-}
-
-/**
- * Gets avatar URL for a Matrix user
- */
-function getAvatarUrl(event: MatrixEvent): string | undefined {
-  // For now, return undefined - avatar implementation will be added later
-  // This is where we'd extract avatar from Matrix event or user profile
-  return undefined;
-}
-
-/**
- * Gets message content from Matrix event
- */
-function getMessageContent(event: MatrixEvent): string {
-  const content = event.getContent();
-  
-  // Handle different message types
-  if (content.msgtype === "m.text") {
-    return content.body || "";
-  } else if (content.msgtype === "m.emote") {
-    return `*${content.body}*`;
-  } else if (content.msgtype === "m.image") {
-    return `📷 Image: ${content.body || "image"}`;
-  } else if (content.msgtype === "m.file") {
-    return `📄 File: ${content.body || "file"}`;
-  } else if (content.msgtype === "m.audio") {
-    return `🎵 Audio: ${content.body || "audio"}`;
-  } else if (content.msgtype === "m.video") {
-    return `🎥 Video: ${content.body || "video"}`;
-  }
-  
-  return content.body || "[Message]";
-}
-
 // =============================================================================
 // Sub-Components
 // =============================================================================
@@ -205,75 +147,18 @@ function DateSeparator({ date }: DateSeparatorProps) {
 }
 
 /**
- * Individual message item component
- */
-function MessageItem({ event, isFirstInGroup, isCurrentUser }: MessageItemProps) {
-  const timestamp = new Date(event.getTs());
-  const displayName = getDisplayName(event);
-  const avatarUrl = getAvatarUrl(event);
-  const content = getMessageContent(event);
-  
-  return (
-    <div className={cn(
-      "relative group flex items-start gap-x-2 p-2 hover:bg-black/5 dark:hover:bg-white/5",
-      isCurrentUser && "bg-indigo-100/10"
-    )}>
-      {isFirstInGroup ? (
-        <div className="cursor-pointer hover:drop-shadow-md transition">
-          {avatarUrl ? (
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <img 
-                src={avatarUrl} 
-                alt={displayName}
-                className="h-10 w-10 rounded-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="h-10 w-10 flex items-center justify-center">
-          <span className="text-xs text-zinc-500 dark:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            {format(timestamp, "HH:mm")}
-          </span>
-        </div>
-      )}
-      
-      <div className="flex flex-col w-full">
-        {isFirstInGroup && (
-          <div className="flex items-baseline gap-x-2">
-            <p className="font-semibold text-sm hover:underline cursor-pointer text-zinc-900 dark:text-zinc-100">
-              {displayName}
-            </p>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              {format(timestamp, DATE_FORMAT)}
-            </span>
-          </div>
-        )}
-        
-        <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
-          {content}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/**
  * Message group component - renders a group of consecutive messages from same sender
  */
-function MessageGroup({ firstMessage, messages, isCurrentUser }: MessageGroupProps) {
+function MessageGroup({ firstMessage, messages, isCurrentUser, currentUserId }: MessageGroupProps & { currentUserId?: string }) {
   return (
     <div className="space-y-0.5">
       {messages.map((message, index) => (
-        <MessageItem
+        <ChatItem
           key={message.getId()}
           event={message}
           isFirstInGroup={index === 0}
           isCurrentUser={isCurrentUser}
+          currentUserId={currentUserId}
         />
       ))}
     </div>
@@ -460,6 +345,7 @@ export function ChatMessages({
                   firstMessage={firstMessage}
                   messages={group}
                   isCurrentUser={isCurrentUser}
+                  currentUserId={currentUserId}
                 />
               </Fragment>
             );

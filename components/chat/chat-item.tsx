@@ -1,261 +1,547 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Member, MemberRole, Profile } from "@prisma/client";
-import {
-  Edit,
-  FileIcon,
-  ShieldAlert,
-  ShieldCheck,
-  Trash
-} from "lucide-react";
-import Image from "next/image";
-import * as z from "zod";
-import axios from "axios";
-import qs from "query-string";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useParams } from "next/navigation";
+import React, { useState } from "react";
+import { format } from "date-fns";
+import { Edit, FileIcon, ImageIcon, VideoIcon, MusicIcon, Download, Plus } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { MatrixEvent } from "matrix-js-sdk";
 
-import { UserAvatar } from "@/components/user-avatar";
-import { ActionTooltip } from "@/components/action-tooltip";
-import { cn } from "@/lib/utils";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useModal } from "@/hooks/use-modal-store";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
+// =============================================================================
+// Types & Interfaces
+// =============================================================================
 
 interface ChatItemProps {
-  id: string;
-  content: string;
-  member: Member & { profile: Profile };
-  timestamp: string;
-  fileUrl: string | null;
-  deleted: boolean;
-  currentMember: Member;
-  isUpdated: boolean;
-  socketUrl: string;
-  socketQuery: Record<string, string>;
+  /**
+   * Matrix event containing the message data
+   */
+  event: MatrixEvent;
+  
+  /**
+   * Whether this is the first message in a group (shows avatar and username)
+   */
+  isFirstInGroup: boolean;
+  
+  /**
+   * Whether this message is from the current user
+   */
+  isCurrentUser: boolean;
+  
+  /**
+   * Current user's Matrix ID for permission checks
+   */
+  currentUserId?: string;
 }
 
-const roleIconMap = {
-  GUEST: null,
-  MODERATOR: <ShieldCheck className="h-4 w-4 ml-2 text-indigo-500" />,
-  ADMIN: <ShieldAlert className="h-4 w-4 ml-2 text-rose-500" />
-};
+interface MessageAttachment {
+  type: 'image' | 'video' | 'audio' | 'file';
+  url?: string;
+  filename: string;
+  size?: number;
+  mimetype?: string;
+  thumbnailUrl?: string;
+}
 
-const formSchema = z.object({
-  content: z.string().min(1)
-});
+interface MessageReaction {
+  emoji: string;
+  count: number;
+  userReacted: boolean;
+  users: string[];
+}
 
-export function ChatItem({
-  id,
-  content,
-  member,
-  timestamp,
-  fileUrl,
-  deleted,
-  currentMember,
-  isUpdated,
-  socketUrl,
-  socketQuery
-}: ChatItemProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const { onOpen } = useModal();
+// =============================================================================
+// Constants
+// =============================================================================
 
-  const params = useParams();
-  const router = useRouter();
+const DATE_FORMAT = "d MMM yyyy, HH:MM";
+const TIME_FORMAT = "HH:mm";
 
-  const onMemberClick = () => {
-    if (member.id === currentMember.id) return;
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
-    router.push(`/servers/${params?.serverId}/conversations/${member.id}`);
-  };
+/**
+ * Gets display name for a Matrix user
+ */
+function getDisplayName(event: MatrixEvent): string {
+  const sender = event.getSender();
+  if (!sender) return "Unknown User";
+  
+  // Try to get display name from event content or sender
+  const displayName = event.getStateKey() || sender;
+  
+  // Extract username from Matrix ID (@username:domain.com -> username)
+  if (displayName.startsWith("@")) {
+    const username = displayName.split(":")[0].substring(1);
+    return username;
+  }
+  
+  return displayName;
+}
 
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if (event.key === "Escape" || event.keyCode === 27) {
-        setIsEditing(false);
-      }
+/**
+ * Gets avatar URL for a Matrix user (placeholder for now)
+ */
+function getAvatarUrl(event: MatrixEvent): string | undefined {
+  // TODO: Implement proper avatar URL extraction from Matrix user profile
+  // For now, return undefined to use fallback initials
+  return undefined;
+}
+
+/**
+ * Gets message content from Matrix event with proper type handling
+ */
+function getMessageContent(event: MatrixEvent): { text: string; isMarkdown: boolean } {
+  const content = event.getContent();
+  
+  // Handle different message types
+  if (content.msgtype === "m.text") {
+    // Check if the message has formatted content (HTML/markdown)
+    const hasFormatted = content.format === "org.matrix.custom.html" && content.formatted_body;
+    return {
+      text: content.body || "",
+      isMarkdown: !hasFormatted // Use markdown if no HTML formatting
     };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      content
-    }
-  });
-
-  const isLoading = form.formState.isSubmitting;
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      const url = qs.stringifyUrl({
-        url: `${socketUrl}/${id}`,
-        query: socketQuery
-      });
-
-      await axios.patch(url, values);
-
-      form.reset();
-      setIsEditing(false);
-    } catch (error) {
-      console.error(error);
-    }
+  } else if (content.msgtype === "m.emote") {
+    return {
+      text: `*${content.body}*`,
+      isMarkdown: true
+    };
+  }
+  
+  return {
+    text: content.body || "[Message]",
+    isMarkdown: false
   };
+}
 
-  useEffect(() => {
-    form.reset({ content });
-  }, [content, form]);
+/**
+ * Extracts attachment information from Matrix event
+ */
+function getAttachment(event: MatrixEvent): MessageAttachment | null {
+  const content = event.getContent();
+  
+  if (!content.msgtype || content.msgtype === "m.text" || content.msgtype === "m.emote") {
+    return null;
+  }
+  
+  const info = content.info || {};
+  let type: MessageAttachment['type'] = 'file';
+  
+  if (content.msgtype === "m.image") type = 'image';
+  else if (content.msgtype === "m.video") type = 'video';
+  else if (content.msgtype === "m.audio") type = 'audio';
+  
+  return {
+    type,
+    url: content.url, // mxc:// URL
+    filename: content.body || "attachment",
+    size: info.size,
+    mimetype: info.mimetype,
+    thumbnailUrl: info.thumbnail_url
+  };
+}
 
-  const fileType = fileUrl?.split(".").pop();
+/**
+ * Checks if a message was edited
+ */
+function isMessageEdited(event: MatrixEvent): boolean {
+  // Check if the event has edit relations
+  const relations = event.getRelation();
+  return relations?.rel_type === "m.replace" || false;
+}
 
-  const isAdmin = currentMember.role === MemberRole.ADMIN;
-  const isModerator = currentMember.role === MemberRole.MODERATOR;
-  const isOwner = currentMember.id === member.id;
-  const canDeleteMessage = !deleted && (isAdmin || isModerator || isOwner);
-  const canEditMessage = !deleted && isOwner && !fileUrl;
-  const isPDF = fileType === "pdf" && fileUrl;
-  const isImage = !isPDF && fileUrl;
+/**
+ * Gets reactions for a message (placeholder for now)
+ */
+function getMessageReactions(event: MatrixEvent): MessageReaction[] {
+  // TODO: Implement proper reaction extraction from Matrix event
+  // This would involve checking for m.annotation relations
+  return [];
+}
 
-  return (
-    <div className="relative group flex items-center hover:bg-black/5 p-4 transition w-full">
-      <div className="group flex gap-x-2 items-center w-full">
-        <div
-          onClick={onMemberClick}
-          className="cursor-pointer hover:drop-shadow-md transition"
-        >
-          <UserAvatar src={member.profile.imageUrl} />
+/**
+ * Formats file size for display
+ */
+function formatFileSize(bytes?: number): string {
+  if (!bytes) return "";
+  
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100} ${sizes[i]}`;
+}
+
+/**
+ * Converts Matrix mxc:// URL to HTTP URL
+ */
+function mxcToHttp(mxcUrl?: string, homeserver?: string): string | undefined {
+  if (!mxcUrl || !mxcUrl.startsWith("mxc://")) return undefined;
+  
+  // Extract server and media ID from mxc://server.com/mediaId
+  const parts = mxcUrl.replace("mxc://", "").split("/");
+  if (parts.length !== 2) return undefined;
+  
+  const [serverName, mediaId] = parts;
+  
+  // TODO: Get homeserver from Matrix client context
+  const baseUrl = homeserver || "https://matrix.org";
+  return `${baseUrl}/_matrix/media/r0/download/${serverName}/${mediaId}`;
+}
+
+// =============================================================================
+// Sub-Components
+// =============================================================================
+
+/**
+ * Attachment display component
+ */
+function AttachmentDisplay({ attachment }: { attachment: MessageAttachment }) {
+  const httpUrl = mxcToHttp(attachment.url);
+  
+  if (attachment.type === 'image' && httpUrl) {
+    return (
+      <div className="mt-2 max-w-md">
+        <div className="relative group cursor-pointer rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+          <img
+            src={httpUrl}
+            alt={attachment.filename}
+            className="w-full h-auto max-h-96 object-cover"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
         </div>
-        <div className="flex flex-col w-full">
-          <div className="flex items-center gap-x-2">
-            <div className="flex items-center">
-              <p
-                onClick={onMemberClick}
-                className="font-semibold text-sm hover:underline cursor-pointer"
-              >
-                {member.profile.name}
-              </p>
-              <ActionTooltip label={member.role}>
-                {roleIconMap[member.role]}
-              </ActionTooltip>
-            </div>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              {timestamp}
-            </span>
-          </div>
-          {isImage && (
-            <a
-              href={fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative aspect-square rounded-md mt-2 overflow-hidden border flex items-center bg-secondary h-48 w-48"
-            >
-              <Image
-                src={fileUrl}
-                alt={content}
-                fill
-                className="object-cover"
-              />
-            </a>
-          )}
-          {isPDF && (
-            <div className="relative flex items-center p-2 mt-2 rounded-md bg-background/10">
-              <FileIcon className="h-10 w-10 fill-indigo-200 stroke-indigo-400" />
-              <a
-                href={fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-2 text-sm text-indigo-500 dark:text-indigo-400 hover:underline"
-              >
-                PDF File
-              </a>
-            </div>
-          )}
-          {!fileUrl && !isEditing && (
-            <p
-              className={cn(
-                "text-sm text-zinc-600 dark:text-zinc-300",
-                deleted &&
-                  "italic to-zinc-500 dark:text-zinc-400 text-xs mt-1"
-              )}
-            >
-              {content}
-              {isUpdated && !deleted && (
-                <span className="text-[10px] mx-2 text-zinc-500 dark:text-zinc-400">
-                  (edited)
-                </span>
-              )}
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+          {attachment.filename}
+          {attachment.size && ` • ${formatFileSize(attachment.size)}`}
+        </p>
+      </div>
+    );
+  }
+  
+  if (attachment.type === 'video' && httpUrl) {
+    return (
+      <div className="mt-2 max-w-md">
+        <div className="relative rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+          <video
+            src={httpUrl}
+            controls
+            className="w-full h-auto max-h-96"
+            preload="metadata"
+          />
+        </div>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+          {attachment.filename}
+          {attachment.size && ` • ${formatFileSize(attachment.size)}`}
+        </p>
+      </div>
+    );
+  }
+  
+  if (attachment.type === 'audio' && httpUrl) {
+    return (
+      <div className="mt-2 max-w-md">
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800">
+          <MusicIcon className="h-8 w-8 text-zinc-500" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+              {attachment.filename}
             </p>
-          )}
-          {!fileUrl && isEditing && (
-            <Form {...form}>
-              <form
-                className="flex items-center w-full gap-x-2 pt-2"
-                onSubmit={form.handleSubmit(onSubmit)}
-              >
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormControl>
-                        <div className="relative w-full">
-                          <Input
-                            disabled={isLoading}
-                            placeholder="Edited message"
-                            className="p-2 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <Button disabled={isLoading} size="sm" variant="primary">
-                  Save
-                </Button>
-              </form>
-              <span className="text-[10px] mt-1 text-zinc-400">
-                Press escape to cancel, enter to save
-              </span>
-            </Form>
-          )}
+            {attachment.size && (
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {formatFileSize(attachment.size)}
+              </p>
+            )}
+          </div>
+          <audio src={httpUrl} controls className="w-48" />
         </div>
       </div>
-      {canDeleteMessage && (
-        <div className="hidden group-hover:flex items-center gap-x-2 absolute p-1 -top-2 right-5 bg-white dark:bg-zinc-800 border rounded-sm">
-          {canEditMessage && (
-            <ActionTooltip label="Edit">
-              <Edit
-                onClick={() => setIsEditing(true)}
-                className="cursor-pointer ml-auto w-4 h-4 text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition"
-              />
-            </ActionTooltip>
+    );
+  }
+  
+  // Generic file attachment
+  return (
+    <div className="mt-2 max-w-md">
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+        <FileIcon className="h-8 w-8 text-zinc-500" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+            {attachment.filename}
+          </p>
+          {attachment.size && (
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {formatFileSize(attachment.size)}
+            </p>
           )}
-          <ActionTooltip label="Delete">
-            <Trash
-              onClick={() =>
-                onOpen("deleteMessage", {
-                  apiUrl: `${socketUrl}/${id}`,
-                  query: socketQuery
-                })
-              }
-              className="cursor-pointer ml-auto w-4 h-4 text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition"
-            />
-          </ActionTooltip>
         </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Download</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Reaction buttons component
+ */
+function ReactionButtons({ 
+  reactions, 
+  onAddReaction, 
+  onToggleReaction 
+}: { 
+  reactions: MessageReaction[];
+  onAddReaction: () => void;
+  onToggleReaction: (emoji: string) => void;
+}) {
+  if (reactions.length === 0) {
+    return (
+      <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                onClick={onAddReaction}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Reaction
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add a reaction</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 mt-1 flex-wrap">
+      {reactions.map((reaction) => (
+        <TooltipProvider key={reaction.emoji}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-6 px-2 text-xs rounded-full border",
+                  reaction.userReacted
+                    ? "bg-indigo-100 dark:bg-indigo-900 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300"
+                    : "border-zinc-300 dark:border-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                )}
+                onClick={() => onToggleReaction(reaction.emoji)}
+              >
+                <span className="mr-1">{reaction.emoji}</span>
+                <span>{reaction.count}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {reaction.users.length > 0 && reaction.users.join(", ")} reacted with {reaction.emoji}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-zinc-200 dark:hover:bg-zinc-700"
+              onClick={onAddReaction}
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Add a reaction</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+/**
+ * Individual chat message item with Discord-style design
+ */
+export function ChatItem({
+  event,
+  isFirstInGroup,
+  isCurrentUser,
+  currentUserId
+}: ChatItemProps) {
+  const [showReactions, setShowReactions] = useState(false);
+  
+  const timestamp = new Date(event.getTs());
+  const displayName = getDisplayName(event);
+  const avatarUrl = getAvatarUrl(event);
+  const { text: content, isMarkdown } = getMessageContent(event);
+  const attachment = getAttachment(event);
+  const isEdited = isMessageEdited(event);
+  const reactions = getMessageReactions(event);
+  
+  // Handle reaction actions (placeholders for now)
+  const handleAddReaction = () => {
+    // TODO: Implement reaction picker modal
+    console.log("Add reaction to message:", event.getId());
+  };
+  
+  const handleToggleReaction = (emoji: string) => {
+    // TODO: Implement reaction toggle via Matrix SDK
+    console.log("Toggle reaction:", emoji, "on message:", event.getId());
+  };
+  
+  return (
+    <div 
+      className={cn(
+        "relative group flex items-start gap-x-2 p-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors",
+        isCurrentUser && "bg-indigo-100/10 dark:bg-indigo-900/10"
       )}
+      onMouseEnter={() => setShowReactions(true)}
+      onMouseLeave={() => setShowReactions(false)}
+    >
+      {/* Avatar Column */}
+      <div className="flex-shrink-0">
+        {isFirstInGroup ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-pointer hover:drop-shadow-md transition">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={avatarUrl} alt={displayName} />
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold text-sm">
+                      {displayName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-center">
+                  <p className="font-semibold">{displayName}</p>
+                  <p className="text-xs text-zinc-400">{event.getSender()}</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <div className="h-10 w-10 flex items-center justify-center">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              {format(timestamp, TIME_FORMAT)}
+            </span>
+          </div>
+        )}
+      </div>
+      
+      {/* Content Column */}
+      <div className="flex flex-col w-full min-w-0">
+        {/* Message Header (only for first in group) */}
+        {isFirstInGroup && (
+          <div className="flex items-baseline gap-x-2 mb-1">
+            <p className="font-semibold text-sm hover:underline cursor-pointer text-zinc-900 dark:text-zinc-100">
+              {displayName}
+            </p>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              {format(timestamp, DATE_FORMAT)}
+            </span>
+            {isEdited && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-xs text-zinc-400 dark:text-zinc-500">
+                      <Edit className="h-3 w-3" />
+                      <span>(edited)</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>This message was edited</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        )}
+        
+        {/* Message Content */}
+        <div className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+          {isMarkdown ? (
+            <ReactMarkdown
+              className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-code:bg-zinc-200 dark:prose-code:bg-zinc-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-zinc-100 dark:prose-pre:bg-zinc-800"
+              components={{
+                // Custom components for better Discord-style rendering
+                p: ({ children }) => <p className="my-1">{children}</p>,
+                code: ({ inline, children, ...props }) => {
+                  if (inline) {
+                    return (
+                      <code 
+                        className="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-sm font-mono" 
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    );
+                  }
+                  return (
+                    <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto">
+                      <code className="font-mono text-sm" {...props}>
+                        {children}
+                      </code>
+                    </pre>
+                  );
+                },
+                blockquote: ({ children }) => (
+                  <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic">
+                    {children}
+                  </blockquote>
+                ),
+              }}
+            >
+              {content}
+            </ReactMarkdown>
+          ) : (
+            <p>{content}</p>
+          )}
+        </div>
+        
+        {/* Attachment Display */}
+        {attachment && <AttachmentDisplay attachment={attachment} />}
+        
+        {/* Edited Indicator (for non-first messages in group) */}
+        {!isFirstInGroup && isEdited && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1 text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                  <Edit className="h-3 w-3" />
+                  <span>(edited)</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>This message was edited</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        
+        {/* Reactions */}
+        <ReactionButtons
+          reactions={reactions}
+          onAddReaction={handleAddReaction}
+          onToggleReaction={handleToggleReaction}
+        />
+      </div>
     </div>
   );
 }

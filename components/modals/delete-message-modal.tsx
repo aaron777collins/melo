@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import axios from "axios";
-import qs from "query-string";
 
 import {
   Dialog,
@@ -14,33 +12,36 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
+import { deleteMessage } from "@/apps/web/services/matrix-message";
 
 export function DeleteMessageModal() {
   const {
     isOpen,
     onClose,
     type,
-    data: { apiUrl, query }
+    data: { roomId, query }
   } = useModal();
 
   const isModalOpen = isOpen && type === "deleteMessage";
+  const eventId = query?.eventId;
 
   const [isLoading, setIsLoading] = useState(false);
 
   const onClick = async () => {
+    if (!roomId || !eventId) {
+      console.error("Missing roomId or eventId for message deletion");
+      return;
+    }
+
     try {
       setIsLoading(true);
 
-      const url = qs.stringifyUrl({
-        url: apiUrl || "",
-        query
-      });
-
-      await axios.delete(url);
+      await deleteMessage(roomId, eventId, "Message deleted by user");
 
       onClose();
     } catch (error) {
-      console.error(error);
+      console.error("Failed to delete message:", error);
+      // TODO: Show error toast notification
     } finally {
       setIsLoading(false);
     }

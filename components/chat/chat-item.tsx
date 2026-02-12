@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import MessageActions from "../../apps/web/components/chat/message-actions";
 
 // =============================================================================
 // Types & Interfaces
@@ -35,6 +36,21 @@ interface ChatItemProps {
    * Current user's Matrix ID for permission checks
    */
   currentUserId?: string;
+  
+  /**
+   * Room ID for Matrix operations
+   */
+  roomId: string;
+  
+  /**
+   * Callback when reply is clicked
+   */
+  onReply?: (event: MatrixEvent) => void;
+  
+  /**
+   * Callback when edit is clicked 
+   */
+  onEdit?: (event: MatrixEvent) => void;
 }
 
 interface MessageAttachment {
@@ -385,9 +401,13 @@ export function ChatItem({
   event,
   isFirstInGroup,
   isCurrentUser,
-  currentUserId
+  currentUserId,
+  roomId,
+  onReply,
+  onEdit
 }: ChatItemProps) {
   const [showReactions, setShowReactions] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   
   const timestamp = new Date(event.getTs());
   const displayName = getDisplayName(event);
@@ -414,8 +434,14 @@ export function ChatItem({
         "relative group flex items-start gap-x-2 p-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors",
         isCurrentUser && "bg-indigo-100/10 dark:bg-indigo-900/10"
       )}
-      onMouseEnter={() => setShowReactions(true)}
-      onMouseLeave={() => setShowReactions(false)}
+      onMouseEnter={() => {
+        setShowReactions(true);
+        setShowActions(true);
+      }}
+      onMouseLeave={() => {
+        setShowReactions(false);
+        setShowActions(false);
+      }}
     >
       {/* Avatar Column */}
       <div className="flex-shrink-0">
@@ -542,6 +568,20 @@ export function ChatItem({
           onToggleReaction={handleToggleReaction}
         />
       </div>
+
+      {/* Message Actions */}
+      <MessageActions
+        event={event}
+        roomId={roomId}
+        show={showActions}
+        currentUserId={currentUserId}
+        onReply={onReply}
+        onEdit={onEdit}
+        onReaction={(emoji) => {
+          // Handle reaction via existing handler
+          handleAddReaction();
+        }}
+      />
     </div>
   );
 }

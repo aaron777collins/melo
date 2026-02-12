@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { Channel, ChannelType, Server } from "@prisma/client";
-import { MatrixSpace, SpaceChannel } from "@/lib/matrix/types/space";
+import { MatrixSpace, SpaceChannel, ChannelType as MatrixChannelType } from "@/lib/matrix/types/space";
 
 export type ModalType =
   | "createServer"
@@ -35,12 +35,17 @@ interface ModalData {
   // Matrix types
   space?: MatrixSpace;
   spaceChannel?: SpaceChannel;
+  /** Matrix channel type ('text' | 'voice' | 'video' | 'announcement') */
+  matrixChannelType?: MatrixChannelType;
   // Common
   apiUrl?: string;
   query?: Record<string, any>;
   // Matrix message/file modals
   roomId?: string;
   onFileUploaded?: (mxcUrl: string, file: File) => void;
+  // Channel creation
+  /** Category ID for new channel placement */
+  categoryId?: string;
 }
 
 interface ModalStore {

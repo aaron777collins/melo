@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ModalProvider } from "@/components/providers/modal-provider";
-import { SocketProvider } from "@/components/providers/socket-provider";
+import { MatrixAuthProvider } from "@/components/providers/matrix-auth-provider";
+import { MatrixProvider } from "@/components/providers/matrix-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 
 import type { Metadata } from "next";
@@ -30,10 +31,12 @@ export default function RootLayout({
           enableSystem
           storageKey="haos-theme"
         >
-          <SocketProvider>
-            <ModalProvider />
-            <QueryProvider>{children}</QueryProvider>
-          </SocketProvider>
+          <MatrixAuthProvider>
+            <MatrixProvider>
+              <ModalProvider />
+              <QueryProvider>{children}</QueryProvider>
+            </MatrixProvider>
+          </MatrixAuthProvider>
         </ThemeProvider>
       </body>
     </html>

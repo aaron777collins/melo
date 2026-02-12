@@ -13,7 +13,7 @@ export function NavigationAction() {
     <div>
       <ActionTooltip side="right" align="center" label="Add a server">
         <button
-          onClick={() => onOpen("createServer")}
+          onClick={() => onOpen("serverDiscovery")}
           className="group flex items-center"
         >
           <div className="flex mx-3 h-[48px] w-[48px] rounded-[24px] group-hover:rounded-[16px] transition-all duration-200 ease-in-out overflow-hidden items-center justify-center bg-neutral-700 dark:bg-neutral-700 group-hover:bg-emerald-500">

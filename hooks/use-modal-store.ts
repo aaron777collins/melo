@@ -25,6 +25,8 @@ export type ModalType =
   | "editSpace"
   | "leaveSpace"
   | "deleteSpace"
+  // Server Discovery
+  | "serverDiscovery"
   // Quick Switcher
   | "quickSwitcher"
   // User Profile

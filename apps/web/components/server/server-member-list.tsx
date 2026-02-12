@@ -328,11 +328,10 @@ export function ServerMemberList({ roomId, className }: ServerMemberListProps) {
 
   // Handle member profile click
   const handleMemberClick = (member: Member) => {
-    // TODO: Add member profile modal type to modal store
-    // For now, open members modal with member data
-    onOpen("members", { 
-      // This will need to be updated when we add user profile modal
-      server: { id: roomId } as any 
+    // Open user profile modal with member data
+    onOpen("userProfile", { 
+      userId: member.userId,
+      spaceId: roomId 
     });
   };
 

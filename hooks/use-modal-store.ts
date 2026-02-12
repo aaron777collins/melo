@@ -26,7 +26,9 @@ export type ModalType =
   | "leaveSpace"
   | "deleteSpace"
   // Quick Switcher
-  | "quickSwitcher";
+  | "quickSwitcher"
+  // User Profile
+  | "userProfile";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -47,6 +49,11 @@ interface ModalData {
   // Channel creation
   /** Category ID for new channel placement */
   categoryId?: string;
+  // User profile modal
+  /** Target user ID for profile display */
+  userId?: string;
+  /** Optional space/server context for role display */
+  spaceId?: string;
 }
 
 interface ModalStore {

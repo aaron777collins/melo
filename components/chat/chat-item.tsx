@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import MessageActions from "../../apps/web/components/chat/message-actions";
+import { useModal } from "@/hooks/use-modal-store";
 
 // =============================================================================
 // Types & Interfaces
@@ -406,6 +407,7 @@ export function ChatItem({
   onReply,
   onEdit
 }: ChatItemProps) {
+  const { onOpen } = useModal();
   const [showReactions, setShowReactions] = useState(false);
   const [showActions, setShowActions] = useState(false);
   
@@ -449,7 +451,13 @@ export function ChatItem({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="cursor-pointer hover:drop-shadow-md transition">
+                <div 
+                  className="cursor-pointer hover:drop-shadow-md transition"
+                  onClick={() => onOpen("userProfile", { 
+                    userId: event.getSender()!, 
+                    spaceId: roomId 
+                  })}
+                >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={avatarUrl} alt={displayName} />
                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold text-sm">

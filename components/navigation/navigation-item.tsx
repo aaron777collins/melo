@@ -53,7 +53,7 @@ export function NavigationItem({
         {/* Active/hover indicator pill on left */}
         <div
           className={cn(
-            "absolute left-0 bg-primary rounded-r-full transition-all w-[4px]",
+            "absolute left-0 bg-primary rounded-r-full transition-all duration-200 ease-in-out w-[4px]",
             !isActive && !hasUnread && "group-hover:h-[20px]",
             hasUnread && !isActive && "h-[8px]",
             isActive && "h-[36px]"
@@ -64,7 +64,7 @@ export function NavigationItem({
         <div
           className={cn(
             "relative group flex mx-3 h-[48px] w-[48px] rounded-[24px]",
-            "group-hover:rounded-[16px] transition-all overflow-hidden",
+            "group-hover:rounded-[16px] transition-all duration-200 ease-in-out overflow-hidden",
             "items-center justify-center",
             isActive && "rounded-[16px]",
             // Background color for fallback
@@ -83,7 +83,7 @@ export function NavigationItem({
           ) : (
             <span
               className={cn(
-                "text-lg font-semibold transition",
+                "text-lg font-semibold transition-colors duration-200 ease-in-out",
                 "text-white",
                 "group-hover:text-white",
                 isActive && "text-white"

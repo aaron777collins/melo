@@ -33,7 +33,7 @@ import { useMxcUrl } from "@/hooks/use-mxc-url";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { MatrixImage } from "@/components/matrix-image";
+import { MatrixImage } from "@/apps/web/components/matrix-image";
 
 // =============================================================================
 // Types

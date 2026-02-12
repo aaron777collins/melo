@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { CreateServerModal } from "@/components/modals/create-server-modal";
 import { InviteModal } from "@/components/modals/invite-modal";
 import { EditServerModal } from "@/components/modals/edit-server-modal";
+import { ServerSettingsModal } from "@/apps/web/components/modals/server-settings-modal";
 import { MembersModal } from "@/components/modals/members-modal";
 import { CreateChannelModal } from "@/components/modals/create-channel-modal";
 import { LeaveServerModal } from "@/components/modals/leave-server-modal";
@@ -55,6 +56,7 @@ export function ModalProvider() {
       <CreateServerModal />
       <InviteModal />
       <EditServerModal />
+      <ServerSettingsModal />
       <MembersModal />
       <CreateChannelModal />
       <LeaveServerModal />

@@ -319,6 +319,17 @@ export function ServerHeader({
 
         {hasModeratorPerms && <DropdownMenuSeparator />}
 
+        {/* Server Settings - Admin only */}
+        {hasAdminPerms && (
+          <DropdownMenuItem
+            onClick={() => onOpen("serverSettings", { space: server })}
+            className="px-3 py-2 text-sm cursor-pointer"
+          >
+            Server Settings
+            <Settings className="h-4 w-4 ml-auto" />
+          </DropdownMenuItem>
+        )}
+
         {/* Notification Settings - All users */}
         <DropdownMenuItem
           onClick={() => onOpen("notificationSettings" as any, { server })}

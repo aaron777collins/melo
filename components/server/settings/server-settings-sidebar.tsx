@@ -1,0 +1,369 @@
+"use client";
+
+/**
+ * Server Settings Sidebar
+ *
+ * Discord-style left navigation for server settings pages.
+ * Groups settings into logical sections with proper routing.
+ */
+
+import React from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Settings,
+  Users,
+  Shield,
+  Plug2,
+  AlertTriangle,
+  ChevronLeft,
+  Crown,
+  MessageSquare,
+  Bell,
+  Palette,
+  Ban,
+  FileText,
+  Webhook,
+  Bot,
+  Lock,
+  Globe,
+  UserCog,
+  Gavel,
+  Activity,
+  Link2
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ActionTooltip } from "@/components/action-tooltip";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { getSpaceInitials, type MatrixSpace } from "@/lib/matrix/types/space";
+
+// =============================================================================
+// Types
+// =============================================================================
+
+interface SettingsNavItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  /** Badge text (e.g., "NEW", "BETA") */
+  badge?: string;
+  /** Whether this is a danger zone item */
+  isDanger?: boolean;
+}
+
+interface SettingsNavSection {
+  title: string | null;
+  items: SettingsNavItem[];
+}
+
+interface ServerSettingsSidebarProps {
+  space: MatrixSpace;
+  serverId: string;
+  /** User's current power level in this space */
+  userPowerLevel: number;
+}
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const POWER_LEVELS = {
+  OWNER: 100,
+  ADMIN: 75,
+  MODERATOR: 50,
+  MEMBER: 0,
+} as const;
+
+/**
+ * Get navigation sections based on user permissions
+ */
+function getNavSections(
+  serverId: string,
+  userPowerLevel: number
+): SettingsNavSection[] {
+  const basePath = `/servers/${serverId}/settings`;
+  
+  const sections: SettingsNavSection[] = [];
+  
+  // Overview section (always visible to admins+)
+  if (userPowerLevel >= POWER_LEVELS.MODERATOR) {
+    sections.push({
+      title: null, // No title for first section
+      items: [
+        {
+          id: "overview",
+          label: "Overview",
+          icon: Settings,
+          href: basePath,
+        },
+      ],
+    });
+  }
+  
+  // Community section (moderator+)
+  if (userPowerLevel >= POWER_LEVELS.MODERATOR) {
+    sections.push({
+      title: "COMMUNITY",
+      items: [
+        {
+          id: "roles",
+          label: "Roles",
+          icon: Shield,
+          href: `${basePath}/roles`,
+        },
+        {
+          id: "members",
+          label: "Members",
+          icon: Users,
+          href: `${basePath}/members`,
+        },
+        {
+          id: "invites",
+          label: "Invites",
+          icon: Link2,
+          href: `${basePath}/invites`,
+        },
+      ],
+    });
+  }
+  
+  // Moderation section (moderator+)
+  if (userPowerLevel >= POWER_LEVELS.MODERATOR) {
+    sections.push({
+      title: "MODERATION",
+      items: [
+        {
+          id: "moderation",
+          label: "Moderation",
+          icon: Gavel,
+          href: `${basePath}/moderation`,
+        },
+        {
+          id: "audit-log",
+          label: "Audit Log",
+          icon: FileText,
+          href: `${basePath}/audit-log`,
+        },
+        {
+          id: "bans",
+          label: "Bans",
+          icon: Ban,
+          href: `${basePath}/bans`,
+        },
+      ],
+    });
+  }
+  
+  // Integrations section (admin+)
+  if (userPowerLevel >= POWER_LEVELS.ADMIN) {
+    sections.push({
+      title: "APPS",
+      items: [
+        {
+          id: "integrations",
+          label: "Integrations",
+          icon: Plug2,
+          href: `${basePath}/integrations`,
+        },
+        {
+          id: "webhooks",
+          label: "Webhooks",
+          icon: Webhook,
+          href: `${basePath}/webhooks`,
+          badge: "BETA",
+        },
+        {
+          id: "bots",
+          label: "Bots",
+          icon: Bot,
+          href: `${basePath}/bots`,
+        },
+      ],
+    });
+  }
+  
+  // Security section (admin+)
+  if (userPowerLevel >= POWER_LEVELS.ADMIN) {
+    sections.push({
+      title: "SECURITY",
+      items: [
+        {
+          id: "security",
+          label: "Security",
+          icon: Lock,
+          href: `${basePath}/security`,
+        },
+        {
+          id: "federation",
+          label: "Federation",
+          icon: Globe,
+          href: `${basePath}/federation`,
+        },
+      ],
+    });
+  }
+  
+  // Danger zone (owner only)
+  if (userPowerLevel >= POWER_LEVELS.OWNER) {
+    sections.push({
+      title: "DANGER ZONE",
+      items: [
+        {
+          id: "danger",
+          label: "Delete Server",
+          icon: AlertTriangle,
+          href: `${basePath}/danger`,
+          isDanger: true,
+        },
+      ],
+    });
+  }
+  
+  return sections;
+}
+
+// =============================================================================
+// Component
+// =============================================================================
+
+export function ServerSettingsSidebar({
+  space,
+  serverId,
+  userPowerLevel,
+}: ServerSettingsSidebarProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  
+  const navSections = getNavSections(serverId, userPowerLevel);
+  
+  /**
+   * Check if a nav item is currently active
+   */
+  const isActive = (href: string) => {
+    // Exact match for overview
+    if (href === `/servers/${serverId}/settings`) {
+      return pathname === href;
+    }
+    // Prefix match for other pages
+    return pathname.startsWith(href);
+  };
+  
+  /**
+   * Navigate back to server
+   */
+  const handleBack = () => {
+    router.push(`/servers/${serverId}`);
+  };
+  
+  return (
+    <div className="flex flex-col h-full w-60 bg-[#2B2D31] dark:bg-[#2B2D31]">
+      {/* Header with back button */}
+      <div className="h-12 flex items-center px-4 border-b border-zinc-800 shadow-sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBack}
+          className="flex items-center gap-2 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/50 p-2 -ml-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="text-sm font-medium truncate max-w-[140px]">
+            {space.name}
+          </span>
+        </Button>
+      </div>
+      
+      {/* Server info */}
+      <div className="p-4 border-b border-zinc-800">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-12 w-12 rounded-2xl">
+            {space.avatarUrl ? (
+              <AvatarImage src={space.avatarUrl} alt={space.name} />
+            ) : null}
+            <AvatarFallback className="rounded-2xl bg-indigo-500 text-white text-lg font-semibold">
+              {getSpaceInitials(space.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-white font-semibold text-sm truncate">
+              {space.name}
+            </h2>
+            <p className="text-zinc-400 text-xs">
+              Server Settings
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Navigation */}
+      <ScrollArea className="flex-1 px-3 py-2">
+        <nav className="space-y-1">
+          {navSections.map((section, sectionIndex) => (
+            <div key={section.title || `section-${sectionIndex}`} className="mb-2">
+              {section.title && (
+                <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider px-2 py-2">
+                  {section.title}
+                </h3>
+              )}
+              
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => router.push(item.href)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-2 py-1.5 rounded-md text-sm font-medium transition-colors",
+                      active
+                        ? "bg-zinc-700/60 text-white"
+                        : item.isDanger
+                        ? "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                        : "text-zinc-400 hover:bg-zinc-700/40 hover:text-zinc-200"
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "h-4 w-4 flex-shrink-0",
+                        active
+                          ? "text-white"
+                          : item.isDanger
+                          ? "text-red-400"
+                          : "text-zinc-400"
+                      )}
+                    />
+                    <span className="truncate">{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold bg-indigo-500 text-white rounded">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+              
+              {sectionIndex < navSections.length - 1 && (
+                <Separator className="my-2 bg-zinc-700/50" />
+              )}
+            </div>
+          ))}
+        </nav>
+      </ScrollArea>
+      
+      {/* Footer with ESC hint */}
+      <div className="p-3 border-t border-zinc-800">
+        <div className="flex items-center justify-center gap-2 text-zinc-500 text-xs">
+          <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded text-[10px] font-mono">
+            ESC
+          </kbd>
+          <span>to close settings</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ServerSettingsSidebar;

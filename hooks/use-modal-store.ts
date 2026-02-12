@@ -23,7 +23,9 @@ export type ModalType =
   | "createSpace"
   | "editSpace"
   | "leaveSpace"
-  | "deleteSpace";
+  | "deleteSpace"
+  // Quick Switcher
+  | "quickSwitcher";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -36,6 +38,9 @@ interface ModalData {
   // Common
   apiUrl?: string;
   query?: Record<string, any>;
+  // Matrix message/file modals
+  roomId?: string;
+  onFileUploaded?: (mxcUrl: string, file: File) => void;
 }
 
 interface ModalStore {

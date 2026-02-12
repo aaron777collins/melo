@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChannelType, MemberRole } from "@prisma/client";
 import { ChevronRight, Plus, Settings } from "lucide-react";
 
@@ -15,6 +15,7 @@ interface ServerSectionProps {
   sectionType: "channels" | "members";
   channelType?: ChannelType;
   server?: ServerWithMembersWithProfiles;
+  serverId?: string;
   children?: React.ReactNode;
   defaultCollapsed?: boolean;
 }
@@ -25,11 +26,44 @@ export function ServerSection({
   sectionType,
   role,
   server,
+  serverId,
   children,
   defaultCollapsed = false
 }: ServerSectionProps) {
   const { onOpen } = useModal();
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+  
+  // Create unique storage key for persistent state
+  const storageKey = React.useMemo(() => {
+    const serverIdToUse = serverId || server?.id;
+    if (!serverIdToUse) return null;
+    
+    const channelTypeSuffix = channelType ? `-${channelType}` : "";
+    return `haos-collapse-${serverIdToUse}-${sectionType}${channelTypeSuffix}`;
+  }, [serverId, server?.id, sectionType, channelType]);
+  
+  // Load initial collapse state from localStorage
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window === "undefined" || !storageKey) return defaultCollapsed;
+    
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored ? JSON.parse(stored) : defaultCollapsed;
+    } catch {
+      return defaultCollapsed;
+    }
+  });
+  
+  // Save collapse state to localStorage when it changes
+  useEffect(() => {
+    if (typeof window === "undefined" || !storageKey) return;
+    
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(isCollapsed));
+    } catch (error) {
+      // Silently fail if localStorage is unavailable
+      console.warn("Failed to save section collapse state:", error);
+    }
+  }, [isCollapsed, storageKey]);
 
   return (
     <div className="mb-2">

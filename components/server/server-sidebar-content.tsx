@@ -104,6 +104,7 @@ export function ServerSidebarContent({
             channelType={ChannelType.TEXT}
             role={role}
             label="Text Channels"
+            serverId={server.id}
           >
             {textChannels.map((channel) => (
               <ServerChannel
@@ -122,6 +123,7 @@ export function ServerSidebarContent({
             channelType={ChannelType.AUDIO}
             role={role}
             label="Voice Channels"
+            serverId={server.id}
           >
             {audioChannels.map((channel) => (
               <ServerChannel
@@ -140,6 +142,7 @@ export function ServerSidebarContent({
             channelType={ChannelType.VIDEO}
             role={role}
             label="Video Channels"
+            serverId={server.id}
           >
             {videoChannels.map((channel) => (
               <ServerChannel

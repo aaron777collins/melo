@@ -3,7 +3,7 @@
  *
  * Service layer for Matrix room (channel) operations.
  * Provides CRUD operations for rooms with full Matrix SDK integration.
- * Handles text, audio, and video channel types within Matrix spaces.
+ * Handles text, voice, video, and announcement channel types within Matrix spaces.
  */
 
 import { Room, Visibility, ICreateRoomOpts, RoomType, EventType } from "matrix-js-sdk";
@@ -16,7 +16,7 @@ import { getClient } from "../../../lib/matrix/client";
 /**
  * Channel types supported by the room service
  */
-export type RoomChannelType = 'text' | 'audio' | 'video';
+export type RoomChannelType = 'text' | 'voice' | 'video' | 'announcement';
 
 /**
  * Data for updating a room

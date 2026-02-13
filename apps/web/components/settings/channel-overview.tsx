@@ -155,7 +155,7 @@ export function ChannelOverview({
       // Update the room via Matrix service
       await updateRoom(channel.id, {
         name: data.name,
-        topic: data.topic || null
+        topic: data.topic || undefined
       });
       
       // Refresh data to reflect changes

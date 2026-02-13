@@ -22,7 +22,7 @@ import {
   getMembers, 
   type Member, 
   type MemberRole 
-} from "@/services/matrix-member";
+} from "@/apps/web/services/matrix-member";
 import { useMatrix } from "@/components/providers/matrix-provider";
 
 // =============================================================================

@@ -31,6 +31,8 @@ export type ModalType =
   | "quickSwitcher"
   // Search
   | "search"
+  // Pinned Messages
+  | "pinnedMessages"
   // User Profile
   | "userProfile";
 
@@ -44,6 +46,8 @@ interface ModalData {
   spaceChannel?: SpaceChannel;
   /** Matrix channel type ('text' | 'voice' | 'video' | 'announcement') */
   matrixChannelType?: MatrixChannelType;
+  // Matrix room (for chat header room settings)
+  room?: any; // Room type from matrix-js-sdk
   // Common
   apiUrl?: string;
   query?: Record<string, any>;

@@ -163,7 +163,7 @@ export function UserProfileModal() {
           role: memberInfo?.role,
           powerLevel: memberInfo?.powerLevel,
           presenceStatus: presenceState,
-          statusMessage: user?.presenceStatusText || undefined
+          statusMessage: user?.presenceStatusMsg || undefined
         };
 
         setProfile(userProfile);

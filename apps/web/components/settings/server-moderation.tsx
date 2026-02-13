@@ -29,7 +29,8 @@ import {
   Loader2,
   RefreshCw,
   UserPlus,
-  MessageSquare
+  MessageSquare,
+  Settings
 } from "lucide-react";
 
 // UI Components

@@ -232,10 +232,8 @@ function ParticipantItem({
       <div className="relative flex-shrink-0">
         {showVideoThumbnail && hasVideo ? (
           <div className="w-10 h-10 rounded-md overflow-hidden bg-zinc-800">
-            <VideoTrack
-              trackRef={videoTrack as any}
-              className="w-full h-full object-cover"
-            />
+            {/* TODO: Fix VideoTrack component integration */}
+            <div className="w-full h-full bg-zinc-700" />
           </div>
         ) : (
           <UserAvatar 

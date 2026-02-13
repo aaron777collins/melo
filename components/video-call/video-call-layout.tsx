@@ -3,7 +3,6 @@
 import React from "react";
 import {
   ConnectionState,
-  Track,
   useTracks,
   useRoomContext,
   useParticipants,
@@ -31,7 +30,7 @@ export function VideoCallLayout({ className }: VideoCallLayoutProps) {
   ]);
 
   // Loading state
-  if (connectionState === ConnectionState.Connecting) {
+  if (connectionState === (ConnectionState as any).Connecting) {
     return (
       <div className={`flex items-center justify-center h-full bg-zinc-900 ${className}`}>
         <div className="text-center">
@@ -43,7 +42,7 @@ export function VideoCallLayout({ className }: VideoCallLayoutProps) {
   }
 
   // Error state
-  if (connectionState === ConnectionState.Disconnected) {
+  if (connectionState === (ConnectionState as any).Disconnected) {
     return (
       <div className={`flex items-center justify-center h-full bg-zinc-900 ${className}`}>
         <div className="text-center">

@@ -81,6 +81,7 @@ import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 import { getClient } from "@/lib/matrix/client";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
+import { NotificationSettings } from "@/components/settings/notification-settings";
 
 // =============================================================================
 // Types and Schemas
@@ -576,12 +577,15 @@ export function UserSettingsModal() {
 
                 {/* Notifications Tab */}
                 {activeTab === "notifications" && (
-                  <NotificationsTab
-                    form={notificationForm}
-                    isSaving={isSaving}
-                    onSave={handleSaveNotifications}
-                    onCancel={() => notificationForm.reset()}
-                  />
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="text-xl font-bold mb-1">Notification Settings</h2>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                        Manage how and when you receive notifications for Matrix events
+                      </p>
+                    </div>
+                    <NotificationSettings />
+                  </div>
                 )}
 
                 {/* Appearance Tab */}
@@ -1135,210 +1139,7 @@ function PrivacyTab({
   );
 }
 
-// Notifications Tab Component
-function NotificationsTab({
-  form,
-  isSaving,
-  onSave,
-  onCancel,
-}: {
-  form: ReturnType<typeof useForm<NotificationFormValues>>;
-  isSaving: boolean;
-  onSave: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold mb-1">Notification Preferences</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Choose what notifications you want to receive
-        </p>
-      </div>
-
-      <Form {...form}>
-        <form className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                General
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="enableNotifications"
-                render={({ field }) => (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Enable notifications</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Receive push notifications
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                )}
-              />
-              
-              <Separator />
-
-              <FormField
-                control={form.control}
-                name="enableSounds"
-                render={({ field }) => (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Notification sounds</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Play sounds for notifications
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                )}
-              />
-
-              <Separator />
-
-              <FormField
-                control={form.control}
-                name="notificationSound"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notification Sound</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="max-w-xs">
-                          <SelectValue placeholder="Select a sound" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {NOTIFICATION_SOUNDS.map((sound) => (
-                          <SelectItem key={sound.value} value={sound.value}>
-                            {sound.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Message Notifications
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="enableDMNotifications"
-                render={({ field }) => (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Direct messages</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Notify on new direct messages
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                )}
-              />
-              
-              <Separator />
-
-              <FormField
-                control={form.control}
-                name="enableMentionNotifications"
-                render={({ field }) => (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Mentions</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Notify when someone mentions you
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                )}
-              />
-              
-              <Separator />
-
-              <FormField
-                control={form.control}
-                name="enableServerNotifications"
-                render={({ field }) => (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Server messages</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Notify on server channel messages
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                )}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Save/Cancel Buttons */}
-          {form.formState.isDirty && (
-            <div className="flex items-center gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
-              <Button
-                type="button"
-                onClick={onSave}
-                disabled={isSaving}
-                className="bg-indigo-500 hover:bg-indigo-600"
-              >
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Check className="h-4 w-4 mr-2" />
-                )}
-                Save Changes
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
-        </form>
-      </Form>
-    </div>
-  );
-}
+// NOTE: This component is replaced by the comprehensive NotificationSettings component
 
 // Appearance Tab Component
 function AppearanceTab({

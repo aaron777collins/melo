@@ -36,6 +36,11 @@ export function UserPanel() {
     onOpen("userSettings");
   };
 
+  // Handle avatar click to open profile (self)
+  const handleAvatarClick = () => {
+    onOpen("userSettings"); // Opens to profile tab by default
+  };
+
   const handleMute = () => {
     setIsMuted(!isMuted);
     // TODO: Integrate with actual voice/audio system
@@ -113,18 +118,23 @@ export function UserPanel() {
 
   return (
     <div className="flex items-center gap-2 p-2 bg-zinc-800/50 mx-2 rounded-md hover:bg-zinc-700/50 transition-colors">
-      {/* User Avatar with Status */}
-      <div className="relative">
-        <UserAvatar
-          src={user.avatarUrl || undefined}
-          className="h-8 w-8"
-        />
-        {/* Online Status Indicator */}
-        <div className={cn(
-          "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-zinc-800",
-          getPresenceColor(user.presence)
-        )} />
-      </div>
+      {/* User Avatar with Status - Clickable to open profile */}
+      <ActionTooltip label="Your Profile" side="top">
+        <button 
+          onClick={handleAvatarClick}
+          className="relative cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <UserAvatar
+            src={user.avatarUrl || undefined}
+            className="h-8 w-8"
+          />
+          {/* Online Status Indicator */}
+          <div className={cn(
+            "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-zinc-800",
+            getPresenceColor(user.presence)
+          )} />
+        </button>
+      </ActionTooltip>
 
       {/* User Info */}
       <div className="flex-1 min-w-0">

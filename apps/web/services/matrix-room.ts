@@ -16,7 +16,7 @@ import { getClient } from "../../../lib/matrix/client";
 /**
  * Channel types supported by the room service
  */
-export type RoomChannelType = 'text' | 'voice' | 'video' | 'announcement';
+export type RoomChannelType = 'text' | 'voice' | 'audio' | 'video' | 'announcement';
 
 /**
  * Data for updating a room
@@ -234,7 +234,7 @@ export async function createRoom(
     };
     
     // Configure room based on type
-    if (type === 'audio' || type === 'video') {
+    if (type === 'audio' || type === 'voice' || type === 'video') {
       // Set power levels that allow voice/video calls
       createOptions.initial_state!.push({
         type: 'm.room.power_levels',
@@ -544,6 +544,106 @@ export async function deleteRoom(roomId: string): Promise<void> {
  */
 export function getRoomType(room: Room): RoomChannelType {
   return determineRoomType(room);
+}
+
+// =============================================================================
+// Room Discovery & Joining
+// =============================================================================
+
+/**
+ * Join a room by ID or alias
+ * Handles both room IDs (!example:server.com) and room aliases (#example:server.com)
+ */
+export async function joinRoomByIdOrAlias(roomIdOrAlias: string): Promise<string> {
+  const client = getMatrixClient();
+  
+  try {
+    // Validate format
+    if (!roomIdOrAlias.startsWith('!') && !roomIdOrAlias.startsWith('#')) {
+      throw new RoomServiceError(
+        'Room identifier must start with ! (room ID) or # (room alias)',
+        'INVALID_ROOM_IDENTIFIER'
+      );
+    }
+    
+    // Join the room (SDK handles both IDs and aliases)
+    const joinResult = await client.joinRoom(roomIdOrAlias);
+    const actualRoomId = joinResult.roomId || roomIdOrAlias;
+    
+    // Wait for the room to be available locally
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new RoomServiceError('Join operation timed out', 'JOIN_TIMEOUT'));
+      }, 10000);
+      
+      const checkRoom = () => {
+        const room = client.getRoom(actualRoomId);
+        if (room && room.hasMembershipState(client.getUserId()!, 'join')) {
+          clearTimeout(timeout);
+          resolve();
+        } else {
+          setTimeout(checkRoom, 100);
+        }
+      };
+      
+      checkRoom();
+    });
+    
+    return actualRoomId;
+    
+  } catch (error) {
+    if (error instanceof RoomServiceError) {
+      throw error;
+    }
+    throw new RoomServiceError(
+      `Failed to join room/space ${roomIdOrAlias}: ${error instanceof Error ? error.message : String(error)}`,
+      'JOIN_FAILED'
+    );
+  }
+}
+
+/**
+ * Search for public rooms on the homeserver
+ * Useful for room discovery before joining
+ */
+export async function searchPublicRooms(
+  searchTerm?: string,
+  limit: number = 50
+): Promise<{
+  roomId: string;
+  alias?: string;
+  name?: string;
+  topic?: string;
+  memberCount: number;
+  avatarUrl?: string;
+  isEncrypted: boolean;
+}[]> {
+  const client = getMatrixClient();
+  
+  try {
+    const response = await client.publicRooms({
+      limit,
+      filter: searchTerm ? {
+        generic_search_term: searchTerm
+      } : undefined,
+    });
+    
+    return response.chunk.map(room => ({
+      roomId: room.room_id,
+      alias: room.canonical_alias,
+      name: room.name,
+      topic: room.topic,
+      memberCount: room.num_joined_members,
+      avatarUrl: room.avatar_url,
+      isEncrypted: room.guest_can_join === false, // Rough heuristic
+    }));
+    
+  } catch (error) {
+    throw new RoomServiceError(
+      `Failed to search public rooms: ${error instanceof Error ? error.message : String(error)}`,
+      'SEARCH_FAILED'
+    );
+  }
 }
 
 // =============================================================================

@@ -93,7 +93,7 @@ export interface DirectMessage {
 /**
  * Types of channels within a space
  */
-export type ChannelType = 'text' | 'voice' | 'video' | 'announcement';
+export type ChannelType = 'text' | 'voice' | 'audio' | 'video' | 'announcement';
 
 /**
  * A channel within a space

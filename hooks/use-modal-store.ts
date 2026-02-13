@@ -29,6 +29,8 @@ export type ModalType =
   | "serverDiscovery"
   // Quick Switcher
   | "quickSwitcher"
+  // Search
+  | "search"
   // User Profile
   | "userProfile";
 

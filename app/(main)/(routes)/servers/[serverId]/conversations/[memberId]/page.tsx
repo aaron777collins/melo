@@ -64,17 +64,10 @@ export default async function MemberIdPage({
       {!video && (
         <>
           <ChatMessages
-            member={currentMember}
-            name={otherMember.profile.name}
-            chatId={conversation.id}
+            roomId={conversation.id}
+            roomName={otherMember.profile.name}
             type="conversation"
-            apiUrl="/api/direct-messages"
-            paramKey="conversationId"
-            paramValue={conversation.id}
-            socketUrl="/api/socket/direct-messages"
-            socketQuery={{
-              conversationId: conversation.id
-            }}
+            currentUserId={currentMember.profile.userId}
           />
           <ChatInput
             name={otherMember.profile.name}

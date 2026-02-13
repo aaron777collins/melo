@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatInput } from "@/apps/web/components/chat/chat-input";
 import { ChatMessages } from "@/components/chat/chat-messages";
+import { ChatLayout } from "@/components/chat/chat-layout";
 import { MediaRoom } from "@/components/media-room";
+import { currentProfile } from "@/lib/current-profile";
+import { db } from "@/lib/db";
 
 interface ChannelIdPageProps {
   params: {
@@ -16,55 +19,93 @@ interface ChannelIdPageProps {
 export default async function ChannelIdPage({
   params: { channelId, serverId }
 }: ChannelIdPageProps) {
-  // For now, create a simplified version that works with Matrix types
-  // TODO: Implement proper Matrix auth and room fetching
-  
-  // Mock channel data for build compatibility
-  // Determine channel type from channel name for now
-  const channelName = "general"; // placeholder, should come from Matrix room
-  let channelType: "text" | "audio" | "video" = "text";
-  
-  if (channelName.toLowerCase().includes("voice") || channelName.toLowerCase().includes("audio")) {
-    channelType = "audio";
-  } else if (channelName.toLowerCase().includes("video")) {
-    channelType = "video";
+  const profile = await currentProfile();
+
+  if (!profile) {
+    return redirect("/");
   }
-  
-  const channel = {
-    id: channelId,
-    name: channelName,
-    type: channelType,
-    serverId: serverId
-  };
+
+  // Fetch server data including members for the member sidebar
+  const server = await db.server.findUnique({
+    where: {
+      id: serverId,
+      members: {
+        some: {
+          profileId: profile.id
+        }
+      }
+    },
+    include: {
+      channels: {
+        where: {
+          id: channelId
+        }
+      },
+      members: {
+        include: {
+          profile: true
+        },
+        orderBy: {
+          role: "asc"
+        }
+      }
+    }
+  });
+
+  if (!server) {
+    return redirect("/");
+  }
+
+  const channel = server.channels?.[0];
+
+  if (!channel) {
+    return redirect(`/servers/${serverId}`);
+  }
+
+  // Filter out current user from members list for member sidebar
+  const members = server.members.filter(
+    member => member.profileId !== profile.id
+  );
+
+  // For now, mock online status - in real implementation this would come from Matrix presence
+  const onlineMembers = members.slice(0, Math.floor(members.length / 2)).map(m => m.id);
 
   return (
-    <div className="bg-white dark:bg-[#313338] flex flex-col h-full">
-      <ChatHeader
-        name={channel.name}
-        serverId={channel.serverId}
-        type="channel"
-      />
-      {channel.type === "text" && (
-        <>
-          <ChatMessages
-            roomId={channelId}
-            roomName={channel.name}
-            type="channel"
-            currentUserId="@user:example.com" // placeholder
-          />
-          <ChatInput
-            roomId={channelId}
-            name={channel.name}
-            type="channel"
-          />
-        </>
-      )}
-      {channel.type === "audio" && (
-        <MediaRoom chatId={channel.id} video={false} audio={true} />
-      )}
-      {channel.type === "video" && (
-        <MediaRoom chatId={channel.id} video={true} audio={true} />
-      )}
-    </div>
+    <ChatLayout 
+      members={members}
+      onlineMembers={onlineMembers}
+      showMembersToggle={channel.type === "TEXT"} // Only show member sidebar for text channels
+      className="bg-white dark:bg-[#313338]"
+    >
+      <div className="flex flex-col h-full">
+        <ChatHeader
+          name={channel.name}
+          serverId={channel.serverId}
+          type="channel"
+          channelId={channel.id}
+        />
+        {channel.type === "TEXT" && (
+          <>
+            <ChatMessages
+              roomId={channelId}
+              roomName={channel.name}
+              type="channel"
+              currentUserId="@user:example.com" // placeholder
+            />
+            <ChatInput
+              roomId={channelId}
+              name={channel.name}
+              type="channel"
+            />
+          </>
+        )}
+        {channel.type === "AUDIO" && (
+          <MediaRoom chatId={channel.id} video={false} audio={true} />
+        )}
+        {channel.type === "VIDEO" && (
+          <MediaRoom chatId={channel.id} video={true} audio={true} />
+        )}
+      </div>
+    </ChatLayout>
   );
 }

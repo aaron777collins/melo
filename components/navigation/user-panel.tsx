@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Settings, Mic, MicOff, Headphones, VolumeX } from "lucide-react";
+import { Settings, Mic, MicOff, Headphones, VolumeX, LogOut } from "lucide-react";
 
 import { ActionTooltip } from "@/components/action-tooltip";
 import { UserAvatar } from "@/components/user-avatar";
@@ -23,12 +23,13 @@ import { cn } from "@/lib/utils";
  * [Avatar] [Name + Status] [Settings] [Mute] [Deafen]
  */
 export function UserPanel() {
-  const { user, isLoading } = useMatrixAuth();
+  const { user, isLoading, logout } = useMatrixAuth();
   const { onOpen } = useModal();
 
   // Audio state management (TODO: integrate with actual voice system)
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
 
   // Handle button clicks
   const handleSettings = () => {
@@ -46,6 +47,15 @@ export function UserPanel() {
     // Note: Deafening should also mute
     if (!isDeafened) {
       setIsMuted(true);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // User will be redirected automatically by auth state change
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
 
@@ -129,6 +139,16 @@ export function UserPanel() {
 
       {/* Control Buttons */}
       <div className="flex gap-1">
+        {/* Logout Button */}
+        <ActionTooltip label="Log Out" side="top">
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-center h-8 w-8 rounded hover:bg-red-600/50 transition-colors"
+          >
+            <LogOut className="h-4 w-4 text-zinc-400 hover:text-red-300" />
+          </button>
+        </ActionTooltip>
+
         {/* Settings Button */}
         <ActionTooltip label="User Settings" side="top">
           <button

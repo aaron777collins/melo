@@ -99,7 +99,7 @@ const ROLE_CONFIGS: Record<MemberRole, RoleConfig> = {
       "Transfer ownership",
       "Manage all roles",
       "Manage server settings"
-    ]
+    ] as string[]
   },
   admin: {
     name: "Administrator", 
@@ -113,7 +113,7 @@ const ROLE_CONFIGS: Record<MemberRole, RoleConfig> = {
       "Manage channels",
       "Ban/kick members",
       "View audit log"
-    ]
+    ] as string[]
   },
   moderator: {
     name: "Moderator",
@@ -127,7 +127,7 @@ const ROLE_CONFIGS: Record<MemberRole, RoleConfig> = {
       "Timeout members",
       "Manage nicknames",
       "View moderation logs"
-    ]
+    ] as string[]
   },
   member: {
     name: "Member",
@@ -141,7 +141,7 @@ const ROLE_CONFIGS: Record<MemberRole, RoleConfig> = {
       "Add reactions",
       "Use external emojis",
       "Read message history"
-    ]
+    ] as string[]
   },
   restricted: {
     name: "Restricted",
@@ -154,7 +154,7 @@ const ROLE_CONFIGS: Record<MemberRole, RoleConfig> = {
       "Limited channel access",
       "No voice permissions",
       "Cannot use reactions"
-    ]
+    ] as string[]
   }
 } as const;
 
@@ -279,7 +279,7 @@ export function ServerRoles({
               <div className="space-y-3">
                 {Object.entries(ROLE_CONFIGS).map(([roleKey, config]) => {
                   const role = roleKey as MemberRole;
-                  const roleMembers = membersByRole[role] || [];
+                  const roleMembers = (membersByRole as any)[role] || [];
                   const Icon = config.icon;
                   const isExpanded = expandedRole === role;
                   
@@ -347,7 +347,7 @@ export function ServerRoles({
                                     Members ({roleMembers.length})
                                   </h4>
                                   <div className="space-y-2 max-h-48 overflow-y-auto">
-                                    {roleMembers.map((member) => (
+                                    {roleMembers.map((member: any) => (
                                       <div key={member.userId} className="flex items-center justify-between p-2 bg-zinc-50 dark:bg-zinc-900 rounded-lg">
                                         <div className="flex items-center space-x-2">
                                           <Avatar className="h-8 w-8">
@@ -437,7 +437,7 @@ export function ServerRoles({
             <CardContent className="space-y-3">
               {Object.entries(ROLE_CONFIGS).map(([roleKey, config]) => {
                 const role = roleKey as MemberRole;
-                const count = membersByRole[role]?.length || 0;
+                const count = (membersByRole as any)[role]?.length || 0;
                 const Icon = config.icon;
                 
                 return (

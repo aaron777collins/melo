@@ -503,7 +503,7 @@ export async function removeDMFromAccountData(roomId: string, userId?: string): 
     if (!targetUserId) {
       const room = client.getRoom(roomId);
       if (room) {
-        targetUserId = getOtherUserInDM(room);
+        targetUserId = getOtherUserInDM(room) || undefined;
       }
     }
     

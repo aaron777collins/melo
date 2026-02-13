@@ -5,7 +5,7 @@
  * Integrates with Matrix room directory API for space discovery.
  */
 
-import { Room, IPublicRoomsChunkRoom, IPublicRoomsResponse } from "matrix-js-sdk";
+import { Room } from "matrix-js-sdk";
 import { getClient } from "../../../lib/matrix/client";
 
 // =============================================================================
@@ -133,7 +133,7 @@ function getMatrixClient() {
 /**
  * Convert Matrix SDK public room data to DiscoveredSpace
  */
-function publicRoomToDiscoveredSpace(room: IPublicRoomsChunkRoom): DiscoveredSpace {
+function publicRoomToDiscoveredSpace(room: any): DiscoveredSpace {
   return {
     id: room.room_id,
     name: room.name || room.canonical_alias || 'Unnamed Space',
@@ -154,7 +154,7 @@ function publicRoomToDiscoveredSpace(room: IPublicRoomsChunkRoom): DiscoveredSpa
  * Extract category tags from room data
  * This is a basic implementation - could be enhanced with standardized room tags
  */
-function extractTagsFromRoom(room: IPublicRoomsChunkRoom): string[] {
+function extractTagsFromRoom(room: any): string[] {
   const tags: string[] = [];
   const topic = (room.topic || '').toLowerCase();
   const name = (room.name || '').toLowerCase();
@@ -212,11 +212,11 @@ export async function searchPublicSpaces(
     };
 
     // Call Matrix SDK public rooms API
-    const response: IPublicRoomsResponse = await client.publicRooms(searchOptions);
+    const response: any = await client.publicRooms(searchOptions);
     
     // Filter for spaces only and convert to our interface
     let spaces = response.chunk
-      .filter((room) => {
+      .filter((room: any) => {
         // Filter for spaces (rooms with type 'm.space' or those that look like spaces)
         const isSpace = room.room_type === 'm.space' || 
                        (room.name && !room.name.includes('#')) || 
@@ -241,8 +241,8 @@ export async function searchPublicSpaces(
     
     // Apply category filtering
     if (filters.categories && filters.categories.length > 0) {
-      spaces = spaces.filter(space => 
-        space.tags?.some(tag => filters.categories!.includes(tag))
+      spaces = spaces.filter((space: any) => 
+        space.tags?.some((tag: any) => filters.categories!.includes(tag))
       );
     }
     

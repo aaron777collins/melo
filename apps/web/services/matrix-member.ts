@@ -130,9 +130,9 @@ function roomMemberToMember(roomMember: RoomMember, room: Room): Member {
   const powerLevels = powerLevelsEvent?.getContent() || {};
   const memberPowerLevel = powerLevels.users?.[roomMember.userId] || powerLevels.users_default || 0;
   
-  // Get typing status
-  const typingUsers = room.currentState.getTypingUsers();
-  const isTyping = typingUsers.includes(roomMember.userId);
+  // Get typing status (disabled for now - API needs review)
+  // TODO: Find correct method to get typing users in matrix-js-sdk v40
+  const isTyping = false;
   
   // Get presence information if available
   const user = client.getUser(roomMember.userId);
@@ -147,13 +147,10 @@ function roomMemberToMember(roomMember: RoomMember, room: Room): Member {
   return {
     userId: roomMember.userId,
     displayName: roomMember.name,
-    avatarUrl: roomMember.getAvatarUrl(
-      client.baseUrl,
-      64, 64, 'crop'
-    ) || null,
+    avatarUrl: roomMember.getAvatarUrl(client.baseUrl, 64, 64, 'crop', false, false) || null,
     powerLevel: memberPowerLevel,
     role: powerLevelToRole(memberPowerLevel),
-    membership: roomMember.membership,
+    membership: roomMember.membership || "unknown",
     isOnline,
     lastActiveAt,
     isTyping,

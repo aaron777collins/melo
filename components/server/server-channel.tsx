@@ -26,6 +26,7 @@ interface ServerChannelProps {
 const iconMap = {
   text: Hash,
   voice: Mic,
+  audio: Mic, // Audio channels use the same icon as voice
   video: Video,
   announcement: Hash, // Use hash for announcement channels too
 } as const;
@@ -54,7 +55,17 @@ export function ServerChannel({
       spaceChannel: channel,
       space: {
         id: server.id,
-        name: server.name
+        name: server.name,
+        avatarUrl: null,
+        topic: null,
+        memberCount: 0,
+        isOwner: false,
+        childRoomIds: [],
+        joinRule: 'invite' as const,
+        canonicalAlias: null,
+        currentUserPowerLevel: 0,
+        hasUnread: false,
+        unreadMentionCount: 0
       }
     });
   };

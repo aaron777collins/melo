@@ -62,7 +62,7 @@ const overviewSchema = z.object({
   topic: z.string()
     .max(1024, "Topic must be 1024 characters or less")
     .optional(),
-  type: z.enum(['text', 'voice', 'video', 'announcement'] as const),
+  type: z.enum(['text', 'voice', 'audio', 'video', 'announcement'] as const),
   isPrivate: z.boolean()
 });
 

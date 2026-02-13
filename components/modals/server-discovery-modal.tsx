@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Search, Hash, Users, Globe, Lock, Plus, X, Loader2, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-// Remove toast import - using local error state instead
 
 import {
   Dialog,
@@ -16,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { UserAvatar } from "@/components/navigation/user-avatar";
+import { UserAvatar } from "@/components/user-avatar";
 import { ActionTooltip } from "@/components/action-tooltip";
 
 import { useModal } from "@/hooks/use-modal-store";
@@ -103,7 +102,7 @@ export function ServerDiscoveryModal() {
       setSearchResults(result.spaces);
     } catch (error) {
       console.error('Search failed:', error);
-      toast.error('Search failed. Please try again.');
+      // TODO: Show error toast when toast system is implemented
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -147,7 +146,7 @@ export function ServerDiscoveryModal() {
       // Check if user can join
       const canJoin = await canJoinSpace(space.id);
       if (!canJoin) {
-        toast.error('You are already a member of this space or cannot join');
+        console.warn('Cannot join space - already a member or not allowed');
         return;
       }
 
@@ -155,7 +154,7 @@ export function ServerDiscoveryModal() {
       
       await joinDiscoveredSpace(space.id);
       
-      toast.success(`Joined ${space.name}!`);
+      console.log(`Successfully joined ${space.name}!`);
       
       // Close modal and navigate to the space
       onClose();
@@ -163,7 +162,7 @@ export function ServerDiscoveryModal() {
       
     } catch (error) {
       console.error('Failed to join space:', error);
-      toast.error('Failed to join space. Please try again.');
+      // TODO: Show error toast when toast system is implemented
     } finally {
       setJoiningSpaces(prev => {
         const next = new Set(prev);

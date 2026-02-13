@@ -59,7 +59,7 @@ export function ParticipantList({
     { source: LKTrack.Source.Camera, withPlaceholder: true },
   ]);
 
-  if (connectionState !== ConnectionState.Connected) {
+  if (connectionState !== (ConnectionState as any).Connected) {
     return (
       <div className={`p-4 ${className}`}>
         <div className="text-center text-zinc-500">
@@ -233,7 +233,7 @@ function ParticipantItem({
         {showVideoThumbnail && hasVideo ? (
           <div className="w-10 h-10 rounded-md overflow-hidden bg-zinc-800">
             <VideoTrack
-              trackRef={videoTrack}
+              trackRef={videoTrack as any}
               className="w-full h-full object-cover"
             />
           </div>

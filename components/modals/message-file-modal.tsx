@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FileUpload } from "@/components/file-upload";
+import { FileUpload } from "@/apps/web/components/file-upload";
 import { useModal } from "@/hooks/use-modal-store";
 import { sendFile } from "@/apps/web/services/matrix-message";
 import type { MxcUrl } from "@/lib/matrix/types/media";

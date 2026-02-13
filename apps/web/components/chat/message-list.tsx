@@ -547,7 +547,8 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
       {/* Virtual message list */}
       <List
         ref={listRef}
-        height={typeof height === 'string' ? '100%' : height}
+        height={typeof height === 'string' ? 600 : height}
+        width="100%"
         itemCount={processedMessages.length}
         itemSize={VIRTUAL_CONFIG.ITEM_SIZE}
         itemData={itemData}
@@ -572,4 +573,3 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
 // =============================================================================
 
 export default MessageList;
-export type { MessageListProps, MessageListRef };

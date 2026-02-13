@@ -52,6 +52,11 @@ interface MessageGroupProps {
    * Whether this is the current user's message
    */
   isCurrentUser: boolean;
+  
+  /**
+   * Room ID for Matrix operations
+   */
+  roomId: string;
 }
 
 interface DateSeparatorProps {
@@ -149,7 +154,7 @@ function DateSeparator({ date }: DateSeparatorProps) {
 /**
  * Message group component - renders a group of consecutive messages from same sender
  */
-function MessageGroup({ firstMessage, messages, isCurrentUser, currentUserId }: MessageGroupProps & { currentUserId?: string }) {
+function MessageGroup({ firstMessage, messages, isCurrentUser, currentUserId, roomId }: MessageGroupProps & { currentUserId?: string }) {
   return (
     <div className="space-y-0.5">
       {messages.map((message, index) => (
@@ -159,6 +164,7 @@ function MessageGroup({ firstMessage, messages, isCurrentUser, currentUserId }: 
           isFirstInGroup={index === 0}
           isCurrentUser={isCurrentUser}
           currentUserId={currentUserId}
+          roomId={roomId}
         />
       ))}
     </div>
@@ -346,6 +352,7 @@ export function ChatMessages({
                   messages={group}
                   isCurrentUser={isCurrentUser}
                   currentUserId={currentUserId}
+                  roomId={roomId}
                 />
               </Fragment>
             );

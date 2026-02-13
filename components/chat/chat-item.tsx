@@ -513,13 +513,17 @@ export function ChatItem({
         {/* Message Content */}
         <div className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
           {isMarkdown ? (
+            <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-code:bg-zinc-200 dark:prose-code:bg-zinc-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-zinc-100 dark:prose-pre:bg-zinc-800">
             <ReactMarkdown
-              className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-code:bg-zinc-200 dark:prose-code:bg-zinc-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-zinc-100 dark:prose-pre:bg-zinc-800"
               components={{
                 // Custom components for better Discord-style rendering
                 p: ({ children }) => <p className="my-1">{children}</p>,
-                code: ({ inline, children, ...props }) => {
-                  if (inline) {
+                code: ({ children, className, ...props }) => {
+                  const match = /language-(\w+)/.exec(className || '');
+                  // If no language class and it's short, treat as inline
+                  const isCodeBlock = match || (typeof children === 'string' && children.includes('\n'));
+                  
+                  if (!isCodeBlock) {
                     return (
                       <code 
                         className="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-sm font-mono" 
@@ -530,13 +534,16 @@ export function ChatItem({
                     );
                   }
                   return (
-                    <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto">
-                      <code className="font-mono text-sm" {...props}>
-                        {children}
-                      </code>
-                    </pre>
+                    <code className={`font-mono text-sm ${className || ''}`} {...props}>
+                      {children}
+                    </code>
                   );
                 },
+                pre: ({ children }) => (
+                  <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto">
+                    {children}
+                  </pre>
+                ),
                 blockquote: ({ children }) => (
                   <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic">
                     {children}
@@ -546,6 +553,7 @@ export function ChatItem({
             >
               {content}
             </ReactMarkdown>
+            </div>
           ) : (
             <p>{content}</p>
           )}

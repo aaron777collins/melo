@@ -270,7 +270,7 @@ function MessageAvatar({
   userInfo: UserInfo; 
   className?: string;
 }) {
-  const avatarHttpUrl = useMxcUrl(userInfo.avatarUrl);
+  const avatarHttpUrl = useMxcUrl(userInfo.avatarUrl || "");
   const fallbackText = userInfo.displayName.substring(0, 2).toUpperCase();
   
   return (
@@ -552,4 +552,3 @@ export function Message({
 // =============================================================================
 
 export default Message;
-export type { MessageProps, UserInfo, ParsedMessageContent };

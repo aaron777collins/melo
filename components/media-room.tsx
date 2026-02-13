@@ -20,7 +20,7 @@ interface MediaRoomProps {
  */
 export function MediaRoom({ chatId, video, audio }: MediaRoomProps) {
   const { client } = useMatrixClient();
-  const userName = client?.getUserId() || client?.getDisplayName() || "User";
+  const userName = client?.getUserId() || "User";
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [showParticipants, setShowParticipants] = useState(true);

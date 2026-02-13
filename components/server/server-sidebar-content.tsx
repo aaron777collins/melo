@@ -102,15 +102,24 @@ export function ServerSidebarContent({
           <ServerSection
             sectionType="channels"
             channelType={ChannelType.TEXT}
-            role={role}
+            role={role as any}
             label="Text Channels"
             serverId={server.id}
           >
             {textChannels.map((channel) => (
               <ServerChannel
                 key={channel.id}
-                channel={channel}
-                role={role}
+                channel={{
+                  id: channel.id,
+                  name: channel.name,
+                  type: channel.type as any, // Convert Prisma ChannelType to Matrix ChannelType
+                  topic: null,
+                  categoryId: null,
+                  order: 0,
+                  hasUnread: false,
+                  mentionCount: 0
+                }}
+                role={role as any}
                 server={server}
               />
             ))}
@@ -121,15 +130,24 @@ export function ServerSidebarContent({
           <ServerSection
             sectionType="channels"
             channelType={ChannelType.AUDIO}
-            role={role}
+            role={role as any}
             label="Voice Channels"
             serverId={server.id}
           >
             {audioChannels.map((channel) => (
               <ServerChannel
                 key={channel.id}
-                channel={channel}
-                role={role}
+                channel={{
+                  id: channel.id,
+                  name: channel.name,
+                  type: channel.type as any, // Convert Prisma ChannelType to Matrix ChannelType
+                  topic: null,
+                  categoryId: null,
+                  order: 0,
+                  hasUnread: false,
+                  mentionCount: 0
+                }}
+                role={role as any}
                 server={server}
               />
             ))}
@@ -140,15 +158,24 @@ export function ServerSidebarContent({
           <ServerSection
             sectionType="channels"
             channelType={ChannelType.VIDEO}
-            role={role}
+            role={role as any}
             label="Video Channels"
             serverId={server.id}
           >
             {videoChannels.map((channel) => (
               <ServerChannel
                 key={channel.id}
-                channel={channel}
-                role={role}
+                channel={{
+                  id: channel.id,
+                  name: channel.name,
+                  type: channel.type as any, // Convert Prisma ChannelType to Matrix ChannelType
+                  topic: null,
+                  categoryId: null,
+                  order: 0,
+                  hasUnread: false,
+                  mentionCount: 0
+                }}
+                role={role as any}
                 server={server}
               />
             ))}

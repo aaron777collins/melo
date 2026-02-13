@@ -322,7 +322,22 @@ export function ServerHeader({
         {/* Server Settings - Admin only */}
         {hasAdminPerms && (
           <DropdownMenuItem
-            onClick={() => onOpen("serverSettings", { space: server })}
+            onClick={() => onOpen("serverSettings", { 
+              space: {
+                id: server.id,
+                name: server.name,
+                avatarUrl: server.imageUrl || null,
+                topic: null,
+                memberCount: 0,
+                isOwner: false,
+                childRoomIds: [],
+                joinRule: 'invite' as const,
+                canonicalAlias: server.canonicalAlias || null,
+                currentUserPowerLevel: 0,
+                hasUnread: false,
+                unreadMentionCount: 0
+              }
+            })}
             className="px-3 py-2 text-sm cursor-pointer"
           >
             Server Settings
@@ -332,7 +347,7 @@ export function ServerHeader({
 
         {/* Notification Settings - All users */}
         <DropdownMenuItem
-          onClick={() => onOpen("notificationSettings" as any, { server })}
+          onClick={() => onOpen("notificationSettings" as any, { server: server as any })}
           className="px-3 py-2 text-sm cursor-pointer"
         >
           Notification Settings
@@ -341,7 +356,16 @@ export function ServerHeader({
 
         {/* Edit Server Profile - All users */}
         <DropdownMenuItem
-          onClick={() => onOpen("editServerProfile" as any, { server })}
+          onClick={() => onOpen("editServerProfile" as any, { 
+            server: {
+              ...server,
+              imageUrl: server.imageUrl || '',
+              inviteCode: server.inviteCode || '',
+              profileId: '',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          })}
           className="px-3 py-2 text-sm cursor-pointer"
         >
           Edit Server Profile

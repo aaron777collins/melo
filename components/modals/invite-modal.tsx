@@ -130,6 +130,25 @@ export function InviteModal() {
   const selectedMaxUsesOption = MAX_USES_OPTIONS.find(opt => opt.value === selectedMaxUses);
 
   // =============================================================================
+  // Event Handlers
+  // =============================================================================
+
+  const loadActiveInvites = useCallback(async () => {
+    if (!space?.id) return;
+
+    try {
+      setLoadingInvites(true);
+      const invites = await getSpaceInvites(space.id);
+      setActiveInvites(invites.filter(invite => invite.isActive));
+    } catch (err) {
+      console.error("Failed to load active invites:", err);
+      setError(err instanceof Error ? err.message : "Failed to load invites");
+    } finally {
+      setLoadingInvites(false);
+    }
+  }, [space?.id]);
+
+  // =============================================================================
   // Effect Handlers
   // =============================================================================
 
@@ -149,25 +168,6 @@ export function InviteModal() {
     }
   }, [isModalOpen]);
 
-  // =============================================================================
-  // Event Handlers
-  // =============================================================================
-
-  const loadActiveInvites = useCallback(async () => {
-    if (!space?.id) return;
-
-    try {
-      setLoadingInvites(true);
-      const invites = await getSpaceInvites(space.id);
-      setActiveInvites(invites.filter(invite => invite.isActive));
-    } catch (err) {
-      console.error("Failed to load active invites:", err);
-      setError(err instanceof Error ? err.message : "Failed to load invites");
-    } finally {
-      setLoadingInvites(false);
-    }
-  }, [space?.id]);
-
   const handleCreateInvite = async () => {
     if (!space?.id) return;
 
@@ -176,7 +176,7 @@ export function InviteModal() {
       setError(null);
 
       // Calculate max uses
-      const maxUses = selectedMaxUsesOption?.uses || null;
+      const maxUses = selectedMaxUsesOption?.uses ?? undefined;
       
       // Create the invite
       const inviteCode = await createInviteLink(space.id, maxUses);

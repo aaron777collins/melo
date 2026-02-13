@@ -248,7 +248,7 @@ export function ServerSettingsSidebar({
       return pathname === href;
     }
     // Prefix match for other pages
-    return pathname.startsWith(href);
+    return pathname?.startsWith(href) ?? false;
   };
   
   /**

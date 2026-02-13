@@ -95,7 +95,7 @@ export function VideoCallLayout({ className }: VideoCallLayoutProps) {
 
 interface ParticipantTileProps {
   participant: Participant;
-  videoTracks: { participant: Participant; publication: any; source: LKTrack.Source }[];
+  videoTracks: { participant: Participant; publication?: any; source: LKTrack.Source }[];
 }
 
 function ParticipantTile({ participant, videoTracks }: ParticipantTileProps) {
@@ -123,7 +123,9 @@ function ParticipantTile({ participant, videoTracks }: ParticipantTileProps) {
       {hasVideo && videoTrack ? (
         <div className="w-full h-full">
           <VideoTrack
-            trackRef={videoTrack}
+            source={videoTrack.source}
+            participant={videoTrack.participant}
+            publication={videoTrack.publication}
             className="w-full h-full object-cover"
           />
         </div>
@@ -198,7 +200,7 @@ function ParticipantTile({ participant, videoTracks }: ParticipantTileProps) {
 }
 
 interface ScreenShareOverlayProps {
-  track: { participant: Participant; publication: any; source: LKTrack.Source };
+  track: { participant: Participant; publication?: any; source: LKTrack.Source };
 }
 
 function ScreenShareOverlay({ track }: ScreenShareOverlayProps) {
@@ -209,7 +211,9 @@ function ScreenShareOverlay({ track }: ScreenShareOverlayProps) {
       {/* Screen share video */}
       <div className="w-full h-full">
         <VideoTrack
-          trackRef={track}
+          source={track.source}
+          participant={track.participant}
+          publication={track.publication}
           className="w-full h-full object-contain"
         />
       </div>

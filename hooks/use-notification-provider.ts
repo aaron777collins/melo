@@ -65,7 +65,7 @@ interface UseNotificationProviderReturn {
  *           🔔 Notifications ready
  *         </div>
  *       )}
- *       {/* rest of your app */}
+ *       {/* rest of your app * /}
  *     </div>
  *   );
  * }

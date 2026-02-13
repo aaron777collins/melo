@@ -1,12 +1,12 @@
 import { Member, Profile, Server } from "@prisma/client";
-import { Server as NetServer, Socket } from "net";
-import { NextApiResponse } from "next";
-import { Server as SocketIOServer } from "socket.io";
+
+/**
+ * Legacy types for Prisma-based components.
+ * These are used by the server sidebar components that still reference
+ * the old Prisma data model. Eventually these should be migrated to 
+ * use Matrix data types instead.
+ */
 
 export type ServerWithMembersWithProfiles = Server & {
   members: (Member & { profile: Profile })[];
-};
-
-export type NextApiResponseServerIo = NextApiResponse & {
-  socket: Socket & { server: NetServer & { io: SocketIOServer } };
 };

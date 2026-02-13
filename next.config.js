@@ -11,7 +11,9 @@ const nextConfig = {
   webpack: (config, { dev, isServer }) => {
     config.externals.push({
       "utf-8-validate": "commonjs utf-8-validate",
-      bufferutil: "commonjs bufferutil"
+      bufferutil: "commonjs bufferutil",
+      // LiveKit server SDK should be server-only external
+      "livekit-server-sdk": "commonjs livekit-server-sdk"
     });
 
     // Bundle optimization configurations

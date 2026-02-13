@@ -1,65 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { PresenceState } from '../services/matrix-presence';
-import useMatrixClient from '../hooks/useMatrixClient'; // Assuming this hook exists
+"use client";
+
+import React from 'react';
+import { usePresence } from '@/hooks/use-presence';
 
 interface UserPresenceProps {
   userId: string;
   className?: string;
+  showLabel?: boolean;
 }
 
-const PRESENCE_STYLES: Record<PresenceState, string> = {
+const PRESENCE_STYLES = {
   online: 'bg-green-500',
   offline: 'bg-gray-500',
-  away: 'bg-yellow-500',
-  'do-not-disturb': 'bg-red-500'
-};
+  unavailable: 'bg-yellow-500',
+} as const;
 
-const PRESENCE_LABELS: Record<PresenceState, string> = {
+const PRESENCE_LABELS = {
   online: 'Online',
   offline: 'Offline',
-  away: 'Away',
-  'do-not-disturb': 'Do Not Disturb'
-};
+  unavailable: 'Away',
+} as const;
 
-const UserPresence: React.FC<UserPresenceProps> = ({ userId, className = '' }) => {
-  const [presenceState, setPresenceState] = useState<PresenceState>('offline');
-  const matrixClient = useMatrixClient();
-  const presenceService = matrixClient?.presenceService;
-
-  useEffect(() => {
-    if (!presenceService) return;
-
-    // Initial presence fetch
-    const initialState = presenceService.getUserPresence(userId);
-    setPresenceState(initialState);
-
-    // Subscribe to presence changes
-    const unsubscribe = presenceService.subscribeToUserPresence(userId, (newState) => {
-      setPresenceState(newState);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [userId, presenceService]);
-
-  if (!presenceService) return null;
+/**
+ * UserPresence - Displays a user's presence indicator
+ * 
+ * Uses the existing usePresence hook which properly integrates with Matrix SDK
+ * for real-time presence updates.
+ */
+const UserPresence: React.FC<UserPresenceProps> = ({ 
+  userId, 
+  className = '',
+  showLabel = true 
+}) => {
+  const { presence } = usePresence(userId);
 
   return (
     <div 
       className={`flex items-center space-x-2 ${className}`} 
-      title={PRESENCE_LABELS[presenceState]}
+      title={PRESENCE_LABELS[presence]}
     >
       <span 
         className={`
           inline-block w-3 h-3 rounded-full 
-          ${PRESENCE_STYLES[presenceState]} 
+          ${PRESENCE_STYLES[presence]} 
           transition-colors duration-300 ease-in-out
         `}
       />
-      <span className="text-sm text-gray-700">
-        {PRESENCE_LABELS[presenceState]}
-      </span>
+      {showLabel && (
+        <span className="text-sm text-gray-700 dark:text-gray-300">
+          {PRESENCE_LABELS[presence]}
+        </span>
+      )}
     </div>
   );
 };

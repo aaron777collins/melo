@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Room, RoomEvent, Track, RemoteTrack, RemoteParticipant, LocalParticipant, Participant } from "livekit-client";
+import { Room, RoomEvent, Track, RemoteTrack, RemoteParticipant, LocalParticipant, Participant, VideoPresets } from "livekit-client";
 
 export interface VoiceChannelParticipant {
   id: string;
@@ -68,7 +68,7 @@ export function useVoiceChannel(options: UseVoiceChannelOptions = {}) {
     }
     
     // Add remote participants
-    room.remoteParticipants.forEach((participant) => {
+    room.participants.forEach((participant) => {
       participants.push(convertParticipant(participant, participant.isSpeaking));
     });
 
@@ -97,8 +97,8 @@ export function useVoiceChannel(options: UseVoiceChannelOptions = {}) {
         dynacast: true,
         publishDefaults: {
           videoSimulcastLayers: [
-            { resolution: { width: 640, height: 360 }, encoding: { maxBitrate: 300_000 } },
-            { resolution: { width: 320, height: 180 }, encoding: { maxBitrate: 100_000 } },
+            VideoPresets.h360,
+            VideoPresets.h180,
           ],
         },
       });

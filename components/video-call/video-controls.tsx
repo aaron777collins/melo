@@ -22,10 +22,9 @@ import {
   useLocalParticipant, 
   useRoomContext,
   useTracks,
-  useConnectionState,
-  ConnectionState
+  useConnectionState
 } from "@livekit/components-react";
-import { Track as LKTrack } from "livekit-client";
+import { Track as LKTrack, ConnectionState } from "livekit-client";
 
 import { ActionTooltip } from "@/components/action-tooltip";
 import {

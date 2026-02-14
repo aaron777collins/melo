@@ -16,6 +16,13 @@ import {
   supportsThumbnails
 } from './types/media';
 
+// Ensure types for added duration field
+declare module './types/media' {
+  interface MediaInfo {
+    duration?: number; // duration in seconds, added for video/audio files
+  }
+}
+
 // Re-export createMxcUrl for convenience
 export { createMxcUrl } from './types/media';
 
@@ -626,11 +633,16 @@ export async function getMediaInfo(file: File): Promise<MediaInfo> {
     }
   }
 
-  // Add duration for videos/audio (would need additional library for full support)
-  // For now, this is a placeholder for future enhancement
+  // Add duration for videos/audio 
   if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
-    // TODO: Extract media duration using a media library
-    // This would require loading a media analysis library
+    try {
+      const { getDuration } = await import('get-video-duration');
+      const duration = await getDuration(URL.createObjectURL(file));
+      info.duration = Math.round(duration); // round to whole seconds
+    } catch (error) {
+      // Non-critical - media duration couldn't be extracted
+      console.warn('Could not extract media duration:', error);
+    }
   }
 
   return info;

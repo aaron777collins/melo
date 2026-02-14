@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Edit, FileIcon, ImageIcon, VideoIcon, MusicIcon, Download, Plus, MessageSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { MessageActions } from "./message-actions";
 import { useModal } from "@/hooks/use-modal-store";
 import { useThreads } from "@/hooks/use-threads";
+import { useMatrixContext } from "@/hooks/use-matrix-context";
 
 // =============================================================================
 // Types & Interfaces
@@ -174,12 +175,56 @@ function isMessageEdited(event: MatrixEvent): boolean {
 }
 
 /**
- * Gets reactions for a message (placeholder for now)
+ * Gets reactions for a message from Matrix event relations
+ * @param event The original message event
+ * @param client Optional Matrix client to fetch relations
  */
-function getMessageReactions(event: MatrixEvent): MessageReaction[] {
-  // TODO: Implement proper reaction extraction from Matrix event
-  // This would involve checking for m.annotation relations
-  return [];
+async function getMessageReactions(event: MatrixEvent, client?: any): Promise<MessageReaction[]> {
+  if (!client) {
+    console.warn("No Matrix client available for reaction extraction");
+    return [];
+  }
+
+  try {
+    // Fetch all m.reaction annotations for this event
+    const relations = await client.getRelations(
+      event.getRoomId(),
+      event.getId(),
+      "m.annotation",
+      "m.reaction"
+    );
+
+    // Group reactions by emoji
+    const reactionMap = new Map<string, MessageReaction>();
+
+    for (const rel of relations.chunk) {
+      const reactionKey = rel.content['m.relates_to'].key;
+      const sender = rel.sender;
+
+      if (!reactionMap.has(reactionKey)) {
+        reactionMap.set(reactionKey, {
+          emoji: reactionKey,
+          count: 0,
+          userReacted: false,
+          users: []
+        });
+      }
+
+      const reaction = reactionMap.get(reactionKey)!;
+      reaction.count++;
+      reaction.users.push(sender);
+    }
+
+    // Convert map to array and mark if current user reacted
+    const currentUserId = client.getUserId();
+    return Array.from(reactionMap.values()).map(reaction => ({
+      ...reaction,
+      userReacted: reaction.users.includes(currentUserId)
+    }));
+  } catch (error) {
+    console.error("Error fetching message reactions:", error);
+    return [];
+  }
 }
 
 /**
@@ -424,15 +469,73 @@ export function ChatItem({
   const isEdited = isMessageEdited(event);
   const reactions = getMessageReactions(event);
   
-  // Handle reaction actions (placeholders for now)
+  // Require the Matrix client for reaction operations
+  const { matrixClient } = useMatrixContext();
+
+  // Open emoji picker and send reaction
   const handleAddReaction = () => {
-    // TODO: Implement reaction picker modal
-    console.log("Add reaction to message:", event.getId());
+    if (!matrixClient) {
+      console.error("Matrix client not available");
+      return;
+    }
+
+    // Open emoji picker modal 
+    onOpen("emojiPicker", {
+      onSelect: async (selectedEmoji: string) => {
+        try {
+          // Send Matrix reaction event
+          await matrixClient.sendEvent(roomId, "m.reaction", {
+            "m.relates_to": {
+              event_id: event.getId(),
+              key: selectedEmoji,
+              rel_type: "m.annotation"
+            }
+          });
+        } catch (error) {
+          console.error("Failed to send reaction:", error);
+          // TODO: Show user-friendly error toast
+        }
+      }
+    });
   };
   
-  const handleToggleReaction = (emoji: string) => {
-    // TODO: Implement reaction toggle via Matrix SDK
-    console.log("Toggle reaction:", emoji, "on message:", event.getId());
+  // Toggle (add/remove) a reaction
+  const handleToggleReaction = async (emoji: string) => {
+    if (!matrixClient) {
+      console.error("Matrix client not available");
+      return;
+    }
+
+    try {
+      // First, check if current user already reacted
+      const userReacted = reactions.some(
+        r => r.emoji === emoji && r.userReacted
+      );
+
+      if (userReacted) {
+        // Remove reaction by sending an empty string relation
+        // This is a Matrix-compliant way of removing a reaction
+        await matrixClient.sendEvent(roomId, "m.reaction", {
+          "m.relates_to": {
+            event_id: event.getId(),
+            key: emoji,
+            rel_type: "m.annotation"
+          }
+        });
+      } else {
+        // Add reaction
+        await matrixClient.sendEvent(roomId, "m.reaction", {
+          "m.relates_to": {
+            event_id: event.getId(),
+            key: emoji,
+            rel_type: "m.annotation"
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Failed to toggle reaction:", error);
+      // TODO: Show user-friendly error toast
+    }
   };
   
   return (

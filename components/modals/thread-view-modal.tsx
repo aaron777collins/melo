@@ -291,7 +291,7 @@ export function ThreadViewModal() {
                     event={originalEvent}
                     isFirstInGroup={true}
                     isCurrentUser={originalEvent.getSender() === client?.getUserId()}
-                    currentUserId={client?.getUserId()}
+                    currentUserId={client?.getUserId() ?? undefined}
                     roomId={roomId || ""}
                   />
                 </div>
@@ -315,7 +315,7 @@ export function ThreadViewModal() {
                       event={reply}
                       isFirstInGroup={index === 0 || threadReplies[index - 1]?.getSender() !== reply.getSender()}
                       isCurrentUser={reply.getSender() === client?.getUserId()}
-                      currentUserId={client?.getUserId()}
+                      currentUserId={client?.getUserId() ?? undefined}
                       roomId={roomId || ""}
                     />
                   ))}

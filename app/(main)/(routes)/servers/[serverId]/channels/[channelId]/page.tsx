@@ -83,6 +83,7 @@ export default async function ChannelIdPage({
           serverId={channel.serverId}
           type="channel"
           channelId={channel.id}
+          roomId={channelId}
         />
         {channel.type === "TEXT" && (
           <>

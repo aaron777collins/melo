@@ -122,7 +122,7 @@ export function useThreads(roomId: string, options: ThreadOptions = {}) {
   const [threadInfos, setThreadInfos] = useState<Map<string, ThreadInfo>>(new Map());
   const [loading, setLoading] = useState(false);
   
-  const currentUserId = client?.getUserId();
+  const currentUserId = client?.getUserId() ?? undefined;
   
   // =============================================================================
   // Thread Analysis
@@ -156,7 +156,7 @@ export function useThreads(roomId: string, options: ThreadOptions = {}) {
     const newThreadInfos = new Map<string, ThreadInfo>();
     
     threadRootIds.forEach(rootId => {
-      const info = extractThreadInfo(events, rootId, currentUserId);
+      const info = extractThreadInfo(events, rootId, currentUserId || undefined);
       if (info.replyCount > 0) {
         newThreadInfos.set(rootId, info);
       }
@@ -315,9 +315,3 @@ export function useThreads(roomId: string, options: ThreadOptions = {}) {
     isThreadReplyTo,
   };
 }
-
-// =============================================================================
-// Type Exports
-// =============================================================================
-
-export type { ThreadInfo, ThreadReply, ThreadOptions };

@@ -10,7 +10,8 @@ import {
   Edit, 
   Copy,
   Flag,
-  Hash
+  Hash,
+  PinOff
 } from "lucide-react";
 import { MatrixEvent } from "matrix-js-sdk";
 
@@ -24,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useModal } from "@/hooks/use-modal-store";
+import { usePins } from "@/hooks/use-pins";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -86,6 +88,7 @@ export function MessageActions({
 }: MessageActionsProps) {
   const { client } = useMatrixClient();
   const { onOpen } = useModal();
+  const { pinMessage, unpinMessage, isPinned, canPin } = usePins(roomId);
   const [isOpen, setIsOpen] = useState(false);
   
   // Check if current user is the message sender
@@ -94,6 +97,11 @@ export function MessageActions({
   // Check if current user can moderate (admin/moderator)
   // TODO: Implement proper role checking
   const canModerate = false;
+  
+  // Check pin status and permissions
+  const eventId = event.getId();
+  const messageIsPinned = eventId ? isPinned(eventId) : false;
+  const canPinMessages = canPin();
   
   // =============================================================================
   // Action Handlers
@@ -132,8 +140,26 @@ export function MessageActions({
    * Pin/unpin message
    */
   const handlePin = async () => {
-    // TODO: Implement message pinning with Matrix
-    console.log("Pin message:", event.getId());
+    try {
+      const eventId = event.getId();
+      if (!eventId) return;
+      
+      const messageIsPinned = isPinned(eventId);
+      
+      if (messageIsPinned) {
+        const success = await unpinMessage(eventId);
+        if (!success) {
+          console.error("Failed to unpin message");
+        }
+      } else {
+        const success = await pinMessage(eventId);
+        if (!success) {
+          console.error("Failed to pin message");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to pin/unpin message:", error);
+    }
     setIsOpen(false);
   };
   
@@ -273,11 +299,20 @@ export function MessageActions({
         
         <DropdownMenuContent align="end" className="w-48">
           {/* Pin Message */}
-          {(canModerate || isOwnMessage) && (
+          {canPinMessages && (
             <>
               <DropdownMenuItem onClick={handlePin}>
-                <Pin className="h-4 w-4 mr-2" />
-                Pin Message
+                {messageIsPinned ? (
+                  <>
+                    <PinOff className="h-4 w-4 mr-2" />
+                    Unpin Message
+                  </>
+                ) : (
+                  <>
+                    <Pin className="h-4 w-4 mr-2" />
+                    Pin Message
+                  </>
+                )}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </>

@@ -6,7 +6,7 @@ import { LiveKitRoom } from "@livekit/components-react";
 import { Loader2 } from "lucide-react";
 
 import { useMatrixClient } from "@/hooks/use-matrix-client";
-import { VideoCallLayout, VideoControls, ParticipantList } from "@/components/video-call";
+import { VideoCallLayout, VideoControls, ParticipantList, CallChatSidebar } from "@/components/video-call";
 
 interface MediaRoomProps {
   chatId: string;
@@ -155,16 +155,13 @@ export function MediaRoom({ chatId, video, audio }: MediaRoomProps) {
             </div>
           )}
 
-          {/* Chat sidebar (placeholder for future implementation) */}
+          {/* Chat sidebar - real-time chat during calls */}
           {showChat && (
-            <div className="w-80 bg-zinc-800 border-l border-zinc-700">
-              <div className="p-4 border-b border-zinc-700">
-                <h3 className="text-sm font-semibold text-white">Chat</h3>
-              </div>
-              <div className="flex-1 p-4 text-center text-zinc-400">
-                <p className="text-sm">Chat feature coming soon...</p>
-              </div>
-            </div>
+            <CallChatSidebar
+              roomId={chatId}
+              onClose={handleToggleChat}
+              className="w-80"
+            />
           )}
         </div>
       </div>

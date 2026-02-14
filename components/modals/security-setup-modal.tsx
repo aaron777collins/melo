@@ -120,8 +120,16 @@ export function SecuritySetupModal({ open, onClose, onComplete }: SecuritySetupM
   }, [open, loadStatus]);
 
   const handleSetupWithPhrase = useCallback(async () => {
-    if (!state.securityPhrase.trim()) {
+    const phrase = state.securityPhrase.trim();
+    
+    if (!phrase) {
       setState(prev => ({ ...prev, error: "Please enter a security phrase" }));
+      return;
+    }
+    
+    // @security: Enforce minimum phrase strength
+    if (phrase.length < 8) {
+      setState(prev => ({ ...prev, error: "Security phrase must be at least 8 characters" }));
       return;
     }
 
@@ -307,10 +315,29 @@ export function SecuritySetupModal({ open, onClose, onComplete }: SecuritySetupM
               <Alert>
                 <Shield className="h-4 w-4" />
                 <AlertDescription className="text-xs">
-                  Make sure you can remember this phrase. You&apos;ll need it to access your backup
-                  from other devices. Consider using a passphrase with multiple words.
+                  <strong>Requirements:</strong> At least 8 characters. We recommend using a passphrase 
+                  with multiple words that you can remember. You&apos;ll need this to access your backup
+                  from other devices.
                 </AlertDescription>
               </Alert>
+              
+              {state.securityPhrase.length > 0 && state.securityPhrase.length < 8 && (
+                <div className="text-xs text-amber-600">
+                  ⚠️ Too short ({state.securityPhrase.length}/8 characters minimum)
+                </div>
+              )}
+              
+              {state.securityPhrase.length >= 8 && state.securityPhrase.length < 12 && (
+                <div className="text-xs text-amber-600">
+                  ✓ Acceptable, but consider using a longer phrase for better security
+                </div>
+              )}
+              
+              {state.securityPhrase.length >= 12 && (
+                <div className="text-xs text-green-600">
+                  ✓ Good phrase length
+                </div>
+              )}
             </div>
           </div>
         );

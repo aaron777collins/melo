@@ -3,16 +3,46 @@
  *
  * Provides secure secret storage for cross-signing keys, key backup keys,
  * and other sensitive cryptographic material. Compatible with Element's 4S.
+ *
+ * @security This module handles sensitive cryptographic operations.
+ *           See SECURITY-AUDIT-REPORT.md for known issues and recommendations.
  */
 
 import { getClient } from "../client";
-import type { MatrixClient } from "matrix-js-sdk";
-// Use console for logging in this module
+import { DeviceVerification } from "matrix-js-sdk/lib/models/device";
+import {
+  generateRecoveryKey,
+  deriveRecoveryKeyFromPassphrase,
+  validateRecoveryKey,
+  type RecoveryKeyInfo,
+} from "./recovery-key";
+
+// Use secure logger that redacts sensitive data in production
+const isProduction = typeof process !== 'undefined' && process.env?.NODE_ENV === 'production';
+
 const logger = {
-  error: console.error,
-  warn: console.warn,
-  info: console.info,
-  debug: console.debug,
+  error: (...args: unknown[]) => {
+    if (!isProduction) {
+      console.error('[SecretStorage]', ...args);
+    } else {
+      console.error('[SecretStorage] Error occurred (details redacted)');
+    }
+  },
+  warn: (...args: unknown[]) => {
+    if (!isProduction) {
+      console.warn('[SecretStorage]', ...args);
+    }
+  },
+  info: (...args: unknown[]) => {
+    if (!isProduction) {
+      console.info('[SecretStorage]', ...args);
+    }
+  },
+  debug: (...args: unknown[]) => {
+    if (!isProduction) {
+      console.debug('[SecretStorage]', ...args);
+    }
+  },
 };
 
 // =============================================================================
@@ -105,7 +135,8 @@ export async function getSecretStorageStatus(): Promise<SecretStorageStatus> {
       };
     }
 
-    const secretStorageKeyId = await client.getDefaultSecretStorageKeyId();
+    // Use secretStorage property which has getDefaultKeyId()
+    const secretStorageKeyId = await client.secretStorage.getDefaultKeyId();
     const hasDefaultKey = secretStorageKeyId !== null;
     
     // Get all secret storage keys
@@ -114,9 +145,16 @@ export async function getSecretStorageStatus(): Promise<SecretStorageStatus> {
       keyIds.push(secretStorageKeyId);
     }
 
-    // Check if we have cached access to the key
-    const hasRecoveryKey = hasDefaultKey && 
-      await client.isSecretStorageReady();
+    // Check if secret storage is ready via crypto API
+    let hasRecoveryKey = false;
+    if (hasDefaultKey && typeof crypto.isSecretStorageReady === 'function') {
+      try {
+        hasRecoveryKey = await crypto.isSecretStorageReady();
+      } catch {
+        // Method may not exist in all SDK versions
+        hasRecoveryKey = false;
+      }
+    }
 
     return {
       isSetUp: hasDefaultKey,
@@ -146,7 +184,13 @@ export async function isSecretStorageReady(): Promise<boolean> {
   if (!client) return false;
 
   try {
-    return await client.isSecretStorageReady();
+    const crypto = client.getCrypto();
+    if (crypto && typeof crypto.isSecretStorageReady === 'function') {
+      return await crypto.isSecretStorageReady();
+    }
+    // Fallback: check if we have a default key
+    const keyId = await client.secretStorage.getDefaultKeyId();
+    return keyId !== null;
   } catch (error) {
     logger.error("Failed to check secret storage readiness:", error);
     return false;
@@ -202,9 +246,6 @@ export async function setupSecretStorage(
       };
     }
 
-    // For now, use a simplified approach that works with the current Matrix SDK version
-    // Note: Full 4S integration would require Matrix SDK with complete secret storage support
-    
     const userId = client.getUserId();
     if (!userId) {
       return {
@@ -213,39 +254,83 @@ export async function setupSecretStorage(
       };
     }
 
-    // Store basic secret storage marker in account data
-    await client.setAccountData("m.secret_storage.default_key", {
-      key: "haos_default_key",
-      name: "HAOS Default Key",
-      passphrase: {
-        algorithm: "m.pbkdf2",
-        iterations: 100000,
-        salt: crypto.getRandomValues(new Uint8Array(32))
+    let recoveryKeyInfo: RecoveryKeyInfo & { salt?: Uint8Array };
+    
+    // Generate or derive recovery key
+    if (securityPhrase) {
+      logger.info("Deriving recovery key from security phrase...");
+      recoveryKeyInfo = await deriveRecoveryKeyFromPassphrase(
+        securityPhrase,
+        undefined,
+        500000
+      );
+    } else if (recoveryKey) {
+      logger.info("Validating provided recovery key...");
+      const validation = validateRecoveryKey(recoveryKey);
+      if (!validation.valid || !validation.keyData) {
+        return {
+          success: false,
+          error: `Invalid recovery key: ${validation.error}`
+        };
       }
-    });
+      recoveryKeyInfo = {
+        keyData: validation.keyData,
+        encodedKey: recoveryKey,
+        displayKey: recoveryKey,
+      };
+    } else {
+      logger.info("Generating new recovery key...");
+      recoveryKeyInfo = generateRecoveryKey();
+    }
 
-    // Generate a recovery key for the user
-    const generatedKey = Array.from(crypto.getRandomValues(new Uint8Array(32)), 
-      b => b.toString(16).padStart(2, '0')).join('');
+    try {
+      // Use Matrix SDK's bootstrapSecretStorage if available (CryptoApi)
+      if (typeof crypto.bootstrapSecretStorage === 'function') {
+        logger.info("Using Matrix SDK's bootstrapSecretStorage...");
+        
+        await crypto.bootstrapSecretStorage({
+          setupNewSecretStorage: true,
+          createSecretStorageKey: async () => ({
+            privateKey: recoveryKeyInfo.keyData,
+            encodedPrivateKey: recoveryKeyInfo.encodedKey,
+          }),
+        });
+      } else {
+        // Fallback: Use secretStorage.addKey directly
+        logger.warn("CryptoApi.bootstrapSecretStorage not available, using fallback");
+        
+        const keyResult = await client.secretStorage.addKey(
+          "m.secret_storage.v1.aes-hmac-sha2",
+          {
+            key: recoveryKeyInfo.keyData,
+            name: "HAOS Recovery Key",
+            ...(securityPhrase && recoveryKeyInfo.salt ? {
+              passphrase: {
+                algorithm: "m.pbkdf2" as const,
+                iterations: 500000,
+                salt: Array.from(recoveryKeyInfo.salt).map(b => b.toString(16).padStart(2, '0')).join(''),
+                bits: 256,
+              }
+            } : {}),
+          }
+        );
+        
+        // Set as default key
+        await client.secretStorage.setDefaultKeyId(keyResult.keyId);
+      }
+    } catch (setupError) {
+      logger.error("Secret storage setup failed:", setupError);
+      return {
+        success: false,
+        error: setupError instanceof Error ? setupError.message : "Setup failed"
+      };
+    }
 
-    const recoveryKeyFormatted = [
-      generatedKey.slice(0, 4),
-      generatedKey.slice(4, 8),
-      generatedKey.slice(8, 12),
-      generatedKey.slice(12, 16),
-      generatedKey.slice(16, 20),
-      generatedKey.slice(20, 24),
-      generatedKey.slice(24, 28),
-      generatedKey.slice(28, 32),
-      generatedKey.slice(32, 36),
-      generatedKey.slice(36, 40),
-      generatedKey.slice(40, 44),
-      generatedKey.slice(44, 48),
-    ].join(' ');
-
+    logger.info("Secret storage setup completed successfully");
+    
     return {
       success: true,
-      recoveryKey: recoveryKeyFormatted,
+      recoveryKey: recoveryKeyInfo.displayKey,
     };
 
   } catch (error) {
@@ -270,8 +355,9 @@ export async function resetSecretStorage(): Promise<boolean> {
   }
 
   try {
-    // This will remove secret storage setup
-    await client.secretStorage.reset();
+    // Clear the default key ID
+    await client.secretStorage.setDefaultKeyId(null);
+    logger.info("Secret storage reset completed");
     return true;
   } catch (error) {
     logger.error("Failed to reset secret storage:", error);
@@ -305,25 +391,62 @@ export async function accessSecretStorage(
       return false;
     }
 
-    const keyId = await client.getDefaultSecretStorageKeyId();
+    const keyId = await client.secretStorage.getDefaultKeyId();
     if (!keyId) {
+      logger.warn("No default secret storage key found");
       return false;
     }
 
+    // Get key info for validation
+    const keyTuple = await client.secretStorage.getKey(keyId);
+    if (!keyTuple) {
+      logger.warn("Secret storage key not found");
+      return false;
+    }
+    
+    const [, keyInfo] = keyTuple;
+
     if (recoveryKey) {
-      // Use recovery key directly
-      const privateKey = client.keyBackupKeyFromRecoveryKey(recoveryKey);
-      await client.storeSecret("m.cross_signing.master", "", [keyId]);
-      return true;
-    } else if (securityPhrase) {
-      // Derive key from security phrase
-      const keyInfo = await client.getSecretStorageKey(keyId);
-      if (!keyInfo) {
+      // Validate and use recovery key
+      const validation = validateRecoveryKey(recoveryKey);
+      if (!validation.valid || !validation.keyData) {
+        logger.warn("Invalid recovery key provided");
         return false;
       }
-
-      const privateKey = await client.keyFromPassphrase(keyInfo, securityPhrase);
-      await client.addSecretStorageKey("m.secret_storage.key." + keyId, privateKey);
+      
+      // Check if the key matches
+      const isValid = await client.secretStorage.checkKey(validation.keyData, keyInfo);
+      if (!isValid) {
+        logger.warn("Recovery key does not match stored key");
+        return false;
+      }
+      
+      logger.info("Recovery key validated successfully");
+      return true;
+    } else if (securityPhrase) {
+      // Derive key from passphrase
+      if (!keyInfo.passphrase) {
+        logger.warn("Key was not created with a passphrase");
+        return false;
+      }
+      
+      const derivedKeyInfo = await deriveRecoveryKeyFromPassphrase(
+        securityPhrase,
+        // Convert hex salt back to Uint8Array
+        new Uint8Array(
+          keyInfo.passphrase.salt.match(/.{2}/g)?.map(b => parseInt(b, 16)) || []
+        ),
+        keyInfo.passphrase.iterations
+      );
+      
+      // Check if derived key matches
+      const isValid = await client.secretStorage.checkKey(derivedKeyInfo.keyData, keyInfo);
+      if (!isValid) {
+        logger.warn("Security phrase does not match stored key");
+        return false;
+      }
+      
+      logger.info("Security phrase validated successfully");
       return true;
     }
 
@@ -352,12 +475,14 @@ export async function storeSecret(
   }
 
   try {
-    const keyId = await client.getDefaultSecretStorageKeyId();
+    const keyId = await client.secretStorage.getDefaultKeyId();
     if (!keyId) {
+      logger.warn("No default secret storage key, cannot store secret");
       return false;
     }
 
-    await client.storeSecret(secretName, secret, [keyId]);
+    await client.secretStorage.store(secretName, secret, [keyId]);
+    logger.debug(`Secret ${secretName} stored successfully`);
     return true;
   } catch (error) {
     logger.error(`Failed to store secret ${secretName}:`, error);
@@ -379,7 +504,7 @@ export async function getSecret(secretName: string): Promise<string | null> {
   }
 
   try {
-    const secret = await client.getSecret(secretName);
+    const secret = await client.secretStorage.get(secretName);
     return secret || null;
   } catch (error) {
     logger.error(`Failed to get secret ${secretName}:`, error);
@@ -411,29 +536,33 @@ export async function shareSecretsWithDevice(deviceId: string): Promise<boolean>
       return false;
     }
 
-    // Matrix SDK handles this automatically through secret storage
-    // when devices are cross-signed. We just need to ensure
-    // the target device is verified.
-
     const userId = client.getUserId();
     if (!userId) {
       return false;
     }
 
-    const device = await crypto.getDevice(userId, deviceId);
+    // Get device info
+    const devices = await crypto.getUserDeviceInfo([userId]);
+    const userDevices = devices.get(userId);
+    const device = userDevices?.get(deviceId);
+    
     if (!device) {
+      logger.warn(`Device ${deviceId} not found`);
       return false;
     }
 
-    // If device is already verified, secrets will be shared automatically
-    const isVerified = device.isVerified();
+    // Check if device is verified
+    const isVerified = device.verified === DeviceVerification.Verified;
     
     if (isVerified) {
-      // Trigger a key sharing request
-      await crypto.requestKeyVerification(userId, [deviceId]);
+      // Request secret sharing with verified device
+      if (typeof crypto.requestDeviceVerification === 'function') {
+        await crypto.requestDeviceVerification(userId, deviceId);
+      }
       return true;
     }
 
+    logger.warn(`Device ${deviceId} is not verified, cannot share secrets`);
     return false;
   } catch (error) {
     logger.error(`Failed to share secrets with device ${deviceId}:`, error);
@@ -472,7 +601,7 @@ export async function getDevicesWithSecretAccess(): Promise<string[]> {
 
     const verifiedDevices: string[] = [];
     userDevices.forEach((device, deviceId) => {
-      if (device.isVerified()) {
+      if (device.verified === DeviceVerification.Verified) {
         verifiedDevices.push(deviceId);
       }
     });

@@ -2,6 +2,8 @@
  * Matrix Crypto Module
  *
  * Exports for end-to-end encryption functionality.
+ *
+ * @security Review SECURITY-AUDIT-REPORT.md for known issues and recommendations.
  */
 
 export {
@@ -17,6 +19,21 @@ export {
   type CryptoStoreOptions,
   type CryptoState,
 } from "./store";
+
+export {
+  // Recovery key functions
+  generateRecoveryKey,
+  createRecoveryKeyFromData,
+  validateRecoveryKey,
+  isValidRecoveryKeyFormat,
+  formatRecoveryKey,
+  unformatRecoveryKey,
+  deriveRecoveryKeyFromPassphrase,
+  encodeBase58,
+  decodeBase58,
+  // Recovery key types
+  type RecoveryKeyInfo,
+} from "./recovery-key";
 
 export {
   // Cross-signing functions

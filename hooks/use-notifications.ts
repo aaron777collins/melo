@@ -33,6 +33,7 @@ export const useNotifications = () => {
     isPermissionGranted: true,
     requestPermission: () => Promise.resolve(),
     testNotification: () => Promise.resolve(),
-    isReady: true
+    isReady: true,
+    error: null as { message: string } | null
   };
 };

@@ -427,10 +427,7 @@ function TestSection() {
 
     setTesting(true);
     try {
-      const success = await testNotification();
-      if (!success) {
-        console.warn('Test notification failed');
-      }
+      await testNotification();
     } catch (error) {
       console.error('Test notification error:', error);
     } finally {

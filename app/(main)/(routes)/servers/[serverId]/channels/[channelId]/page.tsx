@@ -90,7 +90,7 @@ export default async function ChannelIdPage({
               roomId={channelId}
               roomName={channel.name}
               type="channel"
-              currentUserId="@user:example.com" // placeholder
+              currentUserId={profile.userId}
             />
             <ChatInput
               name={channel.name}

@@ -71,6 +71,7 @@ import {
   type CryptoState,
 } from "@/lib/matrix/client";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
+import { useAutoCrossSigningBootstrap } from "@/hooks/use-cross-signing-bootstrap";
 
 // =============================================================================
 // Types
@@ -257,6 +258,13 @@ export function MatrixProvider({
   const isSyncing = syncState === SyncState.Syncing;
   const isE2EEEnabled =
     cryptoState.status === "ready" && cryptoState.isEncryptionSupported;
+
+  // =============================================================================
+  // Cross-Signing Bootstrap
+  // =============================================================================
+
+  // Automatically bootstrap cross-signing after crypto initialization
+  useAutoCrossSigningBootstrap(cryptoState, enableCrypto);
 
   // =============================================================================
   // Room Refresh

@@ -1,19 +1,26 @@
 /**
  * Singleton Matrix Client
  *
- * Provides a global Matrix client instance for real-time sync.
+ * Provides a global Matrix client instance for real-time sync with E2EE support.
  * Only one client can exist at a time - call destroyClient() before creating a new one.
  */
 
 import { createClient, MatrixClient } from "matrix-js-sdk";
 
 import type { MatrixSession } from "./types/auth";
+import {
+  getCryptoStoreConfig,
+  clearCryptoStore,
+  type CryptoStoreOptions,
+  type CryptoState,
+} from "./crypto/store";
 
 // =============================================================================
 // Singleton Instance
 // =============================================================================
 
 let client: MatrixClient | null = null;
+let cryptoState: CryptoState = { status: "uninitialized" };
 
 // =============================================================================
 // Public API
@@ -24,6 +31,8 @@ let client: MatrixClient | null = null;
  *
  * Creates the client, starts sync, and stores it as the singleton instance.
  * If a client already exists, it will be destroyed first.
+ *
+ * NOTE: This does NOT initialize crypto. Call initializeCrypto() after this.
  *
  * @param session - The Matrix session containing credentials
  * @returns The initialized MatrixClient
@@ -47,12 +56,105 @@ export function initializeClient(session: MatrixSession): MatrixClient {
   }
 
   // Create new client
+  // NOTE: deviceId is REQUIRED for E2EE to work properly
   client = createClient({
     baseUrl: session.homeserverUrl,
     accessToken: session.accessToken,
     userId: session.userId,
     deviceId: session.deviceId,
   });
+
+  // Reset crypto state for new client
+  cryptoState = { status: "uninitialized" };
+
+  return client;
+}
+
+/**
+ * Initialize Rust crypto for end-to-end encryption.
+ *
+ * This MUST be called BEFORE startClient() for E2EE to work correctly.
+ * Initializes the crypto store and prepares the client for encrypted messaging.
+ *
+ * @param options - Optional crypto store configuration
+ * @returns Promise that resolves when crypto is ready
+ * @throws Error if client is not initialized or crypto init fails
+ */
+export async function initializeCrypto(
+  options?: CryptoStoreOptions
+): Promise<void> {
+  if (!client) {
+    throw new Error(
+      "Cannot initialize crypto: client not initialized. Call initializeClient() first."
+    );
+  }
+
+  // Don't re-initialize if already done
+  if (cryptoState.status === "ready") {
+    console.log("[MatrixClient] Crypto already initialized");
+    return;
+  }
+
+  // Don't initialize if already in progress
+  if (cryptoState.status === "initializing") {
+    console.log("[MatrixClient] Crypto initialization already in progress");
+    return;
+  }
+
+  cryptoState = { status: "initializing" };
+
+  try {
+    console.log("[MatrixClient] Initializing Rust crypto...");
+
+    const config = getCryptoStoreConfig(options);
+
+    // Initialize Rust crypto with IndexedDB storage
+    await client.initRustCrypto({
+      useIndexedDB: config.useIndexedDB,
+      cryptoDatabasePrefix: config.cryptoDatabasePrefix,
+      storagePassword: config.storagePassword,
+    });
+
+    // Verify crypto is working
+    const crypto = client.getCrypto();
+    const isEncryptionSupported = crypto !== undefined;
+
+    console.log(
+      "[MatrixClient] Rust crypto initialized successfully. E2EE supported:",
+      isEncryptionSupported
+    );
+
+    cryptoState = { status: "ready", isEncryptionSupported };
+  } catch (error) {
+    console.error("[MatrixClient] Failed to initialize Rust crypto:", error);
+    cryptoState = {
+      status: "error",
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
+    throw error;
+  }
+}
+
+/**
+ * Start the Matrix client sync.
+ *
+ * Call this AFTER initializeCrypto() has completed for E2EE support.
+ *
+ * @throws Error if client is not initialized
+ */
+export function startClientSync(): void {
+  if (!client) {
+    throw new Error(
+      "Cannot start sync: client not initialized. Call initializeClient() first."
+    );
+  }
+
+  // Warn if crypto wasn't initialized
+  if (cryptoState.status !== "ready") {
+    console.warn(
+      "[MatrixClient] Starting sync without crypto. E2EE messages will not be decrypted."
+    );
+  }
 
   // Start syncing
   // Using void to handle the promise without awaiting (fire-and-forget)
@@ -63,8 +165,32 @@ export function initializeClient(session: MatrixSession): MatrixClient {
     // Include account data in sync
     includeArchivedRooms: false,
   });
+}
 
-  return client;
+/**
+ * Full initialization sequence: create client, init crypto, start sync.
+ *
+ * This is a convenience method that handles the correct initialization order.
+ *
+ * @param session - The Matrix session containing credentials
+ * @param cryptoOptions - Optional crypto store configuration
+ * @returns The initialized MatrixClient
+ * @throws Error if any step fails
+ */
+export async function initializeClientWithCrypto(
+  session: MatrixSession,
+  cryptoOptions?: CryptoStoreOptions
+): Promise<MatrixClient> {
+  // 1. Create the client
+  const newClient = initializeClient(session);
+
+  // 2. Initialize crypto (must be before startClient)
+  await initializeCrypto(cryptoOptions);
+
+  // 3. Start syncing
+  startClientSync();
+
+  return newClient;
 }
 
 /**
@@ -74,6 +200,24 @@ export function initializeClient(session: MatrixSession): MatrixClient {
  */
 export function getClient(): MatrixClient | null {
   return client;
+}
+
+/**
+ * Get the current crypto initialization state.
+ *
+ * @returns The current CryptoState
+ */
+export function getCryptoState(): CryptoState {
+  return cryptoState;
+}
+
+/**
+ * Check if crypto is ready for use.
+ *
+ * @returns true if crypto is initialized and ready
+ */
+export function isCryptoReady(): boolean {
+  return cryptoState.status === "ready";
 }
 
 /**
@@ -90,8 +234,10 @@ export function hasClient(): boolean {
  *
  * Stops sync, clears the singleton, and performs cleanup.
  * Safe to call even if no client exists.
+ *
+ * @param clearCrypto - If true, also clears the crypto store (default: false)
  */
-export function destroyClient(): void {
+export async function destroyClient(clearCrypto: boolean = false): Promise<void> {
   if (client === null) {
     return;
   }
@@ -104,9 +250,18 @@ export function destroyClient(): void {
 
   // Clear the singleton reference
   client = null;
+
+  // Reset crypto state
+  cryptoState = { status: "uninitialized" };
+
+  // Optionally clear crypto store
+  if (clearCrypto) {
+    await clearCryptoStore();
+  }
 }
 
 /**
  * Re-export MatrixClient type for consumers
  */
 export type { MatrixClient } from "matrix-js-sdk";
+export type { CryptoState } from "./crypto/store";

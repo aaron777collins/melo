@@ -37,7 +37,8 @@ export type ModalType =
   | "userProfile"
   // Threading
   | "threadView"
-  | "reportMessage";
+  | "reportMessage"
+  | "emojiPicker";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -75,6 +76,9 @@ interface ModalData {
   eventId?: string;
   /** User ID of message sender */
   senderId?: string;
+  // Emoji picker callback
+  /** Callback when emoji is selected */
+  onSelect?: (emoji: string) => void;
 }
 
 interface ModalStore {

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { MessageActions } from "./message-actions";
 import { useModal } from "@/hooks/use-modal-store";
 import { useThreads } from "@/hooks/use-threads";
-import { useMatrixContext } from "@/hooks/use-matrix-context";
+import { useMatrixClient } from "@/hooks/use-matrix-client";
 
 // =============================================================================
 // Types & Interfaces
@@ -467,10 +467,27 @@ export function ChatItem({
   const { text: content, isMarkdown } = getMessageContent(event);
   const attachment = getAttachment(event);
   const isEdited = isMessageEdited(event);
-  const reactions = getMessageReactions(event);
   
   // Require the Matrix client for reaction operations
-  const { matrixClient } = useMatrixContext();
+  const { client: matrixClient } = useMatrixClient();
+  
+  // Reactions need to be loaded asynchronously
+  const [reactions, setReactions] = useState<MessageReaction[]>([]);
+  
+  // Load reactions when component mounts or event changes
+  useEffect(() => {
+    const loadReactions = async () => {
+      if (matrixClient) {
+        try {
+          const loadedReactions = await getMessageReactions(event, matrixClient);
+          setReactions(loadedReactions);
+        } catch (error) {
+          console.error("Failed to load reactions:", error);
+        }
+      }
+    };
+    void loadReactions();
+  }, [event, matrixClient]);
 
   // Open emoji picker and send reaction
   const handleAddReaction = () => {
@@ -484,7 +501,8 @@ export function ChatItem({
       onSelect: async (selectedEmoji: string) => {
         try {
           // Send Matrix reaction event
-          await matrixClient.sendEvent(roomId, "m.reaction", {
+          // Use type assertion since m.reaction isn't in TimelineEvents but is valid
+          await matrixClient.sendEvent(roomId, "m.reaction" as any, {
             "m.relates_to": {
               event_id: event.getId(),
               key: selectedEmoji,
@@ -515,7 +533,8 @@ export function ChatItem({
       if (userReacted) {
         // Remove reaction by sending an empty string relation
         // This is a Matrix-compliant way of removing a reaction
-        await matrixClient.sendEvent(roomId, "m.reaction", {
+        // Use type assertion since m.reaction isn't in TimelineEvents but is valid
+        await matrixClient.sendEvent(roomId, "m.reaction" as any, {
           "m.relates_to": {
             event_id: event.getId(),
             key: emoji,
@@ -524,7 +543,8 @@ export function ChatItem({
         });
       } else {
         // Add reaction
-        await matrixClient.sendEvent(roomId, "m.reaction", {
+        // Use type assertion since m.reaction isn't in TimelineEvents but is valid
+        await matrixClient.sendEvent(roomId, "m.reaction" as any, {
           "m.relates_to": {
             event_id: event.getId(),
             key: emoji,

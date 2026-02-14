@@ -636,9 +636,13 @@ export async function getMediaInfo(file: File): Promise<MediaInfo> {
   // Add duration for videos/audio 
   if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
     try {
-      const { getDuration } = await import('get-video-duration');
-      const duration = await getDuration(URL.createObjectURL(file));
-      info.duration = Math.round(duration); // round to whole seconds
+      // Note: get-video-duration uses ffprobe which may not work in browser
+      // This is a server-side utility - in browser, we skip duration extraction
+      if (typeof window === 'undefined') {
+        const { getVideoDurationInSeconds } = await import('get-video-duration');
+        const duration = await getVideoDurationInSeconds(URL.createObjectURL(file));
+        info.duration = Math.round(duration); // round to whole seconds
+      }
     } catch (error) {
       // Non-critical - media duration couldn't be extracted
       console.warn('Could not extract media duration:', error);

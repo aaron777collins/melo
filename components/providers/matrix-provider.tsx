@@ -3,9 +3,9 @@
 /**
  * Matrix Client Context Provider
  *
- * Manages the Matrix client lifecycle and exposes sync state, rooms, and
- * client instance to the application. Works in conjunction with MatrixAuthProvider
- * to initialize the client when a user logs in.
+ * Manages the Matrix client lifecycle including E2EE crypto initialization.
+ * Exposes sync state, rooms, crypto state, and client instance to the application.
+ * Works in conjunction with MatrixAuthProvider to initialize the client when a user logs in.
  *
  * @example
  * ```tsx
@@ -29,7 +29,7 @@
  * import { useMatrix } from '@/components/providers/matrix-provider';
  *
  * function RoomList() {
- *   const { rooms, isReady, syncState } = useMatrix();
+ *   const { rooms, isReady, syncState, cryptoState } = useMatrix();
  *
  *   if (!isReady) return <Spinner />;
  *
@@ -54,12 +54,21 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { ClientEvent, SyncState, type Room, type MatrixClient } from "matrix-js-sdk";
+import {
+  ClientEvent,
+  SyncState,
+  type Room,
+  type MatrixClient,
+} from "matrix-js-sdk";
 
 import {
   initializeClient,
+  initializeCrypto,
+  startClientSync,
   getClient,
   destroyClient,
+  getCryptoState,
+  type CryptoState,
 } from "@/lib/matrix/client";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 
@@ -75,14 +84,20 @@ interface MatrixState {
   client: MatrixClient | null;
   /** Current sync state */
   syncState: SyncState | null;
+  /** Current crypto state */
+  cryptoState: CryptoState;
   /** List of rooms the user has joined */
   rooms: Room[];
-  /** Whether the client is ready (synced at least once) */
+  /** Whether the client is ready (crypto initialized and synced at least once) */
   isReady: boolean;
   /** Whether the client is currently syncing (after initial sync) */
   isSyncing: boolean;
+  /** Whether E2EE is available */
+  isE2EEEnabled: boolean;
   /** Sync error if any */
   syncError: Error | null;
+  /** Crypto error if any */
+  cryptoError: Error | null;
 }
 
 /**
@@ -127,7 +142,7 @@ const MatrixContext = createContext<MatrixContextValue | null>(null);
  * @example
  * ```tsx
  * function ChannelView() {
- *   const { client, rooms, isReady, syncState } = useMatrix();
+ *   const { client, rooms, isReady, syncState, cryptoState } = useMatrix();
  *
  *   if (!isReady) {
  *     return <div>Syncing with server...</div>;
@@ -137,6 +152,7 @@ const MatrixContext = createContext<MatrixContextValue | null>(null);
  *     <div>
  *       <p>Sync state: {syncState}</p>
  *       <p>Rooms: {rooms.length}</p>
+ *       <p>E2EE: {cryptoState.status === 'ready' ? 'Enabled' : 'Disabled'}</p>
  *     </div>
  *   );
  * }
@@ -166,11 +182,23 @@ interface MatrixProviderProps {
    * Callback when sync state changes
    * Useful for logging or analytics
    */
-  onSyncStateChange?: (state: SyncState | null, prevState: SyncState | null) => void;
+  onSyncStateChange?: (
+    state: SyncState | null,
+    prevState: SyncState | null
+  ) => void;
   /**
    * Callback when rooms list updates
    */
   onRoomsUpdate?: (rooms: Room[]) => void;
+  /**
+   * Callback when crypto state changes
+   */
+  onCryptoStateChange?: (state: CryptoState) => void;
+  /**
+   * Whether to initialize crypto (default: true)
+   * Set to false to disable E2EE (not recommended)
+   */
+  enableCrypto?: boolean;
 }
 
 // =============================================================================
@@ -181,7 +209,7 @@ interface MatrixProviderProps {
  * Matrix Client Provider
  *
  * Wraps the application with Matrix client context.
- * Automatically initializes client when user logs in via MatrixAuthProvider.
+ * Automatically initializes client with E2EE when user logs in via MatrixAuthProvider.
  * Must be placed inside MatrixAuthProvider.
  *
  * @param props - Provider props
@@ -191,15 +219,21 @@ export function MatrixProvider({
   children,
   onSyncStateChange,
   onRoomsUpdate,
+  onCryptoStateChange,
+  enableCrypto = true,
 }: MatrixProviderProps): JSX.Element {
   // Get auth state from parent provider
-  const { session, user } = useMatrixAuth();
+  const { session } = useMatrixAuth();
 
   // State
   const [client, setClient] = useState<MatrixClient | null>(null);
   const [syncState, setSyncState] = useState<SyncState | null>(null);
+  const [cryptoState, setCryptoState] = useState<CryptoState>({
+    status: "uninitialized",
+  });
   const [rooms, setRooms] = useState<Room[]>([]);
   const [syncError, setSyncError] = useState<Error | null>(null);
+  const [cryptoError, setCryptoError] = useState<Error | null>(null);
 
   // Track previous sync state for callbacks
   const prevSyncStateRef = useRef<SyncState | null>(null);
@@ -207,12 +241,22 @@ export function MatrixProvider({
   // Track if we've initialized for this session
   const sessionIdRef = useRef<string | null>(null);
 
+  // Track initialization in progress
+  const initializingRef = useRef(false);
+
   // =============================================================================
   // Derived State
   // =============================================================================
 
-  const isReady = syncState === SyncState.Prepared || syncState === SyncState.Syncing;
+  // isReady means both crypto is ready (or disabled) AND sync has completed
+  const isCryptoReadyOrDisabled =
+    !enableCrypto || cryptoState.status === "ready";
+  const isSyncReady =
+    syncState === SyncState.Prepared || syncState === SyncState.Syncing;
+  const isReady = isCryptoReadyOrDisabled && isSyncReady;
   const isSyncing = syncState === SyncState.Syncing;
+  const isE2EEEnabled =
+    cryptoState.status === "ready" && cryptoState.isEncryptionSupported;
 
   // =============================================================================
   // Room Refresh
@@ -242,7 +286,11 @@ export function MatrixProvider({
   // =============================================================================
 
   const handleSync = useCallback(
-    (state: SyncState, prevState: SyncState | null, data?: { error?: Error }) => {
+    (
+      state: SyncState,
+      prevState: SyncState | null,
+      data?: { error?: Error }
+    ) => {
       // Update sync state
       setSyncState(state);
 
@@ -260,10 +308,7 @@ export function MatrixProvider({
       }
 
       // Refresh rooms on successful sync states
-      if (
-        state === SyncState.Prepared ||
-        state === SyncState.Syncing
-      ) {
+      if (state === SyncState.Prepared || state === SyncState.Syncing) {
         refreshRooms();
       }
     },
@@ -278,11 +323,13 @@ export function MatrixProvider({
     // No session = destroy client if exists
     if (!session) {
       if (client) {
-        destroyClient();
+        void destroyClient();
         setClient(null);
         setSyncState(null);
+        setCryptoState({ status: "uninitialized" });
         setRooms([]);
         setSyncError(null);
+        setCryptoError(null);
         sessionIdRef.current = null;
         prevSyncStateRef.current = null;
       }
@@ -294,23 +341,67 @@ export function MatrixProvider({
       return;
     }
 
-    // Initialize new client
-    try {
-      const newClient = initializeClient(session);
-      setClient(newClient);
-      sessionIdRef.current = session.sessionId;
-
-      // Set up sync listener
-      newClient.on(ClientEvent.Sync, handleSync);
-
-      // Initial rooms fetch (may be empty before first sync)
-      const initialRooms = newClient.getRooms();
-      setRooms(initialRooms);
-
-    } catch (error) {
-      console.error("[MatrixProvider] Failed to initialize client:", error);
-      setSyncError(error instanceof Error ? error : new Error("Failed to initialize client"));
+    // Already initializing
+    if (initializingRef.current) {
+      return;
     }
+
+    // Initialize new client with crypto
+    const initialize = async () => {
+      initializingRef.current = true;
+
+      try {
+        // Step 1: Create the client
+        const newClient = initializeClient(session);
+        setClient(newClient);
+        sessionIdRef.current = session.sessionId;
+
+        // Step 2: Initialize crypto if enabled
+        if (enableCrypto) {
+          setCryptoState({ status: "initializing" });
+          onCryptoStateChange?.({ status: "initializing" });
+
+          try {
+            await initializeCrypto();
+
+            const newCryptoState = getCryptoState();
+            setCryptoState(newCryptoState);
+            onCryptoStateChange?.(newCryptoState);
+          } catch (error) {
+            console.error("[MatrixProvider] Failed to initialize crypto:", error);
+            const errorState: CryptoState = {
+              status: "error",
+              error: error instanceof Error ? error : new Error(String(error)),
+            };
+            setCryptoState(errorState);
+            setCryptoError(
+              error instanceof Error ? error : new Error(String(error))
+            );
+            onCryptoStateChange?.(errorState);
+            // Continue without crypto - degraded mode
+          }
+        }
+
+        // Step 3: Start syncing
+        startClientSync();
+
+        // Set up sync listener
+        newClient.on(ClientEvent.Sync, handleSync);
+
+        // Initial rooms fetch (may be empty before first sync)
+        const initialRooms = newClient.getRooms();
+        setRooms(initialRooms);
+      } catch (error) {
+        console.error("[MatrixProvider] Failed to initialize client:", error);
+        setSyncError(
+          error instanceof Error ? error : new Error("Failed to initialize client")
+        );
+      } finally {
+        initializingRef.current = false;
+      }
+    };
+
+    void initialize();
 
     // Cleanup on unmount or session change
     return () => {
@@ -319,7 +410,7 @@ export function MatrixProvider({
         currentClient.off(ClientEvent.Sync, handleSync);
       }
     };
-  }, [session, client, handleSync]);
+  }, [session, client, handleSync, enableCrypto, onCryptoStateChange]);
 
   // =============================================================================
   // Room Events (Join/Leave/Update)
@@ -355,21 +446,34 @@ export function MatrixProvider({
       // State
       client,
       syncState,
+      cryptoState,
       rooms,
       isReady,
       isSyncing,
+      isE2EEEnabled,
       syncError,
+      cryptoError,
       // Actions
       getRoom,
       refreshRooms,
     }),
-    [client, syncState, rooms, isReady, isSyncing, syncError, getRoom, refreshRooms]
+    [
+      client,
+      syncState,
+      cryptoState,
+      rooms,
+      isReady,
+      isSyncing,
+      isE2EEEnabled,
+      syncError,
+      cryptoError,
+      getRoom,
+      refreshRooms,
+    ]
   );
 
   return (
-    <MatrixContext.Provider value={value}>
-      {children}
-    </MatrixContext.Provider>
+    <MatrixContext.Provider value={value}>{children}</MatrixContext.Provider>
   );
 }
 
@@ -378,4 +482,4 @@ export function MatrixProvider({
 // =============================================================================
 
 export { SyncState };
-export type { MatrixState, MatrixActions, MatrixContextValue };
+export type { MatrixState, MatrixActions, MatrixContextValue, CryptoState };

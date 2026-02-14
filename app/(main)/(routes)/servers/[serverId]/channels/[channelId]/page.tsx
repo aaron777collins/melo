@@ -93,9 +93,13 @@ export default async function ChannelIdPage({
               currentUserId="@user:example.com" // placeholder
             />
             <ChatInput
-              roomId={channelId}
               name={channel.name}
               type="channel"
+              apiUrl="/api/socket/messages"
+              query={{
+                channelId,
+                serverId
+              }}
             />
           </>
         )}

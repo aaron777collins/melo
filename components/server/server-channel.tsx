@@ -10,8 +10,11 @@ import { ModalType, useModal } from "@/hooks/use-modal-store";
 
 // Matrix types
 import { SpaceChannel, ChannelType } from "@/lib/matrix/types/space";
-import { MemberRole } from "../../apps/web/services/matrix-member";
-import { MatrixRoom } from "../../apps/web/services/matrix-room";
+// TODO: Migrate from apps/web-enhanced-components
+// import { MemberRole } from "../../apps/web/services/matrix-member";
+// import { MatrixRoom } from "../../apps/web/services/matrix-room";
+type MemberRole = 'owner' | 'admin' | 'moderator' | 'member' | 'guest' | 'restricted'; // Temporary stub
+type MatrixRoom = any; // Temporary stub
 import { useRoom } from "@/hooks/use-room";
 
 interface ServerChannelProps {

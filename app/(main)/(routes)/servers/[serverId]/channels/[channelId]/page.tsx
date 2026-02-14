@@ -2,7 +2,7 @@ import React from "react";
 import { redirect } from "next/navigation";
 
 import { ChatHeader } from "@/components/chat/chat-header";
-import { ChatInput } from "@/apps/web/components/chat/chat-input";
+import { ChatInput } from "@/components/chat/chat-input";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatLayout } from "@/components/chat/chat-layout";
 import { MediaRoom } from "@/components/media-room";

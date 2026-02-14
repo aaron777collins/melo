@@ -53,10 +53,11 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import FileUpload from "@/apps/web/components/file-upload";
+// TODO: Migrate from apps/web-enhanced-components
+// import FileUpload from "@/apps/web/components/file-upload";
+// import { getSpace, updateSpace, type MatrixSpace, type SpaceJoinRule } from "@/apps/web/services/matrix-space";
+// import { getMembers } from "@/apps/web/services/matrix-member";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
-import { getSpace, updateSpace, type MatrixSpace, type SpaceJoinRule } from "@/apps/web/services/matrix-space";
-import { getMembers } from "@/apps/web/services/matrix-member";
 import { getSpaceInitials } from "@/lib/matrix/types/space";
 
 // =============================================================================

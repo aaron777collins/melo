@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { redirectToSignIn } from "@/lib/auth";
 import { currentProfile } from "@/lib/current-profile";
 import { db } from "@/lib/db";
 
@@ -13,7 +12,7 @@ interface ServerIdPageProps {
 export default async function ServerIdPage({ params }: ServerIdPageProps) {
   const profile = await currentProfile();
 
-  if (!profile) return redirectToSignIn();
+  if (!profile) return redirect("/sign-in");
 
   const server = await db.server.findUnique({
     where: {

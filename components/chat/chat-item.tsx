@@ -10,7 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import MessageActions from "../../apps/web/components/chat/message-actions";
+// TODO: Migrate from apps/web-enhanced-components
+// import MessageActions from "../../apps/web/components/chat/message-actions";
 import { useModal } from "@/hooks/use-modal-store";
 
 // =============================================================================
@@ -585,8 +586,8 @@ export function ChatItem({
         />
       </div>
 
-      {/* Message Actions */}
-      <MessageActions
+      {/* TODO: Restore MessageActions after apps/web migration */}
+      {/* <MessageActions
         event={event}
         roomId={roomId}
         show={showActions}
@@ -597,7 +598,7 @@ export function ChatItem({
           // Handle reaction via existing handler
           handleAddReaction();
         }}
-      />
+      /> */}
     </div>
   );
 }

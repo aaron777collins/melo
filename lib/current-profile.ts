@@ -1,18 +1,18 @@
-import { auth } from "@/lib/auth";
+import { validateCurrentSession } from "@/lib/matrix/actions/auth";
 import { db } from "@/lib/db";
 
 /**
- * Get the current user's profile from the database
- * 
- * TODO: Use Matrix session for authentication
+ * Get the current user's profile from the database using Matrix authentication
  */
 export const currentProfile = async () => {
-  const { userId } = auth();
+  const result = await validateCurrentSession();
 
-  if (!userId) return null;
+  if (!result.success || !result.data) return null;
+
+  const { user } = result.data;
 
   const profile = await db.profile.findUnique({
-    where: { userId }
+    where: { userId: user.userId }
   });
 
   return profile;

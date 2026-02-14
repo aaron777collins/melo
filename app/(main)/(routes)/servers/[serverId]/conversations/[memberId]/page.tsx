@@ -1,7 +1,6 @@
 import React from "react";
 import { redirect } from "next/navigation";
 
-import { redirectToSignIn } from "@/lib/auth";
 import { currentProfile } from "@/lib/current-profile";
 import { db } from "@/lib/db";
 import { getOrCreateConversation } from "@/lib/conversation";
@@ -26,7 +25,7 @@ export default async function MemberIdPage({
 }: MemberIdPageProps) {
   const profile = await currentProfile();
 
-  if (!profile) return redirectToSignIn();
+  if (!profile) return redirect("/sign-in");
 
   const currentMember = await db.member.findFirst({
     where: {

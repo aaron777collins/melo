@@ -34,7 +34,10 @@ export type ModalType =
   // Pinned Messages
   | "pinnedMessages"
   // User Profile
-  | "userProfile";
+  | "userProfile"
+  // Threading
+  | "threadView"
+  | "reportMessage";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -62,6 +65,16 @@ interface ModalData {
   userId?: string;
   /** Optional space/server context for role display */
   spaceId?: string;
+  // Thread functionality
+  /** Original event ID that started the thread */
+  originalEventId?: string;
+  /** Thread ID (for existing threads) */
+  threadId?: string;
+  // Message reporting
+  /** Event ID of message to report */
+  eventId?: string;
+  /** User ID of message sender */
+  senderId?: string;
 }
 
 interface ModalStore {

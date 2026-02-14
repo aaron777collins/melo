@@ -1,12 +1,17 @@
 "use client";
 
-// Temporary stub for modal provider to get build working
-// TODO: Restore full implementation from components-needing-migration/modal-provider.tsx
-// after apps/web integration is complete
-
 import React, { useEffect, useState } from "react";
 
-export const ModalProvider = () => {
+import { EditServerModal } from "@/components/modals/edit-server-modal";
+import { LeaveServerModal } from "@/components/modals/leave-server-modal";
+import { DeleteServerModal } from "@/components/modals/delete-server-modal";
+import { DeleteChannelModal } from "@/components/modals/delete-channel-modal";
+import { EditChannelModal } from "@/components/modals/edit-channel-modal";
+import { InitialModal } from "@/components/modals/initial-modal";
+import { ThreadViewModal } from "@/components/modals/thread-view-modal";
+import { ReportMessageModal } from "@/components/modals/report-message-modal";
+
+export function ModalProvider() {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -19,7 +24,15 @@ export const ModalProvider = () => {
 
   return (
     <>
-      {/* TODO: Restore all modal components after migration */}
+      <EditServerModal />
+      <LeaveServerModal />
+      <DeleteServerModal />
+      <DeleteChannelModal />
+      <EditChannelModal />
+      <InitialModal />
+      <ThreadViewModal />
+      <ReportMessageModal />
+      {/* TODO: Add more modals as they're created */}
     </>
   );
-};
+}

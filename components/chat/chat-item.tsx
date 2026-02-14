@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { Edit, FileIcon, ImageIcon, VideoIcon, MusicIcon, Download, Plus } from "lucide-react";
+import { Edit, FileIcon, ImageIcon, VideoIcon, MusicIcon, Download, Plus, MessageSquare } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { MatrixEvent } from "matrix-js-sdk";
 
@@ -10,9 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-// TODO: Migrate from apps/web-enhanced-components
-// import MessageActions from "../../apps/web/components/chat/message-actions";
+import { MessageActions } from "./message-actions";
 import { useModal } from "@/hooks/use-modal-store";
+import { useThreads } from "@/hooks/use-threads";
 
 // =============================================================================
 // Types & Interfaces
@@ -412,6 +412,10 @@ export function ChatItem({
   const [showReactions, setShowReactions] = useState(false);
   const [showActions, setShowActions] = useState(false);
   
+  // Thread functionality
+  const { getThreadInfo, hasThread } = useThreads(roomId);
+  const threadInfo = getThreadInfo(event.getId() || "");
+  
   const timestamp = new Date(event.getTs());
   const displayName = getDisplayName(event);
   const avatarUrl = getAvatarUrl(event);
@@ -584,10 +588,31 @@ export function ChatItem({
           onAddReaction={handleAddReaction}
           onToggleReaction={handleToggleReaction}
         />
+        
+        {/* Thread Indicator */}
+        {threadInfo && threadInfo.replyCount > 0 && (
+          <div className="mt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+              onClick={() => onOpen("threadView", { 
+                originalEventId: event.getId()!, 
+                roomId 
+              })}
+            >
+              <MessageSquare className="h-3 w-3 mr-1" />
+              {threadInfo.replyCount} {threadInfo.replyCount === 1 ? 'reply' : 'replies'}
+              {threadInfo.userParticipated && (
+                <span className="ml-1 text-xs">•</span>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* TODO: Restore MessageActions after apps/web migration */}
-      {/* <MessageActions
+      {/* Message Actions */}
+      <MessageActions
         event={event}
         roomId={roomId}
         show={showActions}
@@ -598,7 +623,7 @@ export function ChatItem({
           // Handle reaction via existing handler
           handleAddReaction();
         }}
-      /> */}
+      />
     </div>
   );
 }

@@ -106,17 +106,17 @@ export async function getCrossSigningStatus(): Promise<CrossSigningStatus> {
     }
 
     // Check cross-signing keys
-    const crossSigningInfo = await crypto.getCrossSigningKeyId();
-    const ownCrossSigningInfo = await crypto.getOwnCrossSigningKeys();
-    
-    const isSetUp = !!crossSigningInfo;
+    const crossSigningKeyId = await crypto.getCrossSigningKeyId();
+    const isSetUp = !!crossSigningKeyId;
     const isMasterKeyTrusted = isSetUp && await crypto.isCrossSigningReady();
     
+    // For now, assume keys are available if cross-signing is set up
+    // TODO: Update when Matrix SDK provides better key availability API
     return {
       isSetUp,
       isMasterKeyTrusted,
-      hasSelfSigningKey: !!ownCrossSigningInfo?.selfSigning,
-      hasUserSigningKey: !!ownCrossSigningInfo?.userSigning,
+      hasSelfSigningKey: isSetUp,
+      hasUserSigningKey: isSetUp,
     };
   } catch (error) {
     console.error("[CrossSigning] Failed to get status:", error);

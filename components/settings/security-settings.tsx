@@ -37,6 +37,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+// Note: Using simple console logging instead of toast notifications
 
 import {
   getCrossSigningStatus,
@@ -46,7 +47,15 @@ import {
   type CrossSigningStatus,
   type CrossSigningBootstrapResult
 } from "@/lib/matrix/crypto/cross-signing";
+import {
+  getSecretStorageStatus,
+  isSecretStorageReady,
+  setupSecretStorage,
+  resetSecretStorage,
+  type SecretStorageStatus,
+} from "@/lib/matrix/crypto/secrets";
 import { getCryptoState, isCryptoReady } from "@/lib/matrix/client";
+import { SecuritySetupModal } from "@/components/modals/security-setup-modal";
 
 // =============================================================================
 // Types
@@ -589,6 +598,11 @@ export function SecuritySettings({ className }: SecuritySettingsProps) {
 
       <Separator />
 
+      {/* Secret Storage */}
+      <SecretStorageCard />
+
+      <Separator />
+
       {/* Additional security info */}
       <Card>
         <CardHeader>
@@ -614,6 +628,223 @@ export function SecuritySettings({ className }: SecuritySettingsProps) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/**
+ * Secret Storage (4S) management card
+ */
+function SecretStorageCard() {
+  const [status, setStatus] = useState<SecretStorageStatus | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const loadStatus = useCallback(async () => {
+    setLoading(true);
+    try {
+      const currentStatus = await getSecretStorageStatus();
+      setStatus(currentStatus);
+    } catch (error) {
+      console.error("Failed to load secret storage status:", error);
+      setStatus({
+        isSetUp: false,
+        hasDefaultKey: false,
+        hasRecoveryKey: false,
+        keyIds: [],
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStatus();
+  }, [loadStatus]);
+
+  const handleReset = useCallback(async () => {
+    if (!confirm("Are you sure you want to reset secret storage? This will remove your secure backup and you may lose access to encrypted messages.")) {
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const success = await resetSecretStorage();
+      if (success) {
+        await loadStatus();
+        console.log("Secret Storage Reset: Your secure backup has been reset");
+      } else {
+        console.error("Reset Failed: Failed to reset secret storage");
+      }
+    } catch (error) {
+      console.error("Reset Failed:", error instanceof Error ? error.message : "Unknown error");
+    } finally {
+      setResetting(false);
+    }
+  }, [loadStatus]);
+
+  const handleSetupComplete = useCallback(() => {
+    loadStatus();
+    console.log("Setup Complete: Your secure backup is now active");
+  }, [loadStatus]);
+
+  const getStatusIcon = () => {
+    if (loading) {
+      return <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />;
+    }
+    
+    if (status?.error) {
+      return <ShieldAlert className="h-5 w-5 text-destructive" />;
+    }
+    
+    if (status?.isSetUp && status?.hasRecoveryKey) {
+      return <ShieldCheck className="h-5 w-5 text-green-600" />;
+    }
+    
+    if (status?.isSetUp) {
+      return <Shield className="h-5 w-5 text-amber-600" />;
+    }
+    
+    return <ShieldOff className="h-5 w-5 text-muted-foreground" />;
+  };
+
+  const getStatusText = () => {
+    if (loading) return "Loading...";
+    if (status?.error) return "Error";
+    if (status?.isSetUp && status?.hasRecoveryKey) return "Active";
+    if (status?.isSetUp) return "Needs Access";
+    return "Not Set Up";
+  };
+
+  const getStatusDescription = () => {
+    if (status?.error) {
+      return `Error: ${status.error}`;
+    }
+    
+    if (status?.isSetUp && status?.hasRecoveryKey) {
+      return "Secure backup is active and protecting your encrypted messages.";
+    }
+    
+    if (status?.isSetUp) {
+      return "Secure backup is set up but you need to enter your recovery key or security phrase.";
+    }
+    
+    return "Secure backup protects your encrypted messages and lets you access them from any device.";
+  };
+
+  const getStatusColor = () => {
+    if (status?.error) {
+      return "border-red-200 bg-red-50";
+    }
+    
+    if (status?.isSetUp && status?.hasRecoveryKey) {
+      return "border-green-200 bg-green-50";
+    }
+    
+    if (status?.isSetUp) {
+      return "border-amber-200 bg-amber-50";
+    }
+    
+    return "border-gray-200 bg-gray-50";
+  };
+
+  return (
+    <>
+      <Card className={getStatusColor()}>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {getStatusIcon()}
+              <CardTitle className="text-lg">Secure Backup</CardTitle>
+              <Badge variant={status?.isSetUp && status?.hasRecoveryKey ? "default" : "secondary"}>
+                {getStatusText()}
+              </Badge>
+            </div>
+            <Button
+              onClick={() => setShowSetupModal(true)}
+              variant={status?.isSetUp ? "outline" : "default"}
+              size="sm"
+              disabled={loading}
+            >
+              {status?.isSetUp ? (
+                <>
+                  <Key className="h-4 w-4 mr-2" />
+                  Manage Backup
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4 mr-2" />
+                  Set Up Backup
+                </>
+              )}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            {getStatusDescription()}
+          </p>
+          
+          {status && (
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span>Secret Storage Set Up:</span>
+                <Badge variant={status.isSetUp ? "default" : "secondary"} className="text-xs">
+                  {status.isSetUp ? "Yes" : "No"}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span>Recovery Key Access:</span>
+                <Badge variant={status.hasRecoveryKey ? "default" : "secondary"} className="text-xs">
+                  {status.hasRecoveryKey ? "Available" : "Needed"}
+                </Badge>
+              </div>
+              
+              {status.keyIds.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>Storage Keys:</span>
+                  <Badge variant="outline" className="text-xs">
+                    {status.keyIds.length} key{status.keyIds.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          )}
+
+          {status?.isSetUp && (
+            <div className="mt-4 pt-4 border-t">
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                size="sm"
+                disabled={resetting}
+                className="text-destructive hover:text-destructive"
+              >
+                {resetting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Resetting...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reset Backup
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <SecuritySetupModal
+        open={showSetupModal}
+        onClose={() => setShowSetupModal(false)}
+        onComplete={handleSetupComplete}
+      />
+    </>
   );
 }
 

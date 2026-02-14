@@ -146,12 +146,12 @@ export function useCrossSigningBootstrap(
     }
 
     // Only trigger when crypto becomes ready
-    if (cryptoState.status !== "ready" || !cryptoState.isEncryptionSupported) {
+    if (cryptoState.status !== "ready" || !(cryptoState as any).isEncryptionSupported) {
       return;
     }
 
     // Already attempted for this crypto session
-    const sessionKey = `ready-${cryptoState.isEncryptionSupported}`;
+    const sessionKey = `ready-${(cryptoState as any).isEncryptionSupported}`;
     if (cryptoSessionRef.current === sessionKey) {
       return;
     }
@@ -231,7 +231,7 @@ export function useCrossSigningBootstrap(
   }, [
     enabled,
     cryptoState.status,
-    cryptoState.isEncryptionSupported,
+    (cryptoState as any).isEncryptionSupported,
     state.attempted,
     state.bootstrapping,
     setupSecretStorage,

@@ -35,3 +35,21 @@ export {
   type CrossSigningBootstrapOptions,
   type CrossSigningBootstrapResult,
 } from "./cross-signing";
+
+export {
+  // Secret storage functions
+  getSecretStorageStatus,
+  isSecretStorageReady,
+  setupSecretStorage,
+  resetSecretStorage,
+  accessSecretStorage,
+  storeSecret,
+  getSecret,
+  shareSecretsWithDevice,
+  getDevicesWithSecretAccess,
+  // Secret storage types
+  type SecretStorageStatus,
+  type SecretStorageSetupOptions,
+  type SecretStorageSetupResult,
+  type SecretAccessOptions,
+} from "./secrets";

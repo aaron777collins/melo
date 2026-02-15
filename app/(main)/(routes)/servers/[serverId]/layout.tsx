@@ -1,9 +1,8 @@
 import React from "react";
 import { redirect } from "next/navigation";
 
-import { currentProfile } from "@/lib/current-profile";
-import { db } from "@/lib/db";
 import { ServerSidebar } from "@/components/server/server-sidebar";
+import { getSessionCookie } from "@/lib/matrix/cookies";
 
 export default async function ServerIdLayout({
   children,
@@ -12,27 +11,20 @@ export default async function ServerIdLayout({
   children: React.ReactNode;
   params: { serverId: string };
 }) {
-  const profile = await currentProfile();
-
-  if (!profile) return redirect("/sign-in");
-
-  const server = await db.server.findUnique({
-    where: {
-      id: params.serverId,
-      members: {
-        some: {
-          profileId: profile.id
-        }
-      }
-    }
-  });
-
-  if (!server) return redirect("/");
+  // Get session from cookies (properly decoded)
+  const session = await getSessionCookie();
+  
+  if (!session?.accessToken) {
+    return redirect("/sign-in");
+  }
+  
+  // Decode the Matrix space ID
+  const spaceId = decodeURIComponent(params.serverId);
 
   return (
     <div className="h-full">
       <div className="hidden md:flex h-full w-60 z-20 flex-col fixed inset-y-0">
-        <ServerSidebar serverId={params.serverId} />
+        <ServerSidebar serverId={spaceId} />
       </div>
       <main className="h-full md:pl-60">{children}</main>
     </div>

@@ -3,151 +3,103 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
+// =============================================================================
+// HAOS Database Schema
+// 
+// Matrix is the source of truth for:
+// - Users (Matrix accounts)
+// - Servers (Matrix spaces)
+// - Channels (Matrix rooms)
+// - Messages (Matrix events)
+//
+// PostgreSQL stores:
+// - User profiles/settings (HAOS-specific preferences)
+// - Session cache (for performance)
+// - Future: search index, analytics, custom features
+// =============================================================================
+
+/// User profile with HAOS-specific settings
+/// Links to Matrix user via matrixUserId
 model Profile {
-  id       String @id @default(uuid())
-  userId   String @unique
-  name     String
-  imageUrl String @db.Text
-  email    String @db.Text
-
-  servers  Server[]
-  members  Member[]
-  channels Channel[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String  @id @default(uuid())
+  matrixUserId String  @unique // e.g., @alice:example.com
+  displayName  String?
+  avatarUrl    String? // mxc:// URL from Matrix
+  email        String?
+  
+  // HAOS-specific preferences
+  settings     Json?   // User preferences as JSON
+  theme        String  @default("dark")
+  locale       String  @default("en")
+  
+  // Cached Matrix session (for faster rehydration)
+  cachedSession Json?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relations
+  serverSettings ServerSettings[]
 }
 
-model Server {
-  id         String @id @default(uuid())
-  name       String
-  imageUrl   String @db.Text
-  inviteCode String @unique
-
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  members  Member[]
-  channels Channel[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+/// Per-server settings for a user
+/// Stores things like notification preferences per space
+model ServerSettings {
+  id            String   @id @default(uuid())
+  profileId     String
+  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  matrixSpaceId String   // Matrix space room ID
+  
+  // Settings
+  notifications String   @default("all") // all, mentions, none
+  muted         Boolean  @default(false)
+  collapsed     Boolean  @default(false) // UI state
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([profileId, matrixSpaceId])
   @@index([profileId])
+  @@index([matrixSpaceId])
 }
 
-enum MemberRole {
-  ADMIN
-  MODERATOR
-  GUEST
+/// Invite codes for servers (HAOS feature)
+/// Matrix has its own invite system, but we can add custom codes
+model InviteCode {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  matrixSpaceId String   // Matrix space this invite is for
+  
+  createdBy     String   // Matrix user ID who created it
+  maxUses       Int?     // null = unlimited
+  uses          Int      @default(0)
+  expiresAt     DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([matrixSpaceId])
+  @@index([code])
 }
 
-model Member {
-  id   String     @id @default(uuid())
-  role MemberRole @default(GUEST)
-
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-
-  messages       Message[]
-  directMessages DirectMessage[]
-
-  conversationsInitiated Conversation[] @relation("MemberOne")
-  conversationsReceived  Conversation[] @relation("MemberTwo")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([profileId])
-  @@index([serverId])
-}
-
-enum ChannelType {
-  TEXT
-  AUDIO
-  VIDEO
-}
-
-model Channel {
-  id   String      @id @default(uuid())
-  name String
-  type ChannelType @default(TEXT)
-
-  profileId String
-  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  serverId String
-  server   Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
-
-  messages Message[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([profileId])
-  @@index([serverId])
-}
-
-model Message {
-  id      String @id @default(uuid())
-  content String @db.Text
-
-  fileUrl String? @db.Text
-
-  memberId String
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  channelId String
-  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
-
-  deleted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([channelId])
-  @@index([memberId])
-}
-
-model Conversation {
-  id String @id @default(uuid())
-
-  memberOneId String
-  memberOne   Member @relation("MemberOne", fields: [memberOneId], references: [id], onDelete: Cascade)
-
-  memberTwoId String
-  memberTwo   Member @relation("MemberTwo", fields: [memberTwoId], references: [id], onDelete: Cascade)
-
-  directMessages DirectMessage[]
-
-  @@unique([memberOneId, memberTwoId])
-  @@index([memberTwoId])
-}
-
-model DirectMessage {
-  id      String  @id @default(uuid())
-  content String  @db.Text
-  fileUrl String? @db.Text
-
-  memberId String
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  deleted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([memberId])
-  @@index([conversationId])
+/// Audit log for security/compliance
+model AuditLog {
+  id            String   @id @default(uuid())
+  action        String   // e.g., "server.create", "member.kick", "settings.update"
+  actorId       String   // Matrix user ID
+  targetType    String?  // "user", "server", "channel"
+  targetId      String?  // Matrix ID of target
+  metadata      Json?    // Additional context
+  ipAddress     String?
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
 }

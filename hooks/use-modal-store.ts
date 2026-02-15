@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Channel, ChannelType, Server } from "@prisma/client";
+import { Channel, ChannelType, Server } from "@/lib/haos-types";
 import { MatrixSpace, SpaceChannel, ChannelType as MatrixChannelType } from "@/lib/matrix/types/space";
 
 export type ModalType =

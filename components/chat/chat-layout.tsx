@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Member, Profile } from "@prisma/client";
+import { Member, Profile } from "@/lib/haos-types";
 import { Users, X } from "lucide-react";
 
 import { MemberSidebar } from "@/components/chat/member-sidebar";

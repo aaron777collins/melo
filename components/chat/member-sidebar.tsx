@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Member, Profile } from "@prisma/client";
+import { Member, Profile } from "@/lib/haos-types";
 import { Crown, ShieldAlert, ShieldCheck } from "lucide-react";
 
 import { UserAvatar } from "@/components/user-avatar";

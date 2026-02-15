@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChannelType, MemberRole } from "@prisma/client";
+import { ChannelType, MemberRole } from "@/lib/haos-types";
 import { ChevronRight, Plus, Settings } from "lucide-react";
 
 import { ServerWithMembersWithProfiles } from "@/types";

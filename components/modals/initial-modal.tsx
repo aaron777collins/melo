@@ -153,13 +153,13 @@ export function InitialModal() {
       form.reset();
       setIsOpen(false);
       
-      // Refresh to show the new space in the sidebar
-      // The full channel view routes need to be built out
-      // For now, just close the modal and stay on the current page
-      router.refresh();
+      // Navigate to the new server/channel
+      // URL-encode the Matrix room IDs since they contain special characters
+      const encodedSpaceId = encodeURIComponent(createResult.room_id);
+      const encodedChannelId = encodeURIComponent(generalChannel.room_id);
       
-      // TODO: Navigate to /servers/${createResult.room_id}/channels/general 
-      // once the Matrix-based server routes are implemented
+      router.push(`/servers/${encodedSpaceId}/channels/${encodedChannelId}`);
+      router.refresh();
       
     } catch (err) {
       console.error("[InitialModal] Error creating space:", err);

@@ -344,6 +344,322 @@ export class MatrixModerationService {
       return [];
     }
   }
+
+  /**
+   * Delete a single message by redacting it
+   * @param roomId The room containing the message
+   * @param eventId The message event ID to delete
+   * @param userId The user performing the deletion (for permission check)
+   * @param reason Optional reason for deletion
+   */
+  async deleteMessage(
+    roomId: string,
+    eventId: string,
+    userId: string,
+    reason?: string
+  ): Promise<ModerationResult> {
+    try {
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        return {
+          success: false,
+          error: "Room not found"
+        };
+      }
+
+      // Get the original message event to check permissions
+      const event = room.findEventById(eventId);
+      if (!event) {
+        return {
+          success: false,
+          error: "Message not found"
+        };
+      }
+
+      const messageSender = event.getSender();
+      const isOwnMessage = messageSender === userId;
+
+      // Check permissions - can delete own messages or need moderation rights
+      if (!isOwnMessage) {
+        const hasPermission = await this.hasPermission(roomId, userId, 'DELETE_MESSAGE');
+        if (!hasPermission) {
+          return {
+            success: false,
+            error: "You don't have permission to delete this message"
+          };
+        }
+      }
+
+      // Perform the redaction (deletion)
+      const redactionReason = reason || (isOwnMessage ? "Message deleted by author" : "Message deleted by moderator");
+      await this.client.redactEvent(roomId, eventId, undefined, {
+        reason: redactionReason
+      });
+
+      // Log the moderation action
+      const logEntry = {
+        action: 'delete_message',
+        moderatorId: userId,
+        targetUserId: messageSender!,
+        eventId,
+        roomId,
+        reason: redactionReason,
+        timestamp: new Date().toISOString(),
+        isOwnMessage
+      };
+      
+      await this.logModerationAction(logEntry);
+      
+      console.log(`Message ${eventId} deleted by ${userId}. Reason: ${redactionReason}`);
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error deleting message:", error);
+      
+      let errorMessage = "Failed to delete message";
+      if (error.errcode === 'M_FORBIDDEN') {
+        errorMessage = "You don't have permission to delete this message";
+      } else if (error.errcode === 'M_NOT_FOUND') {
+        errorMessage = "Message not found";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Delete multiple messages in bulk
+   * @param roomId The room containing the messages
+   * @param eventIds Array of message event IDs to delete
+   * @param userId The user performing the bulk deletion (for permission check)
+   * @param reason Optional reason for bulk deletion
+   */
+  async bulkDeleteMessages(
+    roomId: string,
+    eventIds: string[],
+    userId: string,
+    reason?: string
+  ): Promise<{
+    success: boolean;
+    deletedCount: number;
+    failedCount: number;
+    errors: Array<{ eventId: string; error: string }>;
+  }> {
+    const results = {
+      success: true,
+      deletedCount: 0,
+      failedCount: 0,
+      errors: [] as Array<{ eventId: string; error: string }>
+    };
+
+    // Check bulk moderation permission first
+    const hasPermission = await this.hasPermission(roomId, userId, 'DELETE_MESSAGE');
+    if (!hasPermission) {
+      return {
+        success: false,
+        deletedCount: 0,
+        failedCount: eventIds.length,
+        errors: eventIds.map(eventId => ({
+          eventId,
+          error: "You don't have permission to perform bulk message deletion"
+        }))
+      };
+    }
+
+    const bulkReason = reason || "Bulk message deletion by moderator";
+
+    // Process deletions in batches to avoid overwhelming the server
+    const batchSize = 10;
+    for (let i = 0; i < eventIds.length; i += batchSize) {
+      const batch = eventIds.slice(i, i + batchSize);
+      
+      // Process batch with slight delay to be respectful to the server
+      const batchPromises = batch.map(async (eventId) => {
+        try {
+          const result = await this.deleteMessage(roomId, eventId, userId, bulkReason);
+          if (result.success) {
+            results.deletedCount++;
+          } else {
+            results.failedCount++;
+            results.errors.push({ eventId, error: result.error || "Unknown error" });
+          }
+        } catch (error: any) {
+          results.failedCount++;
+          results.errors.push({ 
+            eventId, 
+            error: error.message || "Failed to delete message" 
+          });
+        }
+      });
+
+      await Promise.all(batchPromises);
+      
+      // Small delay between batches
+      if (i + batchSize < eventIds.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    // Log bulk operation
+    const logEntry = {
+      action: 'bulk_delete_messages',
+      moderatorId: userId,
+      targetUserId: '', // Multiple targets in bulk operation
+      eventId: '', // Multiple events
+      roomId,
+      reason: bulkReason,
+      timestamp: new Date().toISOString(),
+      metadata: {
+        totalMessages: eventIds.length,
+        deletedCount: results.deletedCount,
+        failedCount: results.failedCount
+      }
+    };
+    
+    await this.logModerationAction(logEntry);
+
+    console.log(`Bulk deletion completed: ${results.deletedCount}/${eventIds.length} messages deleted by ${userId}`);
+
+    if (results.failedCount > 0) {
+      results.success = false;
+    }
+
+    return results;
+  }
+
+  /**
+   * Log a moderation action for audit trail
+   * @param logEntry The moderation action details
+   */
+  private async logModerationAction(logEntry: {
+    action: string;
+    moderatorId: string;
+    targetUserId: string;
+    eventId: string;
+    roomId: string;
+    reason: string;
+    timestamp: string;
+    isOwnMessage?: boolean;
+    metadata?: any;
+  }): Promise<void> {
+    try {
+      // Store moderation logs in room state or send as special message type
+      // For now, we'll send a state event to maintain audit trail
+      
+      // Create a unique state key based on timestamp and action
+      const stateKey = `${logEntry.timestamp}_${logEntry.action}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Use type assertion for custom state event type
+      await this.client.sendStateEvent(
+        logEntry.roomId,
+        'org.haos.moderation.log' as any,
+        {
+          ...logEntry,
+          version: '1.0'
+        },
+        stateKey
+      );
+    } catch (error) {
+      console.error("Failed to log moderation action:", error);
+      // Don't fail the main operation if logging fails
+    }
+  }
+
+  /**
+   * Get moderation logs for a room
+   * @param roomId The room to get moderation logs for
+   * @param limit Maximum number of logs to return (default 50)
+   */
+  async getModerationLogs(
+    roomId: string, 
+    limit: number = 50
+  ): Promise<Array<{
+    action: string;
+    moderatorId: string;
+    targetUserId: string;
+    eventId: string;
+    roomId: string;
+    reason: string;
+    timestamp: string;
+    isOwnMessage?: boolean;
+    metadata?: any;
+  }>> {
+    try {
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        throw new Error(`Room ${roomId} not found`);
+      }
+
+      // Get all moderation log state events
+      const stateEvents = room.currentState.events.get('org.haos.moderation.log');
+      if (!stateEvents) {
+        return [];
+      }
+
+      const logs = [];
+      for (const [, event] of stateEvents.events) {
+        const content = event.getContent();
+        if (content.action && content.timestamp) {
+          logs.push(content);
+        }
+      }
+
+      // Sort by timestamp (newest first) and limit
+      logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      return logs.slice(0, limit);
+    } catch (error) {
+      console.error("Error getting moderation logs:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if a user can delete a specific message
+   * @param roomId The room containing the message  
+   * @param userId The user wanting to delete
+   * @param eventId The message event ID
+   */
+  async canDeleteMessage(
+    roomId: string,
+    userId: string,
+    eventId: string
+  ): Promise<{ canDelete: boolean; reason: string }> {
+    try {
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        return { canDelete: false, reason: "Room not found" };
+      }
+
+      const event = room.findEventById(eventId);
+      if (!event) {
+        return { canDelete: false, reason: "Message not found" };
+      }
+
+      const messageSender = event.getSender();
+      const isOwnMessage = messageSender === userId;
+
+      // Can always delete own messages (unless message is too old - could add that check)
+      if (isOwnMessage) {
+        return { canDelete: true, reason: "Own message" };
+      }
+
+      // Check moderation permissions for others' messages
+      const hasPermission = await this.hasPermission(roomId, userId, 'DELETE_MESSAGE');
+      if (hasPermission) {
+        return { canDelete: true, reason: "Moderator permissions" };
+      }
+
+      return { canDelete: false, reason: "Insufficient permissions" };
+    } catch (error) {
+      console.error("Error checking delete permissions:", error);
+      return { canDelete: false, reason: "Error checking permissions" };
+    }
+  }
 }
 
 /**

@@ -32,7 +32,7 @@ export function ConfirmDeleteModal() {
    * Handle the actual message deletion
    */
   const handleDelete = async () => {
-    if (!client || !eventId || !roomId) {
+    if (!client || !eventId || !roomId || !currentUserId) {
       console.error("Missing required data for message deletion");
       return;
     }
@@ -40,22 +40,27 @@ export function ConfirmDeleteModal() {
     try {
       setIsLoading(true);
       
-      if (isOwnMessage) {
-        // User deleting their own message
-        await client.redactEvent(roomId, eventId);
-        console.log(`User deleted their own message: ${eventId}`);
-      } else if (canModerate) {
-        // Moderator deleting another user's message
-        await client.redactEvent(roomId, eventId, undefined, {
-          reason: "Message removed by moderator"
-        });
-        console.log(`Moderator deleted message: ${eventId}`);
+      // Use the new moderation service for consistent logging and permissions
+      const moderationService = createModerationService(client);
+      const reason = isOwnMessage 
+        ? "Message deleted by author" 
+        : "Message removed by moderator";
+      
+      const result = await moderationService.deleteMessage(
+        roomId,
+        eventId,
+        currentUserId,
+        reason
+      );
+
+      if (result.success) {
+        console.log(`Message ${eventId} deleted successfully`);
+        onClose();
       } else {
-        console.error("User does not have permission to delete this message");
-        return;
+        console.error("Failed to delete message:", result.error);
+        // TODO: Show user-friendly error toast with result.error
       }
 
-      onClose();
     } catch (error: any) {
       console.error("Failed to delete message:", error);
       
@@ -65,6 +70,8 @@ export function ConfirmDeleteModal() {
         errorMessage = "You don't have permission to delete this message";
       } else if (error.errcode === 'M_NOT_FOUND') {
         errorMessage = "Message not found";
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       // For now, just log the error - could show toast notification

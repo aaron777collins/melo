@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Hash, Pin } from "lucide-react";
 
 import { MobileToggle } from "@/components/mobile-toggle";
@@ -9,10 +9,12 @@ import { ConnectionIndicator } from "@/components/connection-indicator";
 import { ChatVideoButton } from "@/components/chat/chat-video-button";
 import { VoiceChannelControls } from "@/components/voice/voice-channel-controls";
 import { VoiceConnectionStatus } from "@/components/voice/voice-connection-status";
+import { ModActions } from "@/components/chat/mod-actions";
 import { Button } from "@/components/ui/button";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useModal } from "@/hooks/use-modal-store";
 import { usePins } from "@/hooks/use-pins";
+import { canModerate } from "@/lib/matrix/moderation";
 
 interface ChatHeaderProps {
   serverId: string;
@@ -34,10 +36,28 @@ export function ChatHeader({
   const { client } = useMatrixClient();
   const { onOpen } = useModal();
   const userId = client?.getUserId() || "Unknown User";
+  const [canUserModerate, setCanUserModerate] = useState(false);
   
   // Use channelId as roomId if roomId not provided (for backward compatibility)
   const effectiveRoomId = roomId || channelId || "";
   const { hasPins, pinCount } = usePins(effectiveRoomId);
+
+  // Check moderation permissions
+  useEffect(() => {
+    const checkModerationPermissions = async () => {
+      if (client && userId && effectiveRoomId && userId !== "Unknown User") {
+        try {
+          const hasPermission = await canModerate(effectiveRoomId, userId, client);
+          setCanUserModerate(hasPermission);
+        } catch (error) {
+          console.error("Error checking moderation permissions:", error);
+          setCanUserModerate(false);
+        }
+      }
+    };
+    
+    checkModerationPermissions();
+  }, [client, userId, effectiveRoomId]);
   
   /**
    * Open pinned messages modal
@@ -62,6 +82,15 @@ export function ChatHeader({
         {name}
       </p>
       <div className="ml-auto flex items-center gap-2">
+        {/* Moderation Actions */}
+        {effectiveRoomId && canUserModerate && (
+          <ModActions
+            roomId={effectiveRoomId}
+            currentUserId={userId !== "Unknown User" ? userId : undefined}
+            canModerate={canUserModerate}
+          />
+        )}
+
         {/* Pinned Messages Button */}
         {effectiveRoomId && (
           <Button

@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useModal } from "@/hooks/use-modal-store";
 import { usePins } from "@/hooks/use-pins";
-import { canModerate } from "@/lib/matrix/moderation";
+import { canModerate, createModerationService } from "@/lib/matrix/moderation";
 import { cn } from "@/lib/utils";
 
 // =============================================================================

@@ -199,8 +199,15 @@ function MemberItem({ member, isOnline, serverId, roomId }: MemberItemProps) {
   const handleBanUser = () => {
     if (!serverId || !canBan) return;
 
-    // TODO: Implement ban user modal (similar to kick)
-    console.log('Ban user not implemented yet:', member.profile.name);
+    onOpen("banUser", {
+      targetUser: {
+        id: member.id,
+        name: member.profile.name,
+        avatarUrl: member.profile.imageUrl
+      },
+      serverId,
+      roomId
+    });
   };
 
   const handleViewProfile = () => {

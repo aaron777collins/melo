@@ -41,6 +41,7 @@ export type ModalType =
   | "emojiPicker"
   // User moderation
   | "kickUser"
+  | "banUser"
   // Role Management
   | "createRole";
 

@@ -226,7 +226,7 @@ export async function getRoomPowerLevels(roomId: string): Promise<PowerLevelsCon
 
   try {
     const powerLevelEvent = client.getRoom(roomId)?.currentState.getStateEvents("m.room.power_levels", "");
-    return powerLevelEvent?.getContent() || null;
+    return (powerLevelEvent?.getContent() as PowerLevelsContent) || null;
   } catch (error) {
     console.error("Failed to get power levels:", error);
     return null;
@@ -257,7 +257,7 @@ export async function setUserPowerLevel(
       },
     };
 
-    await client.sendStateEvent(roomId, "m.room.power_levels", newPowerLevels, "");
+    await client.sendStateEvent(roomId, "m.room.power_levels" as any, newPowerLevels, "");
     console.log(`Set power level ${powerLevel} for user ${userId} in room ${roomId}`);
   } catch (error) {
     console.error("Failed to set user power level:", error);

@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 
 import { currentProfile } from "@/lib/current-profile";
 import { SettingsSidebar } from "@/components/settings/settings-sidebar";
+import { SectionErrorBoundary, PageErrorBoundary } from "@/components/error-boundary";
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
@@ -26,11 +27,15 @@ export default async function SettingsLayout({
   return (
     <div className="h-full flex">
       {/* Settings Sidebar */}
-      <SettingsSidebar profile={profile} />
+      <SectionErrorBoundary name="settings-sidebar">
+        <SettingsSidebar profile={profile} />
+      </SectionErrorBoundary>
 
       {/* Main Content */}
       <div className="flex-1 bg-white dark:bg-[#313338] overflow-y-auto">
-        {children}
+        <PageErrorBoundary name="settings-content">
+          {children}
+        </PageErrorBoundary>
       </div>
     </div>
   );

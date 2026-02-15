@@ -6,6 +6,7 @@ import { Users, X } from "lucide-react";
 
 import { MemberSidebar } from "@/components/chat/member-sidebar";
 import { ActionTooltip } from "@/components/action-tooltip";
+import { SectionErrorBoundary } from "@/components/error-boundary";
 import { cn } from "@/lib/utils";
 
 interface ChatLayoutProps {
@@ -85,11 +86,13 @@ export function ChatLayout({
             "lg:relative lg:z-auto",
             "w-60 flex-shrink-0"
           )}>
-            <MemberSidebar 
-              members={members}
-              onlineMembers={onlineMembers}
-              className="h-full border-l border-zinc-200 dark:border-zinc-800"
-            />
+            <SectionErrorBoundary name="member-sidebar">
+              <MemberSidebar 
+                members={members}
+                onlineMembers={onlineMembers}
+                className="h-full border-l border-zinc-200 dark:border-zinc-800"
+              />
+            </SectionErrorBoundary>
             
             {/* Desktop close button */}
             <div className="hidden lg:block absolute top-2 left-2">

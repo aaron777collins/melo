@@ -5,6 +5,7 @@ import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatLayout } from "@/components/chat/chat-layout";
+import { SectionErrorBoundary, ChatErrorBoundary } from "@/components/error-boundary";
 import { getSessionCookie } from "@/lib/matrix/cookies";
 
 interface ChannelIdPageProps {
@@ -140,52 +141,62 @@ export default async function ChannelIdPage({
   const onlineMembers = otherMembers.map(m => m.id);
 
   return (
-    <ChatLayout 
-      members={otherMembers.map(m => ({
-        id: m.id,
-        profileId: m.id,
-        role: "GUEST" as const,
-        serverId: spaceId,
-        profile: {
+    <ChatErrorBoundary>
+      <ChatLayout 
+        members={otherMembers.map(m => ({
           id: m.id,
-          userId: m.id,
-          name: m.name,
-          imageUrl: m.avatarUrl || "",
-          email: "",
+          profileId: m.id,
+          role: "GUEST" as const,
+          serverId: spaceId,
+          profile: {
+            id: m.id,
+            userId: m.id,
+            name: m.name,
+            imageUrl: m.avatarUrl || "",
+            email: "",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
           createdAt: new Date(),
           updatedAt: new Date(),
-        },
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }))}
-      onlineMembers={onlineMembers}
-      showMembersToggle={true}
-      className="bg-white dark:bg-[#313338]"
-    >
-      <div className="flex flex-col h-full">
-        <ChatHeader
-          name={roomInfo.name}
-          serverId={spaceId}
-          type="channel"
-          channelId={roomId}
-          roomId={roomId}
-        />
-        <ChatMessages
-          roomId={roomId}
-          roomName={roomInfo.name}
-          type="channel"
-          currentUserId={userId}
-        />
-        <ChatInput
-          name={roomInfo.name}
-          type="channel"
-          apiUrl="/api/messages"
-          query={{
-            channelId: roomId,
-            serverId: spaceId
-          }}
-        />
-      </div>
-    </ChatLayout>
+        }))}
+        onlineMembers={onlineMembers}
+        showMembersToggle={true}
+        className="bg-white dark:bg-[#313338]"
+      >
+        <div className="flex flex-col h-full">
+          <SectionErrorBoundary name="chat-header">
+            <ChatHeader
+              name={roomInfo.name}
+              serverId={spaceId}
+              type="channel"
+              channelId={roomId}
+              roomId={roomId}
+            />
+          </SectionErrorBoundary>
+          
+          <SectionErrorBoundary name="chat-messages">
+            <ChatMessages
+              roomId={roomId}
+              roomName={roomInfo.name}
+              type="channel"
+              currentUserId={userId}
+            />
+          </SectionErrorBoundary>
+          
+          <SectionErrorBoundary name="chat-input">
+            <ChatInput
+              name={roomInfo.name}
+              type="channel"
+              apiUrl="/api/messages"
+              query={{
+                channelId: roomId,
+                serverId: spaceId
+              }}
+            />
+          </SectionErrorBoundary>
+        </div>
+      </ChatLayout>
+    </ChatErrorBoundary>
   );
 }

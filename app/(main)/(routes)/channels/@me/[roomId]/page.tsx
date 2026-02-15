@@ -7,6 +7,7 @@ import { ChatMessages } from "@/components/chat/chat-messages";
 import { DMChatInput } from "@/components/chat/dm-chat-input";
 import { MediaRoom } from "@/components/media-room";
 import { DMList } from "@/components/navigation/dm-list";
+import { SectionErrorBoundary } from "@/components/error-boundary";
 import { Separator } from "@/components/ui/separator";
 
 interface DMRoomPageProps {
@@ -53,7 +54,9 @@ export default async function DMRoomPage({
 
         {/* DM List */}
         <div className="flex-1">
-          <DMList />
+          <SectionErrorBoundary name="dm-list">
+            <DMList />
+          </SectionErrorBoundary>
         </div>
       </div>
 
@@ -61,25 +64,34 @@ export default async function DMRoomPage({
 
       {/* Right content - Chat interface */}
       <div className="flex-1 bg-white dark:bg-[#36393f] flex flex-col">
-        <DMChatHeader roomId={roomId} />
+        <SectionErrorBoundary name="dm-chat-header">
+          <DMChatHeader roomId={roomId} />
+        </SectionErrorBoundary>
         
         {video && (
-          <MediaRoom
-            chatId={roomId}
-            video={true}
-            audio={true}
-          />
+          <SectionErrorBoundary name="media-room">
+            <MediaRoom
+              chatId={roomId}
+              video={true}
+              audio={true}
+            />
+          </SectionErrorBoundary>
         )}
         
         {!video && (
           <>
-            <ChatMessages
-              roomId={roomId}
-              roomName="Direct Message"
-              type="conversation"
-              currentUserId={profile.userId}
-            />
-            <DMChatInput roomId={roomId} />
+            <SectionErrorBoundary name="dm-chat-messages">
+              <ChatMessages
+                roomId={roomId}
+                roomName="Direct Message"
+                type="conversation"
+                currentUserId={profile.userId}
+              />
+            </SectionErrorBoundary>
+            
+            <SectionErrorBoundary name="dm-chat-input">
+              <DMChatInput roomId={roomId} />
+            </SectionErrorBoundary>
           </>
         )}
       </div>

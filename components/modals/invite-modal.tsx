@@ -17,12 +17,12 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 import { useModal } from "@/hooks/use-modal-store";
-import { useMatrixContext } from "@/components/providers/matrix-provider";
+import { useMatrix } from "@/components/providers/matrix-provider";
 import { createInviteService, InviteLink } from "@/lib/matrix/invites";
 
 export function InviteModal() {
   const { isOpen, onClose, type, data } = useModal();
-  const { client } = useMatrixContext();
+  const { client } = useMatrix();
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
 

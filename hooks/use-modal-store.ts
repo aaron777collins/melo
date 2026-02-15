@@ -110,6 +110,9 @@ interface ModalData {
   member?: Member & { profile: Profile };
   /** Callback after successful role assignment */
   onSuccess?: () => void;
+  // Invite modal
+  /** Pre-generated invite URL for sharing */
+  inviteUrl?: string;
 }
 
 interface ModalStore {

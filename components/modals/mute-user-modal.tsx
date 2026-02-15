@@ -69,7 +69,7 @@ export function MuteUserModal() {
   });
 
   const selectedDuration = form.watch("duration");
-  const isPermanent = selectedDuration === "permanent";
+  const isPermanent = (selectedDuration as string) === "permanent";
 
   const onSubmit = async (values: z.infer<typeof muteFormSchema>) => {
     if (!client || !targetUser || !serverId) {

@@ -256,7 +256,22 @@ export function ServerHeader({
         {/* Invite People - Moderator+ */}
         {hasModeratorPerms && (
           <DropdownMenuItem
-            onClick={() => onOpen("invite", { server } as any)}
+            onClick={() => onOpen("invite", { 
+              space: { 
+                id: server.id, 
+                name: server.name,
+                avatarUrl: null,
+                topic: null,
+                memberCount: 0,
+                isOwner: true,
+                childRoomIds: [],
+                joinRule: 'invite' as const,
+                canonicalAlias: server.canonicalAlias || null,
+                currentUserPowerLevel: 100,
+                hasUnread: false,
+                unreadMentionCount: 0
+              } 
+            })}
             className="text-indigo-600 dark:text-indigo-400 px-3 py-2 text-sm cursor-pointer"
           >
             Invite People

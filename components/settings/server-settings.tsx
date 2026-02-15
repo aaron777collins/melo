@@ -261,7 +261,7 @@ export function ServerSettings({
       case "invites":
         return (
           <InviteGenerator
-            spaceId={spaceId}
+            spaceId={serverId}
             spaceName={space.name}
           />
         );

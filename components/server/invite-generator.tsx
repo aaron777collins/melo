@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useMatrixContext } from "@/components/providers/matrix-provider";
+import { useMatrix } from "@/components/providers/matrix-provider";
 import { createInviteService, InviteLink, CreateInviteOptions, MatrixInviteService } from "@/lib/matrix/invites";
 
 interface InviteGeneratorProps {
@@ -24,7 +24,7 @@ interface InviteGeneratorProps {
 }
 
 export function InviteGenerator({ spaceId, spaceName }: InviteGeneratorProps) {
-  const { client } = useMatrixContext();
+  const { client } = useMatrix();
   const [inviteService, setInviteService] = useState<MatrixInviteService | null>(null);
   
   // Form state
@@ -315,7 +315,7 @@ export function InviteGenerator({ spaceId, spaceName }: InviteGeneratorProps) {
 
           <Button 
             onClick={handleCreateInvite} 
-            disabled={isCreating || (!customSlug && !createAlias) || (customSlug && !slugValid)}
+            disabled={isCreating || (customSlug.length > 0 && !slugValid)}
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -459,7 +459,7 @@ export function InviteGenerator({ spaceId, spaceName }: InviteGeneratorProps) {
               {selectedInvite.expiresAt && (
                 <p><strong>Expires:</strong> {formatExpirationDate(selectedInvite.expiresAt)}</p>
               )}
-              {selectedInvite.maxUses > 0 && (
+              {selectedInvite.maxUses && selectedInvite.maxUses > 0 && (
                 <p><strong>Uses:</strong> {selectedInvite.currentUses} / {selectedInvite.maxUses}</p>
               )}
               {selectedInvite.alias && (

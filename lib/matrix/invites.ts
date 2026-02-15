@@ -85,7 +85,7 @@ export class MatrixInviteService {
       if (options.createAlias && options.slug) {
         // Try to create a room alias with the custom slug
         const aliasResult = await this.createRoomAlias(room, options.slug);
-        if (aliasResult.success) {
+        if (aliasResult.success && aliasResult.alias) {
           alias = aliasResult.alias;
           inviteUrl = this.buildInviteUrl(alias);
         } else {

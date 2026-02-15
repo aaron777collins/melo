@@ -4,9 +4,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: true,
-  },
+  // serverActions is stable in Next.js 14, no longer experimental
   output: "standalone",
   webpack: (config, { dev, isServer }) => {
     config.externals.push({

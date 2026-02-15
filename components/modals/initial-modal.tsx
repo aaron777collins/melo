@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 
 import {
   Dialog,
@@ -25,17 +25,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileUpload } from "@/components/file-upload";
+import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
+import { getClient } from "@/lib/matrix/client";
 
+// Make image optional - we'll use a default or generated avatar
 const formSchema = z.object({
   name: z.string().min(1, { message: "Server name is required." }),
-  imageUrl: z.string().min(1, { message: "Server image is required." })
+  imageUrl: z.string().optional()
 });
 
 export function InitialModal() {
   const [isMounted, setIsMounted] = useState(false);
-
+  const [isOpen, setIsOpen] = useState(true); // Open by default when this component is rendered
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { session } = useMatrixAuth();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -48,15 +52,108 @@ export function InitialModal() {
   const isLoading = form.formState.isSubmitting;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setError(null);
+    
     try {
-      await axios.post("/api/servers", values);
+      const client = getClient();
+      if (!client) {
+        setError("Matrix client not initialized. Please refresh the page.");
+        return;
+      }
+
+      console.log("[InitialModal] Creating Matrix space:", values.name);
+
+      // Create a Matrix space (which is like a Discord server)
+      const createResult = await client.createRoom({
+        name: values.name,
+        // Mark as a space (not a regular room)
+        creation_content: {
+          type: "m.space"
+        },
+        // Set initial power levels
+        power_level_content_override: {
+          users_default: 0,
+          events_default: 0,
+          state_default: 50,
+          ban: 50,
+          kick: 50,
+          redact: 50,
+          invite: 0
+        },
+        // Set visibility
+        visibility: "private" as any,
+        preset: "private_chat" as any,
+        // Initial state events
+        initial_state: [
+          // Enable guest access (optional)
+          {
+            type: "m.room.guest_access",
+            state_key: "",
+            content: { guest_access: "can_join" }
+          },
+          // Set history visibility
+          {
+            type: "m.room.history_visibility",
+            state_key: "",
+            content: { history_visibility: "shared" }
+          }
+        ]
+      });
+
+      console.log("[InitialModal] Space created:", createResult.room_id);
+
+      // Create a default "general" channel within the space
+      const generalChannel = await client.createRoom({
+        name: "general",
+        topic: "General discussion",
+        visibility: "private" as any,
+        preset: "private_chat" as any,
+        initial_state: [
+          // Link to parent space
+          {
+            type: "m.space.parent",
+            state_key: createResult.room_id,
+            content: {
+              via: [session?.userId?.split(":")[1] || "matrix.org"],
+              canonical: true
+            }
+          }
+        ]
+      });
+
+      console.log("[InitialModal] General channel created:", generalChannel.room_id);
+
+      // Add the channel to the space
+      await client.sendStateEvent(
+        createResult.room_id,
+        "m.space.child" as any,
+        {
+          via: [session?.userId?.split(":")[1] || "matrix.org"],
+          suggested: true,
+          order: "0000"
+        },
+        generalChannel.room_id
+      );
+
+      console.log("[InitialModal] Channel linked to space");
 
       form.reset();
+      setIsOpen(false);
+      
+      // Navigate to the new space
+      router.push(`/channels/${createResult.room_id}`);
       router.refresh();
-      window.location.reload();
-    } catch (error) {
-      console.error(error);
+      
+    } catch (err) {
+      console.error("[InitialModal] Error creating space:", err);
+      setError(err instanceof Error ? err.message : "Failed to create server");
     }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    // Navigate to DMs without creating a server
+    router.push("/channels/@me");
   };
 
   useEffect(() => {
@@ -66,37 +163,31 @@ export function InitialModal() {
   if (!isMounted) return null;
 
   return (
-    <Dialog open>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="bg-white text-black p-0 overflow-hidden">
+        <button
+          onClick={handleClose}
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </button>
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold">
-            Customize your server
+            Create your first server
           </DialogTitle>
           <DialogDescription className="text-center text-zinc-500">
-            Give your server a personality with a name and an image. You can
-            always change it later.
+            Create a Matrix space to get started. You can customize it later.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-8 px-6">
-              <div className="flex items-center justify-center text-center">
-                <FormField
-                  control={form.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <FileUpload
-                          endpoint="serverImage"
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {error && (
+                <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
+                  {error}
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="name"
@@ -108,8 +199,8 @@ export function InitialModal() {
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="Enter server name"
-                        className="bg-zinc-300/50 border-0 focus-visible: ring-0 text-black focus-visible:ring-offset-0"
+                        placeholder="My Awesome Server"
+                        className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
                         {...field}
                       />
                     </FormControl>
@@ -119,8 +210,16 @@ export function InitialModal() {
               />
             </div>
             <DialogFooter className="bg-gray-100 px-6 py-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleClose}
+                disabled={isLoading}
+              >
+                Skip for now
+              </Button>
               <Button disabled={isLoading} variant="primary">
-                Create
+                {isLoading ? "Creating..." : "Create"}
               </Button>
             </DialogFooter>
           </form>

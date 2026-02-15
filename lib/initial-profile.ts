@@ -1,11 +1,14 @@
 import { validateCurrentSession } from "@/lib/matrix/actions/auth";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
+import { MatrixProfile } from "@/lib/current-profile";
 
 /**
- * Get or create the initial profile for the current user using Matrix auth
+ * Get the initial profile for the current user using Matrix auth
+ * 
+ * This is a Matrix-native implementation that doesn't require a database.
+ * The profile is derived from the Matrix session data.
  */
-export const initialProfile = async () => {
+export const initialProfile = async (): Promise<MatrixProfile> => {
   const result = await validateCurrentSession();
 
   if (!result.success || !result.data) {
@@ -14,26 +17,20 @@ export const initialProfile = async () => {
 
   const { user } = result.data;
 
-  const profile = await db.profile.findUnique({
-    where: {
-      userId: user.userId
-    }
-  });
-
-  if (profile) return profile;
-
   // Extract localpart from Matrix ID for display name fallback
   const localpart = user.userId.startsWith('@') ? user.userId.slice(1).split(':')[0] : user.userId;
   const name = user.displayName || localpart;
 
-  const newProfile = await db.profile.create({
-    data: {
-      userId: user.userId,
-      name,
-      imageUrl: user.avatarUrl || "",
-      email: "" // Matrix doesn't expose email by default
-    }
-  });
+  // Create a profile object from the Matrix session
+  const profile: MatrixProfile = {
+    id: user.userId,
+    userId: user.userId,
+    name: name,
+    imageUrl: user.avatarUrl || null,
+    email: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
 
-  return newProfile;
+  return profile;
 };

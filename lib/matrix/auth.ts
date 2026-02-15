@@ -97,7 +97,9 @@ async function matrixFetch<T>(
   options: RequestInit = {},
   accessToken?: string
 ): Promise<T> {
-  const url = `${homeserverUrl}${API_PREFIX}${endpoint}`;
+  // Remove trailing slash from homeserver URL to avoid double slashes
+  const normalizedUrl = homeserverUrl.replace(/\/+$/, '');
+  const url = `${normalizedUrl}${API_PREFIX}${endpoint}`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -192,7 +194,12 @@ export async function loginWithPassword(
   }
 
   // Make login request
-  const response = await matrixFetch<LoginResponse & {
+  // Matrix API returns snake_case, we need to handle both formats
+  const response = await matrixFetch<{
+    user_id: string;
+    access_token: string;
+    device_id: string;
+    home_server?: string;
     refresh_token?: string;
     expires_in_ms?: number;
     well_known?: {
@@ -204,13 +211,13 @@ export async function loginWithPassword(
     body: JSON.stringify(loginBody),
   });
 
-  // Create session object
+  // Create session object - use snake_case from API response
   const now = new Date().toISOString();
   const session: MatrixSession = {
-    sessionId: `${response.deviceId}-${Date.now()}`,
-    userId: response.userId,
-    accessToken: response.accessToken,
-    deviceId: response.deviceId,
+    sessionId: `${response.device_id}-${Date.now()}`,
+    userId: response.user_id,
+    accessToken: response.access_token,
+    deviceId: response.device_id,
     homeserverUrl: response.well_known?.['m.homeserver']?.base_url || homeserverUrl,
     createdAt: now,
     lastActiveAt: now,

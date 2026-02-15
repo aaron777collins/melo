@@ -296,7 +296,14 @@ export function MatrixAuthProvider({
       setError(null);
 
       try {
-        const result = await loginAction(username, password, homeserverUrl);
+        // Use API route for more reliable standalone mode support
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password, homeserverUrl }),
+        });
+
+        const result = await response.json();
 
         if (result.success) {
           setUser(result.data.user);
@@ -304,7 +311,7 @@ export function MatrixAuthProvider({
           onAuthChange?.(result.data.user);
           return true;
         } else {
-          setError(result.error.message);
+          setError(result.error?.message || "Login failed");
           return false;
         }
       } catch (err) {

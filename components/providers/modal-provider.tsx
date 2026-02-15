@@ -7,7 +7,8 @@ import { LeaveServerModal } from "@/components/modals/leave-server-modal";
 import { DeleteServerModal } from "@/components/modals/delete-server-modal";
 import { DeleteChannelModal } from "@/components/modals/delete-channel-modal";
 import { EditChannelModal } from "@/components/modals/edit-channel-modal";
-import { InitialModal } from "@/components/modals/initial-modal";
+// InitialModal is only rendered on the setup page, not globally
+// import { InitialModal } from "@/components/modals/initial-modal";
 import { ThreadViewModal } from "@/components/modals/thread-view-modal";
 import { ReportMessageModal } from "@/components/modals/report-message-modal";
 import { UserSettingsModal } from "@/components/modals/user-settings-modal";
@@ -31,7 +32,7 @@ export function ModalProvider() {
       <DeleteServerModal />
       <DeleteChannelModal />
       <EditChannelModal />
-      <InitialModal />
+      {/* InitialModal removed - only shows on /setup page */}
       <ThreadViewModal />
       <ReportMessageModal />
       <UserSettingsModal />

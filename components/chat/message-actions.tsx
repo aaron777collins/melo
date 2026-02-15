@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   MessageSquare, 
   MoreHorizontal, 
@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useModal } from "@/hooks/use-modal-store";
 import { usePins } from "@/hooks/use-pins";
+import { canModerate } from "@/lib/matrix/moderation";
 import { cn } from "@/lib/utils";
 
 // =============================================================================
@@ -90,13 +91,27 @@ export function MessageActions({
   const { onOpen } = useModal();
   const { pinMessage, unpinMessage, isPinned, canPin } = usePins(roomId);
   const [isOpen, setIsOpen] = useState(false);
+  const [canUserModerate, setCanUserModerate] = useState(false);
   
   // Check if current user is the message sender
   const isOwnMessage = event.getSender() === currentUserId;
   
-  // Check if current user can moderate (admin/moderator)
-  // TODO: Implement proper role checking
-  const canModerate = false;
+  // Check moderation permissions when component mounts or user/room changes
+  useEffect(() => {
+    const checkModerationPermissions = async () => {
+      if (client && currentUserId && roomId) {
+        try {
+          const hasPermission = await canModerate(roomId, currentUserId, client);
+          setCanUserModerate(hasPermission);
+        } catch (error) {
+          console.error("Error checking moderation permissions:", error);
+          setCanUserModerate(false);
+        }
+      }
+    };
+    
+    checkModerationPermissions();
+  }, [client, currentUserId, roomId]);
   
   // Check pin status and permissions
   const eventId = event.getId();
@@ -173,26 +188,21 @@ export function MessageActions({
   };
   
   /**
-   * Delete message
+   * Delete message - opens confirmation modal
    */
-  const handleDelete = async () => {
-    try {
-      if (!client || !event.getId()) return;
-      
-      const eventId = event.getId()!;
-      
-      if (isOwnMessage) {
-        // Redact own message
-        await client.redactEvent(roomId, eventId);
-      } else if (canModerate) {
-        // Moderator delete with reason
-        await client.redactEvent(roomId, eventId, undefined, {
-          reason: "Message removed by moderator"
-        });
-      }
-    } catch (error) {
-      console.error("Failed to delete message:", error);
-    }
+  const handleDelete = () => {
+    const eventId = event.getId();
+    if (!eventId) return;
+    
+    // Open confirmation modal with all required data
+    onOpen("deleteMessage", {
+      eventId,
+      roomId,
+      currentUserId,
+      isOwnMessage,
+      canModerate: canUserModerate
+    });
+    
     setIsOpen(false);
   };
   
@@ -340,7 +350,7 @@ export function MessageActions({
           <DropdownMenuSeparator />
           
           {/* Delete (own messages or moderator) */}
-          {(isOwnMessage || canModerate) && (
+          {(isOwnMessage || canUserModerate) && (
             <DropdownMenuItem 
               onClick={handleDelete}
               className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"

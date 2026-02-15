@@ -96,6 +96,13 @@ interface ModalData {
   };
   /** Server/space context for moderation action */
   serverId?: string;
+  // Message deletion
+  /** Current user's Matrix ID */
+  currentUserId?: string;
+  /** Whether the current user owns the message */
+  isOwnMessage?: boolean;
+  /** Whether the current user can moderate (delete others' messages) */
+  canModerate?: boolean;
 }
 
 interface ModalStore {

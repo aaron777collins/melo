@@ -2,18 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Edit, FileIcon, ImageIcon, VideoIcon, MusicIcon, Download, Plus, MessageSquare } from "lucide-react";
+import { Edit, FileIcon, ImageIcon, VideoIcon, MusicIcon, Download, Plus, MessageSquare, Check, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { MatrixEvent } from "matrix-js-sdk";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { MessageActions } from "./message-actions";
 import { useModal } from "@/hooks/use-modal-store";
 import { useThreads } from "@/hooks/use-threads";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
+import { useMessageEdit } from "@/hooks/use-message-edit";
 
 // =============================================================================
 // Types & Interfaces
@@ -114,8 +116,19 @@ function getAvatarUrl(event: MatrixEvent): string | undefined {
 /**
  * Gets message content from Matrix event with proper type handling
  */
-function getMessageContent(event: MatrixEvent): { text: string; isMarkdown: boolean; hasFormattedBody: boolean; formattedBody?: string } {
+function getMessageContent(event: MatrixEvent): { text: string; isMarkdown: boolean; hasFormattedBody: boolean; formattedBody?: string; isRedacted: boolean } {
   const content = event.getContent();
+  
+  // Check if the message has been redacted (deleted)
+  const isRedacted = event.isRedacted();
+  if (isRedacted) {
+    return {
+      text: "Message deleted",
+      isMarkdown: false,
+      hasFormattedBody: false,
+      isRedacted: true
+    };
+  }
   
   // Handle different message types
   if (content.msgtype === "m.text") {
@@ -125,20 +138,23 @@ function getMessageContent(event: MatrixEvent): { text: string; isMarkdown: bool
       text: content.body || "",
       isMarkdown: !hasFormatted, // Use markdown if no HTML formatting
       hasFormattedBody: hasFormatted,
-      formattedBody: content.formatted_body
+      formattedBody: content.formatted_body,
+      isRedacted: false
     };
   } else if (content.msgtype === "m.emote") {
     return {
       text: `*${content.body}*`,
       isMarkdown: true,
-      hasFormattedBody: false
+      hasFormattedBody: false,
+      isRedacted: false
     };
   }
   
   return {
     text: content.body || "[Message]",
     isMarkdown: false,
-    hasFormattedBody: false
+    hasFormattedBody: false,
+    isRedacted: false
   };
 }
 
@@ -554,15 +570,30 @@ export function ChatItem({
   const { getThreadInfo, hasThread } = useThreads(roomId);
   const threadInfo = getThreadInfo(event.getId() || "");
   
+  // Require the Matrix client for reaction operations
+  const { client: matrixClient } = useMatrixClient();
+  
+  // Message editing functionality
+  const { 
+    editState, 
+    startEditing, 
+    cancelEditing, 
+    saveEdit, 
+    updateContent, 
+    canEditMessage,
+    isMessageEdited: checkIfEdited
+  } = useMessageEdit(roomId);
+  
   const timestamp = new Date(event.getTs());
   const displayName = getDisplayName(event);
   const avatarUrl = getAvatarUrl(event);
   const { text: content, isMarkdown, hasFormattedBody, formattedBody } = getMessageContent(event);
   const attachment = getAttachment(event);
-  const isEdited = isMessageEdited(event);
+  const isRedacted = event.isRedacted();
   
-  // Require the Matrix client for reaction operations
-  const { client: matrixClient } = useMatrixClient();
+  // Check if message is edited and if currently being edited
+  const isEdited = checkIfEdited(event);
+  const isCurrentlyEditing = editState.isEditing && editState.event?.getId() === event.getId();
   
   // Reactions need to be loaded asynchronously
   const [reactions, setReactions] = useState<MessageReaction[]>([]);
@@ -651,6 +682,33 @@ export function ChatItem({
     }
   };
   
+  // Handle starting message edit
+  const handleStartEdit = () => {
+    if (canEditMessage(event)) {
+      startEditing(event);
+    }
+  };
+  
+  // Handle saving edited message
+  const handleSaveEdit = async () => {
+    const success = await saveEdit();
+    if (!success) {
+      // TODO: Show error toast
+      console.error("Failed to save message edit");
+    }
+  };
+  
+  // Handle keyboard shortcuts in edit mode
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      cancelEditing();
+    }
+  };
+  
   return (
     <div 
       className={cn(
@@ -732,70 +790,134 @@ export function ChatItem({
         )}
         
         {/* Message Content */}
-        <div className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
-          {hasFormattedBody && formattedBody ? (
-            // Matrix HTML formatted content (may contain mentions)
-            <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1">
-              {parseFormattedMentions(formattedBody, currentUserId)}
+        {isCurrentlyEditing ? (
+          // Inline editing interface
+          <div className="space-y-2">
+            <div className="relative">
+              <Input
+                value={editState.content}
+                onChange={(e) => updateContent(e.target.value)}
+                onKeyDown={handleEditKeyDown}
+                placeholder="Edit message..."
+                className="pr-20 text-sm"
+                disabled={editState.isSaving}
+                autoFocus
+              />
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
+                        onClick={handleSaveEdit}
+                        disabled={editState.isSaving}
+                      >
+                        <Check className="h-3 w-3 text-green-600" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Save (Enter)</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
+                        onClick={cancelEditing}
+                        disabled={editState.isSaving}
+                      >
+                        <X className="h-3 w-3 text-red-600" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Cancel (Escape)</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
-          ) : isMarkdown ? (
-            // Markdown content with mention highlighting
-            <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-code:bg-zinc-200 dark:prose-code:bg-zinc-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-zinc-100 dark:prose-pre:bg-zinc-800">
-              <ReactMarkdown
-                components={{
-                  // Custom components for better Discord-style rendering
-                  p: ({ children }) => (
-                    <p className="my-1">
-                      {typeof children === 'string' 
-                        ? parseMentions(children, currentUserId)
-                        : children
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Press Enter to save • Escape to cancel
+            </p>
+          </div>
+        ) : (
+          // Normal message display
+          <div className={cn(
+            "text-sm leading-relaxed",
+            isRedacted 
+              ? "text-zinc-400 dark:text-zinc-500 italic" 
+              : "text-zinc-700 dark:text-zinc-300"
+          )}>
+            {isRedacted ? (
+              // Deleted message placeholder
+              <p className="italic">{content}</p>
+            ) : hasFormattedBody && formattedBody ? (
+              // Matrix HTML formatted content (may contain mentions)
+              <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1">
+                {parseFormattedMentions(formattedBody, currentUserId)}
+              </div>
+            ) : isMarkdown ? (
+              // Markdown content with mention highlighting
+              <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-code:bg-zinc-200 dark:prose-code:bg-zinc-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-zinc-100 dark:prose-pre:bg-zinc-800">
+                <ReactMarkdown
+                  components={{
+                    // Custom components for better Discord-style rendering
+                    p: ({ children }) => (
+                      <p className="my-1">
+                        {typeof children === 'string' 
+                          ? parseMentions(children, currentUserId)
+                          : children
+                        }
+                      </p>
+                    ),
+                    code: ({ children, className, ...props }) => {
+                      const match = /language-(\w+)/.exec(className || '');
+                      // If no language class and it's short, treat as inline
+                      const isCodeBlock = match || (typeof children === 'string' && children.includes('\n'));
+                      
+                      if (!isCodeBlock) {
+                        return (
+                          <code 
+                            className="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-sm font-mono" 
+                            {...props}
+                          >
+                            {children}
+                          </code>
+                        );
                       }
-                    </p>
-                  ),
-                  code: ({ children, className, ...props }) => {
-                    const match = /language-(\w+)/.exec(className || '');
-                    // If no language class and it's short, treat as inline
-                    const isCodeBlock = match || (typeof children === 'string' && children.includes('\n'));
-                    
-                    if (!isCodeBlock) {
                       return (
-                        <code 
-                          className="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-sm font-mono" 
-                          {...props}
-                        >
+                        <code className={`font-mono text-sm ${className || ''}`} {...props}>
                           {children}
                         </code>
                       );
-                    }
-                    return (
-                      <code className={`font-mono text-sm ${className || ''}`} {...props}>
+                    },
+                    pre: ({ children }) => (
+                      <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto">
                         {children}
-                      </code>
-                    );
-                  },
-                  pre: ({ children }) => (
-                    <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto">
-                      {children}
-                    </pre>
-                  ),
-                  blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic">
-                      {children}
-                    </blockquote>
-                  ),
-                }}
-              >
-                {content}
-              </ReactMarkdown>
-            </div>
-          ) : (
-            // Plain text with mention highlighting
-            <p>{parseMentions(content, currentUserId)}</p>
-          )}
-        </div>
+                      </pre>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic">
+                        {children}
+                      </blockquote>
+                    ),
+                  }}
+                >
+                  {content}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              // Plain text with mention highlighting
+              <p>{parseMentions(content, currentUserId)}</p>
+            )}
+          </div>
+        )}
         
         {/* Attachment Display */}
-        {attachment && <AttachmentDisplay attachment={attachment} />}
+        {attachment && !isRedacted && <AttachmentDisplay attachment={attachment} />}
         
         {/* Edited Indicator (for non-first messages in group) */}
         {!isFirstInGroup && isEdited && (
@@ -813,11 +935,13 @@ export function ChatItem({
         )}
         
         {/* Reactions */}
-        <ReactionButtons
-          reactions={reactions}
-          onAddReaction={handleAddReaction}
-          onToggleReaction={handleToggleReaction}
-        />
+        {!isRedacted && (
+          <ReactionButtons
+            reactions={reactions}
+            onAddReaction={handleAddReaction}
+            onToggleReaction={handleToggleReaction}
+          />
+        )}
         
         {/* Thread Indicator */}
         {threadInfo && threadInfo.replyCount > 0 && (
@@ -842,18 +966,20 @@ export function ChatItem({
       </div>
 
       {/* Message Actions */}
-      <MessageActions
-        event={event}
-        roomId={roomId}
-        show={showActions}
-        currentUserId={currentUserId}
-        onReply={onReply}
-        onEdit={onEdit}
-        onReaction={(emoji) => {
-          // Handle reaction via existing handler
-          handleAddReaction();
-        }}
-      />
+      {!isRedacted && (
+        <MessageActions
+          event={event}
+          roomId={roomId}
+          show={showActions}
+          currentUserId={currentUserId}
+          onReply={onReply}
+          onEdit={handleStartEdit}
+          onReaction={(emoji) => {
+            // Handle reaction via existing handler
+            handleAddReaction();
+          }}
+        />
+      )}
     </div>
   );
 }

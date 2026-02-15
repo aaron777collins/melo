@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { rateLimit, getRateLimitConfig, addRateLimitHeaders, createRateLimitResponse } from "./lib/rate-limiting";
 
 /**
  * Middleware for authentication and security headers
@@ -92,8 +93,31 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  
+  // Apply rate limiting to API routes
+  if (pathname.startsWith('/api/')) {
+    try {
+      const config = await getRateLimitConfig(request);
+      const result = await rateLimit(request, config);
+      
+      if (!result.allowed) {
+        // Rate limit exceeded - return 429 response
+        return createRateLimitResponse(result, config.message);
+      }
+      
+      // Rate limit passed - continue with request and add headers
+      const response = NextResponse.next();
+      addRateLimitHeaders(response, result);
+      return applySecurityHeaders(response);
+    } catch (error) {
+      console.error('[RATE_LIMIT]', error);
+      // If rate limiting fails, continue without it (fail open)
+      const response = NextResponse.next();
+      return applySecurityHeaders(response);
+    }
+  }
   
   // Allow public routes
   if (publicRoutes.some(route => pathname.startsWith(route))) {
@@ -112,3 +136,4 @@ export const config = {
 };
 
 // Security headers implementation completed - p12-13-security-headers
+// API rate limiting implementation completed - p12-1-rate-limiting

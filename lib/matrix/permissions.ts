@@ -694,6 +694,391 @@ export async function updateRoomPermissions(
   }
 }
 
+// =============================================================================
+// Channel Permission Overrides
+// =============================================================================
+
+import type { 
+  ChannelPermissions, 
+  ChannelRolePermissionOverride, 
+  ChannelUserPermissionOverride,
+  PermissionCheckResult,
+  BulkPermissionOperation
+} from '@/src/types/channel';
+
+/**
+ * Get channel-specific permission overrides from room account data
+ */
+export async function getChannelPermissions(channelId: string): Promise<ChannelPermissions | null> {
+  const client = getClient();
+  if (!client) {
+    throw new Error("Matrix client not initialized");
+  }
+
+  try {
+    const room = client.getRoom(channelId);
+    if (!room) return null;
+
+    const permissionData = room.getAccountData("dev.haos.channel_permissions");
+    return (permissionData?.getContent() as ChannelPermissions) || null;
+  } catch (error) {
+    console.error("Failed to get channel permissions:", error);
+    return null;
+  }
+}
+
+/**
+ * Set channel-specific permission overrides
+ */
+export async function setChannelPermissions(
+  channelId: string, 
+  permissions: ChannelPermissions
+): Promise<void> {
+  const client = getClient();
+  if (!client) {
+    throw new Error("Matrix client not initialized");
+  }
+
+  try {
+    permissions.lastUpdated = new Date().toISOString();
+    permissions.version = (permissions.version || 0) + 1;
+
+    await client.setRoomAccountData(channelId, "dev.haos.channel_permissions", permissions);
+    console.log(`Updated channel permissions for ${channelId}`);
+  } catch (error) {
+    console.error("Failed to set channel permissions:", error);
+    throw error;
+  }
+}
+
+/**
+ * Add or update a role permission override for a channel
+ */
+export async function setChannelRolePermissionOverride(
+  channelId: string,
+  roleId: string,
+  roleName: string,
+  permissionOverrides: Partial<HaosPermissions>,
+  createdBy: string
+): Promise<void> {
+  const existingPermissions = await getChannelPermissions(channelId);
+  
+  const channelPermissions: ChannelPermissions = existingPermissions || {
+    channelId,
+    roleOverrides: [],
+    userOverrides: [],
+    inheritFromParent: true,
+    lastUpdated: new Date().toISOString(),
+    lastUpdatedBy: createdBy,
+    version: 1
+  };
+
+  // Find existing override or create new one
+  const existingIndex = channelPermissions.roleOverrides.findIndex(
+    override => override.roleId === roleId
+  );
+
+  const override: ChannelRolePermissionOverride = {
+    roleId,
+    roleName,
+    permissions: permissionOverrides,
+    createdAt: existingIndex >= 0 ? 
+      channelPermissions.roleOverrides[existingIndex].createdAt : 
+      new Date().toISOString(),
+    createdBy: existingIndex >= 0 ? 
+      channelPermissions.roleOverrides[existingIndex].createdBy : 
+      createdBy,
+  };
+
+  if (existingIndex >= 0) {
+    channelPermissions.roleOverrides[existingIndex] = override;
+  } else {
+    channelPermissions.roleOverrides.push(override);
+  }
+
+  channelPermissions.lastUpdatedBy = createdBy;
+  await setChannelPermissions(channelId, channelPermissions);
+}
+
+/**
+ * Add or update a user permission override for a channel
+ */
+export async function setChannelUserPermissionOverride(
+  channelId: string,
+  userId: string,
+  displayName: string,
+  permissionOverrides: Partial<HaosPermissions>,
+  createdBy: string
+): Promise<void> {
+  const existingPermissions = await getChannelPermissions(channelId);
+  
+  const channelPermissions: ChannelPermissions = existingPermissions || {
+    channelId,
+    roleOverrides: [],
+    userOverrides: [],
+    inheritFromParent: true,
+    lastUpdated: new Date().toISOString(),
+    lastUpdatedBy: createdBy,
+    version: 1
+  };
+
+  // Find existing override or create new one
+  const existingIndex = channelPermissions.userOverrides.findIndex(
+    override => override.userId === userId
+  );
+
+  const override: ChannelUserPermissionOverride = {
+    userId,
+    displayName,
+    permissions: permissionOverrides,
+    createdAt: existingIndex >= 0 ? 
+      channelPermissions.userOverrides[existingIndex].createdAt : 
+      new Date().toISOString(),
+    createdBy: existingIndex >= 0 ? 
+      channelPermissions.userOverrides[existingIndex].createdBy : 
+      createdBy,
+  };
+
+  if (existingIndex >= 0) {
+    channelPermissions.userOverrides[existingIndex] = override;
+  } else {
+    channelPermissions.userOverrides.push(override);
+  }
+
+  channelPermissions.lastUpdatedBy = createdBy;
+  await setChannelPermissions(channelId, channelPermissions);
+}
+
+/**
+ * Remove a role permission override from a channel
+ */
+export async function removeChannelRolePermissionOverride(
+  channelId: string,
+  roleId: string,
+  removedBy: string
+): Promise<void> {
+  const channelPermissions = await getChannelPermissions(channelId);
+  if (!channelPermissions) return;
+
+  channelPermissions.roleOverrides = channelPermissions.roleOverrides.filter(
+    override => override.roleId !== roleId
+  );
+
+  channelPermissions.lastUpdatedBy = removedBy;
+  await setChannelPermissions(channelId, channelPermissions);
+}
+
+/**
+ * Remove a user permission override from a channel
+ */
+export async function removeChannelUserPermissionOverride(
+  channelId: string,
+  userId: string,
+  removedBy: string
+): Promise<void> {
+  const channelPermissions = await getChannelPermissions(channelId);
+  if (!channelPermissions) return;
+
+  channelPermissions.userOverrides = channelPermissions.userOverrides.filter(
+    override => override.userId !== userId
+  );
+
+  channelPermissions.lastUpdatedBy = removedBy;
+  await setChannelPermissions(channelId, channelPermissions);
+}
+
+/**
+ * Check if a user has a specific permission in a channel
+ * Considers role permissions, channel overrides, and user overrides
+ * Precedence: User override > Channel role override > Base role permission
+ */
+export async function hasChannelPermission(
+  channelId: string,
+  userId: string,
+  permission: keyof HaosPermissions,
+  userRoles?: { roleId: string, roleName: string, powerLevel: number }[],
+  roomPowerLevels?: any
+): Promise<PermissionCheckResult> {
+  try {
+    // Get channel-specific permissions
+    const channelPermissions = await getChannelPermissions(channelId);
+    
+    // Check for user-specific override first (highest precedence)
+    if (channelPermissions?.userOverrides) {
+      const userOverride = channelPermissions.userOverrides.find(
+        override => override.userId === userId
+      );
+      
+      if (userOverride && permission in userOverride.permissions) {
+        const value = userOverride.permissions[permission]!;
+        return {
+          allowed: value,
+          source: 'channel-user',
+          reasoning: `User-specific override in channel`,
+          value
+        };
+      }
+    }
+
+    // Check for role-specific channel overrides (medium precedence)
+    if (channelPermissions?.roleOverrides && userRoles) {
+      for (const userRole of userRoles) {
+        const roleOverride = channelPermissions.roleOverrides.find(
+          override => override.roleId === userRole.roleId
+        );
+        
+        if (roleOverride && permission in roleOverride.permissions) {
+          const value = roleOverride.permissions[permission]!;
+          return {
+            allowed: value,
+            source: 'channel-role',
+            reasoning: `Role "${userRole.roleName}" override in channel`,
+            value
+          };
+        }
+      }
+    }
+
+    // Fall back to base role permission check (lowest precedence)
+    if (userRoles && userRoles.length > 0) {
+      // Use the highest power level among user's roles
+      const highestPowerLevel = Math.max(...userRoles.map(role => role.powerLevel));
+      const hasBasePermission = hasPermission(highestPowerLevel, permission, roomPowerLevels);
+      
+      return {
+        allowed: hasBasePermission,
+        source: 'role',
+        reasoning: `Base role permission (power level ${highestPowerLevel})`,
+        value: hasBasePermission
+      };
+    }
+
+    // Default to base permission check with user's power level
+    const client = getClient();
+    if (!client) {
+      return {
+        allowed: false,
+        source: 'default',
+        reasoning: 'Matrix client not available',
+        value: false
+      };
+    }
+
+    const room = client.getRoom(channelId);
+    const powerLevels = room?.currentState.getStateEvents("m.room.power_levels", "")?.getContent();
+    const userPowerLevel = powerLevels?.users?.[userId] || powerLevels?.users_default || 0;
+    
+    const hasBasePermission = hasPermission(userPowerLevel, permission, powerLevels);
+    return {
+      allowed: hasBasePermission,
+      source: 'default',
+      reasoning: `Default power level ${userPowerLevel}`,
+      value: hasBasePermission
+    };
+
+  } catch (error) {
+    console.error("Failed to check channel permission:", error);
+    return {
+      allowed: false,
+      source: 'default',
+      reasoning: 'Error checking permissions',
+      value: false
+    };
+  }
+}
+
+/**
+ * Get effective permissions for a user in a channel
+ */
+export async function getChannelUserPermissions(
+  channelId: string,
+  userId: string,
+  userRoles?: { roleId: string, roleName: string, powerLevel: number }[]
+): Promise<HaosPermissions> {
+  const permissions: HaosPermissions = {} as HaosPermissions;
+  
+  for (const permission of Object.keys(MATRIX_PERMISSION_MAPPINGS) as (keyof HaosPermissions)[]) {
+    const result = await hasChannelPermission(channelId, userId, permission, userRoles);
+    permissions[permission] = result.allowed;
+  }
+  
+  return permissions;
+}
+
+/**
+ * Execute bulk permission operations
+ */
+export async function executeBulkPermissionOperation(
+  channelId: string,
+  operation: BulkPermissionOperation,
+  executedBy: string
+): Promise<{ success: string[]; failed: { id: string; error: string }[] }> {
+  const success: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+
+  for (const targetId of operation.targetIds) {
+    try {
+      let permissionOverrides: Partial<HaosPermissions> = {};
+
+      if (operation.type === 'copy' && operation.copyFromId) {
+        // Copy permissions from another target
+        const channelPermissions = await getChannelPermissions(channelId);
+        if (channelPermissions) {
+          const sourceOverride = operation.targetType === 'role' 
+            ? channelPermissions.roleOverrides.find(r => r.roleId === operation.copyFromId)
+            : channelPermissions.userOverrides.find(u => u.userId === operation.copyFromId);
+          
+          if (sourceOverride) {
+            permissionOverrides = { ...sourceOverride.permissions };
+          }
+        }
+      } else if (operation.type === 'reset') {
+        // Reset means removing the override entirely
+        if (operation.targetType === 'role') {
+          await removeChannelRolePermissionOverride(channelId, targetId, executedBy);
+        } else {
+          await removeChannelUserPermissionOverride(channelId, targetId, executedBy);
+        }
+        success.push(targetId);
+        continue;
+      } else {
+        // Grant or deny specific permissions
+        for (const permission of operation.permissions) {
+          permissionOverrides[permission] = operation.action === 'allow';
+        }
+      }
+
+      // Apply the override
+      if (operation.targetType === 'role') {
+        await setChannelRolePermissionOverride(
+          channelId, 
+          targetId, 
+          `Role ${targetId}`, // TODO: Get actual role name
+          permissionOverrides,
+          executedBy
+        );
+      } else {
+        await setChannelUserPermissionOverride(
+          channelId,
+          targetId,
+          `User ${targetId}`, // TODO: Get actual user display name
+          permissionOverrides,
+          executedBy
+        );
+      }
+
+      success.push(targetId);
+    } catch (error) {
+      failed.push({
+        id: targetId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  return { success, failed };
+}
+
 const permissionsService = {
   PERMISSION_CATEGORIES,
   PERMISSION_TEMPLATES,
@@ -706,6 +1091,17 @@ const permissionsService = {
   validatePermissions,
   applyPermissionTemplate,
   updateRoomPermissions,
+  
+  // Channel-specific permissions
+  getChannelPermissions,
+  setChannelPermissions,
+  setChannelRolePermissionOverride,
+  setChannelUserPermissionOverride,
+  removeChannelRolePermissionOverride,
+  removeChannelUserPermissionOverride,
+  hasChannelPermission,
+  getChannelUserPermissions,
+  executeBulkPermissionOperation,
 };
 
 export default permissionsService;

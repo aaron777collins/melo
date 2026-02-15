@@ -153,9 +153,13 @@ export function InitialModal() {
       form.reset();
       setIsOpen(false);
       
-      // Navigate to the new space
-      router.push(`/channels/${createResult.room_id}`);
+      // Refresh to show the new space in the sidebar
+      // The full channel view routes need to be built out
+      // For now, just close the modal and stay on the current page
       router.refresh();
+      
+      // TODO: Navigate to /servers/${createResult.room_id}/channels/general 
+      // once the Matrix-based server routes are implemented
       
     } catch (err) {
       console.error("[InitialModal] Error creating space:", err);

@@ -198,7 +198,7 @@ function PasswordConfirmationForm({
             <Button
               type="submit"
               variant={config.actionVariant || "destructive"}
-              disabled={isLoading || (config.confirmationText && !form.watch("confirmAction"))}
+              disabled={isLoading || !!(config.confirmationText && !form.watch("confirmAction"))}
             >
               {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {config.actionText}

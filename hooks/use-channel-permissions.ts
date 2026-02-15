@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import permissionsService, { type HaosPermissions } from '@/lib/matrix/permissions';
 import rolesService from '@/lib/matrix/roles';
 import type { 
@@ -8,7 +8,7 @@ import type {
   ChannelUserPermissionOverride,
   BulkPermissionOperation,
   PermissionCheckResult
-} from '@/types/channel';
+} from '@/src/types/channel';
 
 interface UseChannelPermissionsProps {
   channelId: string;
@@ -61,8 +61,6 @@ export function useChannelPermissions({
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  const { toast } = useToast();
-
   const loadChannelPermissions = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -70,15 +68,11 @@ export function useChannelPermissions({
       setChannelPermissions(permissions);
     } catch (error) {
       console.error('Failed to load channel permissions:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load channel permissions',
-        variant: 'destructive',
-      });
+      toast.error('Failed to load channel permissions');
     } finally {
       setIsLoading(false);
     }
-  }, [channelId, toast]);
+  }, [channelId]);
 
   const loadUserRoles = useCallback(async () => {
     if (!userId || !channelId) return;
@@ -166,22 +160,15 @@ export function useChannelPermissions({
         userId
       );
       await loadChannelPermissions();
-      toast({
-        title: 'Success',
-        description: `Updated permissions for role "${roleName}"`,
-      });
+      toast.success(`Updated permissions for role "${roleName}"`);
     } catch (error) {
       console.error('Failed to set role permission override:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update role permissions',
-        variant: 'destructive',
-      });
+      toast.error('Failed to update role permissions');
       throw error;
     } finally {
       setIsUpdating(false);
     }
-  }, [channelId, userId, loadChannelPermissions, toast]);
+  }, [channelId, userId, loadChannelPermissions]);
 
   const setUserPermissionOverride = useCallback(async (
     targetUserId: string,
@@ -204,22 +191,15 @@ export function useChannelPermissions({
         // Refresh effective permissions if updating current user
         await loadEffectivePermissions();
       }
-      toast({
-        title: 'Success',
-        description: `Updated permissions for "${displayName}"`,
-      });
+      toast.success(`Updated permissions for "${displayName}"`);
     } catch (error) {
       console.error('Failed to set user permission override:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update user permissions',
-        variant: 'destructive',
-      });
+      toast.error('Failed to update user permissions');
       throw error;
     } finally {
       setIsUpdating(false);
     }
-  }, [channelId, userId, loadChannelPermissions, loadEffectivePermissions, toast]);
+  }, [channelId, userId, loadChannelPermissions, loadEffectivePermissions]);
 
   const removeRoleOverride = useCallback(async (roleId: string) => {
     if (!userId) throw new Error('User not authenticated');
@@ -232,22 +212,15 @@ export function useChannelPermissions({
         userId
       );
       await loadChannelPermissions();
-      toast({
-        title: 'Success',
-        description: 'Removed role permission override',
-      });
+      toast.success('Removed role permission override');
     } catch (error) {
       console.error('Failed to remove role override:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to remove role override',
-        variant: 'destructive',
-      });
+      toast.error('Failed to remove role override');
       throw error;
     } finally {
       setIsUpdating(false);
     }
-  }, [channelId, userId, loadChannelPermissions, toast]);
+  }, [channelId, userId, loadChannelPermissions]);
 
   const removeUserOverride = useCallback(async (targetUserId: string) => {
     if (!userId) throw new Error('User not authenticated');
@@ -264,22 +237,15 @@ export function useChannelPermissions({
         // Refresh effective permissions if removing current user override
         await loadEffectivePermissions();
       }
-      toast({
-        title: 'Success',
-        description: 'Removed user permission override',
-      });
+      toast.success('Removed user permission override');
     } catch (error) {
       console.error('Failed to remove user override:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to remove user override',
-        variant: 'destructive',
-      });
+      toast.error('Failed to remove user override');
       throw error;
     } finally {
       setIsUpdating(false);
     }
-  }, [channelId, userId, loadChannelPermissions, loadEffectivePermissions, toast]);
+  }, [channelId, userId, loadChannelPermissions, loadEffectivePermissions]);
 
   const checkPermission = useCallback(async (permission: keyof HaosPermissions): Promise<PermissionCheckResult> => {
     if (!userId) {
@@ -313,33 +279,22 @@ export function useChannelPermissions({
       await loadChannelPermissions();
       
       if (result.success.length > 0) {
-        toast({
-          title: 'Bulk Operation Complete',
-          description: `Updated permissions for ${result.success.length} target(s)`,
-        });
+        toast.success(`Updated permissions for ${result.success.length} target(s)`);
       }
       
       if (result.failed.length > 0) {
-        toast({
-          title: 'Partial Success',
-          description: `${result.failed.length} operations failed`,
-          variant: 'destructive',
-        });
+        toast.error(`${result.failed.length} operations failed`);
       }
       
       return result;
     } catch (error) {
       console.error('Failed to execute bulk operation:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to execute bulk operation',
-        variant: 'destructive',
-      });
+      toast.error('Failed to execute bulk operation');
       throw error;
     } finally {
       setIsUpdating(false);
     }
-  }, [channelId, userId, loadChannelPermissions, toast]);
+  }, [channelId, userId, loadChannelPermissions]);
 
   const refreshPermissions = useCallback(async () => {
     await Promise.all([

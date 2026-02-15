@@ -39,7 +39,9 @@ const store = new Map<string, { count: number; resetTime: number }>();
  */
 function cleanExpiredEntries() {
   const now = Date.now();
-  for (const [key, entry] of store.entries()) {
+  // Convert entries to array to avoid iterator compatibility issues
+  const entries = Array.from(store.entries());
+  for (const [key, entry] of entries) {
     if (now >= entry.resetTime) {
       store.delete(key);
     }
@@ -84,7 +86,7 @@ function getClientIP(req: NextRequest): string {
 /**
  * Check if user is authenticated by looking for Matrix session
  */
-async function isAuthenticated(req: NextRequest): Promise<string | null> {
+async function isAuthenticated(req: NextRequest): Promise<string | undefined> {
   try {
     // Check for Matrix access token in Authorization header
     const authHeader = req.headers.get('authorization');
@@ -111,9 +113,9 @@ async function isAuthenticated(req: NextRequest): Promise<string | null> {
       }
     }
     
-    return null;
+    return undefined;
   } catch {
-    return null;
+    return undefined;
   }
 }
 

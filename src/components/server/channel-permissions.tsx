@@ -56,7 +56,7 @@ import type {
   ChannelRolePermissionOverride,
   ChannelUserPermissionOverride,
   BulkPermissionOperation
-} from '@/types/channel';
+} from '@/src/types/channel';
 
 interface ChannelPermissionsProps {
   channelId: string;

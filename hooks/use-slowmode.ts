@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SlowmodeSettings } from '@/types/channel';
+import { SlowmodeSettings } from '@/src/types/channel';
 import { toast } from 'sonner';
 
 /**

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useSlowmode } from '@/hooks/use-slowmode';
-import { SlowmodeSettings } from '@/types/channel';
+import { SlowmodeSettings } from '@/src/types/channel';
 
 interface ChatInputProps {
   slowmodeSettings?: SlowmodeSettings;

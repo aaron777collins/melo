@@ -26,8 +26,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Settings, Shield } from 'lucide-react';
-import { SLOWMODE_DURATION_OPTIONS } from '@/types/channel';
-import { ChannelPermissions } from '@/components/server/channel-permissions';
+import { SLOWMODE_DURATION_OPTIONS } from '@/src/types/channel';
+import { ChannelPermissions } from '@/src/components/server/channel-permissions';
 
 const channelSettingsSchema = z.object({
   slowmodeDuration: z.number().min(0).max(900),

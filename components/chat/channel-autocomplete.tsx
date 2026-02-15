@@ -67,7 +67,8 @@ interface ChannelAutocompleteProps {
 function roomToChannelMention(room: Room): ChannelMention {
   // Determine channel type based on room state
   let type: ChannelMention['type'] = "text";
-  const roomType = room.getStateEvents("m.room.create", "")[0]?.getContent()?.type;
+  const createEvent = room.currentState.getStateEvents("m.room.create", "");
+  const roomType = createEvent?.getContent()?.type;
   
   switch (roomType) {
     case "m.space.voice":

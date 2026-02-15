@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Edit, FileIcon, ImageIcon, VideoIcon, MusicIcon, Download, Plus, MessageSquare, Check, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { MatrixEvent } from "matrix-js-sdk";
+import { CodeBlock } from "./code-block";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -876,8 +877,9 @@ export function ChatItem({
                     ),
                     code: ({ children, className, ...props }) => {
                       const match = /language-(\w+)/.exec(className || '');
+                      const language = match ? match[1] : undefined;
                       // If no language class and it's short, treat as inline
-                      const isCodeBlock = match || (typeof children === 'string' && children.includes('\n'));
+                      const isCodeBlock = language || (typeof children === 'string' && children.includes('\n'));
                       
                       if (!isCodeBlock) {
                         return (
@@ -889,17 +891,45 @@ export function ChatItem({
                           </code>
                         );
                       }
-                      return (
+                      
+                      return typeof children === 'string' ? (
+                        <CodeBlock 
+                          code={children} 
+                          language={language} 
+                          className="my-2"
+                        />
+                      ) : (
                         <code className={`font-mono text-sm ${className || ''}`} {...props}>
                           {children}
                         </code>
                       );
                     },
-                    pre: ({ children }) => (
-                      <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto">
-                        {children}
-                      </pre>
-                    ),
+                    pre: ({ children, ...props }) => {
+                      // Only replace if the pre contains a code block with language
+                      if (React.isValidElement(children)) {
+                        const codeProps = children.props;
+                        const language = (codeProps.className && /language-(\w+)/.exec(codeProps.className)?.[1]) || undefined;
+                        const code = codeProps.children || '';
+                        
+                        return typeof code === 'string' ? (
+                          <CodeBlock 
+                            code={code} 
+                            language={language} 
+                            className="my-2"
+                          />
+                        ) : (
+                          <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto" {...props}>
+                            {children}
+                          </pre>
+                        );
+                      }
+                      
+                      return (
+                        <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto" {...props}>
+                          {children}
+                        </pre>
+                      );
+                    },
                     blockquote: ({ children }) => (
                       <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic">
                         {children}

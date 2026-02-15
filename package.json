@@ -52,6 +52,7 @@
     "eslint": "8.48.0",
     "eslint-config-next": "13.4.12",
     "get-video-duration": "^5.0.0",
+    "highlight.js": "^11.11.1",
     "livekit-client": "^1.13.2",
     "livekit-server-sdk": "^1.2.6",
     "lucide-react": "^0.269.0",

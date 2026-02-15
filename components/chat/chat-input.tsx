@@ -4,7 +4,7 @@ import React, { useRef, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Send } from "lucide-react";
+import { Plus, Send, Image } from "lucide-react";
 import axios from "axios";
 import qs from "query-string";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,7 @@ import { useMentions } from "@/hooks/use-mentions";
 import { EmojiPicker } from "@/components/emoji-picker";
 import { MentionAutocomplete } from "./mention-autocomplete";
 import { ChannelAutocomplete } from "./channel-autocomplete";
+import { GifPicker } from "./gif-picker";
 
 interface ChatInputProps {
   /**
@@ -72,6 +73,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Handle input changes for mention detection
@@ -181,6 +183,40 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     }
   }, [form, onSubmit]);
 
+  // Handle GIF selection
+  const handleGifSelect = useCallback(async (gifUrl: string) => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
+    try {
+      if (roomId && client && isReady) {
+        // Send GIF via Matrix
+        const messageContent = {
+          msgtype: "m.text",
+          body: gifUrl, // Send GIF URL as message body
+          format: "org.matrix.custom.html",
+          formatted_body: `<img src="${gifUrl}" alt="GIF" style="max-width: 300px; max-height: 300px;" />`,
+        };
+        
+        await client.sendMessage(roomId, messageContent);
+      } else if (apiUrl && query) {
+        // Legacy API-based sending
+        const url = qs.stringifyUrl({
+          url: apiUrl,
+          query
+        });
+
+        await axios.post(url, { content: gifUrl });
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Failed to send GIF:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [roomId, client, isReady, apiUrl, query, isLoading, router]);
+
   const isMatrixMode = Boolean(roomId && client && isReady);
   const placeholder = `Message ${type === "conversation" ? name : "#" + name}`;
 
@@ -225,6 +261,18 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                     
                     {/* Right side controls */}
                     <div className="absolute top-7 right-8 flex items-center gap-2">
+                      {/* GIF picker button */}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowGifPicker(true)}
+                        disabled={isLoading}
+                        className="h-6 w-6 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition"
+                      >
+                        <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" />
+                      </Button>
+                      
                       {/* Emoji picker */}
                       <EmojiPicker
                         onChange={(emoji: string) => {
@@ -259,6 +307,13 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
         </form>
       </Form>
       
+      {/* GIF picker modal */}
+      <GifPicker
+        isOpen={showGifPicker}
+        onClose={() => setShowGifPicker(false)}
+        onGifSelect={handleGifSelect}
+      />
+
       {/* Mention autocomplete (Matrix mode only) */}
       {isMatrixMode && (
         <>

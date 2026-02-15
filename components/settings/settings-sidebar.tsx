@@ -91,6 +91,12 @@ function getNavSections(): SettingsNavSection[] {
           icon: Bell,
           href: `${basePath}/notifications`,
         },
+        {
+          id: "security",
+          label: "Security",
+          icon: Lock,
+          href: `${basePath}/security`,
+        },
       ],
     },
     

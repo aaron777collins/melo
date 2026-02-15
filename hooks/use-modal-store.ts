@@ -42,6 +42,7 @@ export type ModalType =
   // User moderation
   | "kickUser"
   | "banUser"
+  | "muteUser"
   // Role Management
   | "createRole"
   | "memberRoleEditor";

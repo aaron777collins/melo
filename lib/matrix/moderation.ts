@@ -293,6 +293,342 @@ export class MatrixModerationService {
   }
 
   /**
+   * Mute a user in a room by setting their power level to restrict messaging
+   * @param roomId The room to mute the user in
+   * @param userId The user performing the mute (for permission check)
+   * @param targetUserId The user to mute
+   * @param options Mute options including reason and duration
+   */
+  async muteUser(
+    roomId: string,
+    userId: string,
+    targetUserId: string,
+    options: MuteUserOptions = {}
+  ): Promise<ModerationResult> {
+    try {
+      // Check permissions
+      const hasPermission = await this.hasPermission(roomId, userId, 'MUTE', targetUserId);
+      if (!hasPermission) {
+        return {
+          success: false,
+          error: "You don't have permission to mute this user"
+        };
+      }
+
+      // Cannot mute yourself
+      if (userId === targetUserId) {
+        return {
+          success: false,
+          error: "You cannot mute yourself"
+        };
+      }
+
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        return {
+          success: false,
+          error: "Room not found"
+        };
+      }
+
+      // Store original power level for potential unmuting
+      const targetMember = room.getMember(targetUserId);
+      const originalPowerLevel = targetMember?.powerLevel ?? PowerLevels.USER;
+
+      // Set power level to -1 to mute (below minimum required for messaging)
+      await this.client.setPowerLevel(roomId, targetUserId, -1);
+
+      // Store mute information in room state for tracking and scheduled unmute
+      const muteData = {
+        mutedBy: userId,
+        mutedAt: new Date().toISOString(),
+        reason: options.reason || "Muted by moderator",
+        duration: options.duration || 0, // 0 = permanent
+        originalPowerLevel,
+        expiresAt: options.duration && options.duration > 0 ? 
+          new Date(Date.now() + options.duration).toISOString() : null
+      };
+
+      await this.client.sendStateEvent(
+        roomId,
+        'org.haos.moderation.mute' as any,
+        muteData,
+        targetUserId
+      );
+
+      // Log the moderation action
+      const logEntry = {
+        action: 'mute_user',
+        moderatorId: userId,
+        targetUserId,
+        eventId: '', // Not applicable for muting
+        roomId,
+        reason: options.reason || 'Muted by moderator',
+        timestamp: new Date().toISOString(),
+        metadata: {
+          duration: options.duration || 0,
+          originalPowerLevel
+        }
+      };
+      
+      await this.logModerationAction(logEntry);
+
+      console.log(`User ${userId} muted ${targetUserId} in ${roomId}. Reason: ${options.reason || 'No reason provided'}`);
+
+      // Schedule automatic unmute if duration is specified
+      if (options.duration && options.duration > 0) {
+        this.scheduleUnmute(roomId, targetUserId, options.duration);
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error muting user:", error);
+      
+      let errorMessage = "Failed to mute user";
+      if (error.errcode === 'M_FORBIDDEN') {
+        errorMessage = "You don't have permission to mute this user";
+      } else if (error.errcode === 'M_NOT_FOUND') {
+        errorMessage = "User not found in this room";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Unmute a user in a room by restoring their original power level
+   * @param roomId The room to unmute the user in
+   * @param userId The user performing the unmute (for permission check)
+   * @param targetUserId The user to unmute
+   */
+  async unmuteUser(
+    roomId: string,
+    userId: string,
+    targetUserId: string
+  ): Promise<ModerationResult> {
+    try {
+      // Check permissions
+      const hasPermission = await this.hasPermission(roomId, userId, 'MUTE');
+      if (!hasPermission) {
+        return {
+          success: false,
+          error: "You don't have permission to unmute users"
+        };
+      }
+
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        return {
+          success: false,
+          error: "Room not found"
+        };
+      }
+
+      // Get mute information from room state
+      const muteState = room.currentState.getStateEvents('org.haos.moderation.mute' as any, targetUserId);
+      
+      let originalPowerLevel = PowerLevels.USER; // Default fallback
+      if (muteState) {
+        const muteData = muteState.getContent();
+        originalPowerLevel = muteData.originalPowerLevel ?? PowerLevels.USER;
+      }
+
+      // Restore original power level
+      await this.client.setPowerLevel(roomId, targetUserId, originalPowerLevel);
+
+      // Remove mute state
+      await this.client.sendStateEvent(
+        roomId,
+        'org.haos.moderation.mute' as any,
+        {},
+        targetUserId
+      );
+
+      // Log the moderation action
+      const logEntry = {
+        action: 'unmute_user',
+        moderatorId: userId,
+        targetUserId,
+        eventId: '', // Not applicable for unmuting
+        roomId,
+        reason: `Unmuted by ${userId}`,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          restoredPowerLevel: originalPowerLevel
+        }
+      };
+      
+      await this.logModerationAction(logEntry);
+
+      console.log(`User ${userId} unmuted ${targetUserId} in ${roomId}`);
+
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error unmuting user:", error);
+      
+      let errorMessage = "Failed to unmute user";
+      if (error.errcode === 'M_FORBIDDEN') {
+        errorMessage = "You don't have permission to unmute users";
+      } else if (error.errcode === 'M_NOT_FOUND') {
+        errorMessage = "User not found";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  }
+
+  /**
+   * Check if a user is currently muted in a room
+   * @param roomId The room to check
+   * @param targetUserId The user to check mute status for
+   */
+  async isUserMuted(roomId: string, targetUserId: string): Promise<{
+    isMuted: boolean;
+    muteInfo?: {
+      mutedBy: string;
+      mutedAt: string;
+      reason: string;
+      duration: number;
+      expiresAt?: string;
+      originalPowerLevel: number;
+    };
+  }> {
+    try {
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        return { isMuted: false };
+      }
+
+      // Check current power level
+      const targetMember = room.getMember(targetUserId);
+      const currentPowerLevel = targetMember?.powerLevel ?? PowerLevels.USER;
+      
+      // If power level is -1, user is muted
+      const isMuted = currentPowerLevel === -1;
+      
+      if (!isMuted) {
+        return { isMuted: false };
+      }
+
+      // Get mute information from state
+      const muteState = room.currentState.getStateEvents('org.haos.moderation.mute' as any, targetUserId);
+      
+      if (muteState) {
+        const muteData = muteState.getContent();
+        return {
+          isMuted: true,
+          muteInfo: {
+            mutedBy: muteData.mutedBy,
+            mutedAt: muteData.mutedAt,
+            reason: muteData.reason,
+            duration: muteData.duration,
+            expiresAt: muteData.expiresAt,
+            originalPowerLevel: muteData.originalPowerLevel
+          }
+        };
+      }
+
+      // User is muted but no state info (edge case)
+      return { isMuted: true };
+    } catch (error) {
+      console.error("Error checking mute status:", error);
+      return { isMuted: false };
+    }
+  }
+
+  /**
+   * Get all muted users in a room
+   * @param roomId The room to get muted users from
+   */
+  async getMutedUsers(roomId: string): Promise<Array<{
+    userId: string;
+    mutedBy: string;
+    mutedAt: string;
+    reason: string;
+    duration: number;
+    expiresAt?: string;
+    originalPowerLevel: number;
+  }>> {
+    try {
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        return [];
+      }
+
+      const mutedUsers: Array<{
+        userId: string;
+        mutedBy: string;
+        mutedAt: string;
+        reason: string;
+        duration: number;
+        expiresAt?: string;
+        originalPowerLevel: number;
+      }> = [];
+
+      // Get all mute state events
+      const muteStates = room.currentState.events.get('org.haos.moderation.mute' as any);
+      if (!muteStates) {
+        return [];
+      }
+
+      muteStates.forEach((event, userId) => {
+        const content = event.getContent();
+        if (content.mutedBy) {
+          mutedUsers.push({
+            userId,
+            mutedBy: content.mutedBy,
+            mutedAt: content.mutedAt,
+            reason: content.reason,
+            duration: content.duration,
+            expiresAt: content.expiresAt,
+            originalPowerLevel: content.originalPowerLevel
+          });
+        }
+      });
+
+      return mutedUsers.sort((a, b) => new Date(b.mutedAt).getTime() - new Date(a.mutedAt).getTime());
+    } catch (error) {
+      console.error("Error getting muted users:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Schedule automatic unmute for a user (simple timer-based implementation)
+   * @param roomId The room where user is muted
+   * @param targetUserId The muted user
+   * @param duration Duration in milliseconds
+   */
+  private scheduleUnmute(roomId: string, targetUserId: string, duration: number): void {
+    // In a production system, this should use a persistent job queue
+    // For now, we'll use a simple setTimeout (won't survive page reloads)
+    setTimeout(async () => {
+      try {
+        // Check if user is still muted before unmuting
+        const muteStatus = await this.isUserMuted(roomId, targetUserId);
+        if (muteStatus.isMuted) {
+          // Use a system user ID for automatic unmutes
+          const systemUserId = this.client.getUserId() || '@system:haos';
+          await this.unmuteUser(roomId, systemUserId, targetUserId);
+          console.log(`Automatically unmuted ${targetUserId} in ${roomId} after ${duration}ms`);
+        }
+      } catch (error) {
+        console.error(`Failed to auto-unmute ${targetUserId} in ${roomId}:`, error);
+      }
+    }, duration);
+  }
+
+  /**
    * Get list of room members with their power levels and roles
    * @param roomId The room to get members from
    */

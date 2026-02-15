@@ -12,6 +12,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { ServerSettingsSidebar } from "@/components/server/settings/server-settings-sidebar";
 import { RoleManager } from "@/components/server/role-manager";
 import { MemberList } from "@/components/server/member-list";
+import { InviteGenerator } from "@/components/server/invite-generator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -259,11 +260,9 @@ export function ServerSettings({
         
       case "invites":
         return (
-          <PlaceholderTab
-            title="Invites"
-            description="Create and manage server invite links."
-            icon={Link2}
-            comingSoon={true}
+          <InviteGenerator
+            spaceId={spaceId}
+            spaceName={space.name}
           />
         );
         

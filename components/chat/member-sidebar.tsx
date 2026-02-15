@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Member, Profile } from "@/lib/haos-types";
-import { Crown, ShieldAlert, ShieldCheck, UserX, Ban, MoreVertical } from "lucide-react";
+import { Crown, ShieldAlert, ShieldCheck, UserX, Ban, VolumeX, MoreVertical } from "lucide-react";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { ActionTooltip } from "@/components/action-tooltip";
@@ -140,6 +140,8 @@ function MemberItem({ member, isOnline, serverId, roomId }: MemberItemProps) {
   const { client } = useMatrixClient();
   const [canKick, setCanKick] = useState(false);
   const [canBan, setCanBan] = useState(false);
+  const [canMute, setCanMute] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [userRole, setUserRole] = useState<'admin' | 'moderator' | 'member'>('member');
 
   const roleIcon = roleIconMap[member.role as keyof typeof roleIconMap];
@@ -157,25 +159,31 @@ function MemberItem({ member, isOnline, serverId, roomId }: MemberItemProps) {
       if (currentUserId === member.id) {
         setCanKick(false);
         setCanBan(false);
+        setCanMute(false);
         return;
       }
 
       const moderationService = createModerationService(client);
       
       try {
-        const [kickPermission, banPermission, currentUserRole] = await Promise.all([
+        const [kickPermission, banPermission, mutePermission, currentUserRole, muteStatus] = await Promise.all([
           moderationService.hasPermission(serverId, currentUserId, 'KICK', member.id),
           moderationService.hasPermission(serverId, currentUserId, 'BAN', member.id),
-          moderationService.getUserRole(serverId, currentUserId)
+          moderationService.hasPermission(serverId, currentUserId, 'MUTE', member.id),
+          moderationService.getUserRole(serverId, currentUserId),
+          moderationService.isUserMuted(serverId, member.id)
         ]);
 
         setCanKick(kickPermission);
         setCanBan(banPermission);
+        setCanMute(mutePermission);
         setUserRole(currentUserRole);
+        setIsMuted(muteStatus.isMuted);
       } catch (error) {
         console.error('Error checking permissions:', error);
         setCanKick(false);
         setCanBan(false);
+        setCanMute(false);
       }
     };
 
@@ -210,6 +218,41 @@ function MemberItem({ member, isOnline, serverId, roomId }: MemberItemProps) {
     });
   };
 
+  const handleMuteUser = () => {
+    if (!serverId || !canMute) return;
+
+    onOpen("muteUser", {
+      targetUser: {
+        id: member.id,
+        name: member.profile.name,
+        avatarUrl: member.profile.imageUrl
+      },
+      serverId,
+      roomId
+    });
+  };
+
+  const handleUnmuteUser = async () => {
+    if (!serverId || !canMute || !client) return;
+
+    const currentUserId = client.getUserId();
+    if (!currentUserId) return;
+
+    try {
+      const moderationService = createModerationService(client);
+      const result = await moderationService.unmuteUser(serverId, currentUserId, member.id);
+      
+      if (result.success) {
+        setIsMuted(false);
+        // Could add a toast notification here
+      } else {
+        console.error('Failed to unmute user:', result.error);
+      }
+    } catch (error) {
+      console.error('Error unmuting user:', error);
+    }
+  };
+
   const handleViewProfile = () => {
     onOpen("userProfile", {
       userId: member.id,
@@ -218,7 +261,7 @@ function MemberItem({ member, isOnline, serverId, roomId }: MemberItemProps) {
   };
 
   // Check if current user can moderate this member
-  const showModerationMenu = (canKick || canBan) && client?.getUserId() !== member.id;
+  const showModerationMenu = (canKick || canBan || canMute) && client?.getUserId() !== member.id;
 
   return (
     <div className="group flex items-center gap-x-2 w-full p-2 rounded-md transition hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 relative">
@@ -256,6 +299,11 @@ function MemberItem({ member, isOnline, serverId, roomId }: MemberItemProps) {
               {roleIcon}
             </div>
           )}
+          {isMuted && (
+            <div className="flex-shrink-0" title="User is muted">
+              <VolumeX className="h-3 w-3 text-orange-500" />
+            </div>
+          )}
         </div>
         
         {/* Optional status or activity */}
@@ -285,7 +333,27 @@ function MemberItem({ member, isOnline, serverId, roomId }: MemberItemProps) {
                 View Profile
               </DropdownMenuItem>
               
-              {(canKick || canBan) && <DropdownMenuSeparator />}
+              {(canKick || canBan || canMute) && <DropdownMenuSeparator />}
+              
+              {canMute && (
+                isMuted ? (
+                  <DropdownMenuItem 
+                    onClick={handleUnmuteUser}
+                    className="text-green-600 dark:text-green-400 focus:text-green-600 dark:focus:text-green-400"
+                  >
+                    <VolumeX className="h-4 w-4 mr-2" />
+                    Unmute User
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem 
+                    onClick={handleMuteUser}
+                    className="text-orange-600 dark:text-orange-400 focus:text-orange-600 dark:focus:text-orange-400"
+                  >
+                    <VolumeX className="h-4 w-4 mr-2" />
+                    Mute User
+                  </DropdownMenuItem>
+                )
+              )}
               
               {canKick && (
                 <DropdownMenuItem 

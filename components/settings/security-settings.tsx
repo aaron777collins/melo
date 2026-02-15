@@ -56,6 +56,7 @@ import {
 } from "@/lib/matrix/crypto/secrets";
 import { getCryptoState, isCryptoReady } from "@/lib/matrix/client";
 import { SecuritySetupModal } from "@/components/modals/security-setup-modal";
+import { DeviceManagement } from "./device-management";
 
 // =============================================================================
 // Types
@@ -595,6 +596,11 @@ export function SecuritySettings({ className }: SecuritySettingsProps) {
 
       {/* Cross-signing */}
       <CrossSigningStatusCard />
+
+      <Separator />
+
+      {/* Device Management */}
+      <DeviceManagement />
 
       <Separator />
 

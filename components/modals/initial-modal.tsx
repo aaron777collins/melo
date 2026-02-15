@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 import { getClient } from "@/lib/matrix/client";
+import { MatrixFileUpload } from "@/components/matrix-file-upload";
 
 // Make image optional - we'll use a default or generated avatar
 const formSchema = z.object({
@@ -63,6 +64,31 @@ export function InitialModal() {
 
       console.log("[InitialModal] Creating Matrix space:", values.name);
 
+      // Build initial state events
+      const initialState: any[] = [
+        // Enable guest access (optional)
+        {
+          type: "m.room.guest_access",
+          state_key: "",
+          content: { guest_access: "can_join" }
+        },
+        // Set history visibility
+        {
+          type: "m.room.history_visibility",
+          state_key: "",
+          content: { history_visibility: "shared" }
+        }
+      ];
+
+      // Add avatar if uploaded (mxc:// URL)
+      if (values.imageUrl) {
+        initialState.push({
+          type: "m.room.avatar",
+          state_key: "",
+          content: { url: values.imageUrl }
+        });
+      }
+
       // Create a Matrix space (which is like a Discord server)
       const createResult = await client.createRoom({
         name: values.name,
@@ -84,20 +110,7 @@ export function InitialModal() {
         visibility: "private" as any,
         preset: "private_chat" as any,
         // Initial state events
-        initial_state: [
-          // Enable guest access (optional)
-          {
-            type: "m.room.guest_access",
-            state_key: "",
-            content: { guest_access: "can_join" }
-          },
-          // Set history visibility
-          {
-            type: "m.room.history_visibility",
-            state_key: "",
-            content: { history_visibility: "shared" }
-          }
-        ]
+        initial_state: initialState
       });
 
       console.log("[InitialModal] Space created:", createResult.room_id);
@@ -188,6 +201,31 @@ export function InitialModal() {
                   {error}
                 </div>
               )}
+              
+              {/* Server Icon Upload */}
+              <div className="flex items-center justify-center">
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <MatrixFileUpload
+                          type="image"
+                          value={field.value}
+                          onUpload={(mxcUrl) => field.onChange(mxcUrl)}
+                          onClear={() => field.onChange("")}
+                          onError={(err) => setError(err)}
+                          disabled={isLoading}
+                          placeholder="Upload server icon (optional)"
+                          maxSize={4 * 1024 * 1024}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
                 name="name"

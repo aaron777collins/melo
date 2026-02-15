@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Channel, ChannelType, Server } from "@/lib/haos-types";
+import { Channel, ChannelType, Server, Member, Profile } from "@/lib/haos-types";
 import { MatrixSpace, SpaceChannel, ChannelType as MatrixChannelType } from "@/lib/matrix/types/space";
 
 export type ModalType =
@@ -43,7 +43,8 @@ export type ModalType =
   | "kickUser"
   | "banUser"
   // Role Management
-  | "createRole";
+  | "createRole"
+  | "memberRoleEditor";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -103,6 +104,11 @@ interface ModalData {
   isOwnMessage?: boolean;
   /** Whether the current user can moderate (delete others' messages) */
   canModerate?: boolean;
+  // Member role editor
+  /** Member to edit roles for */
+  member?: Member & { profile: Profile };
+  /** Callback after successful role assignment */
+  onSuccess?: () => void;
 }
 
 interface ModalStore {

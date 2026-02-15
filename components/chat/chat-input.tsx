@@ -22,6 +22,7 @@ import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useMentions } from "@/hooks/use-mentions";
 import { EmojiPicker } from "@/components/emoji-picker";
 import { MentionAutocomplete } from "./mention-autocomplete";
+import { ChannelAutocomplete } from "./channel-autocomplete";
 
 interface ChatInputProps {
   /**
@@ -112,7 +113,13 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
           for (const mention of parsedMentions) {
             const beforeMention = formattedBody.substring(0, mention.offset + offset);
             const afterMention = formattedBody.substring(mention.offset + offset + mention.length);
-            const mentionHtml = `<a href="https://matrix.to/#/${mention.userId}">${mention.displayName}</a>`;
+            
+            let mentionHtml;
+            if (mention.type === "user") {
+              mentionHtml = `<a href="https://matrix.to/#/${mention.userId}">${mention.displayName}</a>`;
+            } else if (mention.type === "channel") {
+              mentionHtml = `<a href="#/channels/${mention.channelId}">#${mention.displayName}</a>`;
+            }
             
             formattedBody = beforeMention + mentionHtml + afterMention;
             offset += mentionHtml.length - mention.length;
@@ -123,18 +130,21 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
           
           // Add Matrix spec mentions
           messageContent["m.mentions"] = {
-            user_ids: parsedMentions.map(m => m.userId),
+            user_ids: parsedMentions
+              .filter(m => m.type === "user")
+              .map(m => m.userId || ""),
+            room_ids: parsedMentions
+              .filter(m => m.type === "channel")
+              .map(m => m.channelId || ""),
           };
         }
         
         // Send the message via Matrix
         await client.sendMessage(roomId, messageContent);
         
-        // Optional: Send notifications to mentioned users
-        // This could be handled by the Matrix server or client-side
+        // Optional: Send notifications to mentioned users/channels
         for (const mention of parsedMentions) {
-          // TODO: Implement custom notification system if needed
-          console.log(`Mentioned user: ${mention.displayName} (${mention.userId})`);
+          console.log(`Mentioned ${mention.type}: ${mention.displayName} (${mention.type === "user" ? mention.userId : mention.channelId})`);
         }
         
         // Reset form
@@ -248,14 +258,25 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
       
       {/* Mention autocomplete (Matrix mode only) */}
       {isMatrixMode && (
-        <MentionAutocomplete
-          members={mentions.members}
-          query={mentions.mentionQuery}
-          position={mentions.autocompletePosition}
-          visible={mentions.showAutocomplete}
-          onSelect={mentions.handleUserSelect}
-          onClose={mentions.closeAutocomplete}
-        />
+        <>
+          <MentionAutocomplete
+            members={mentions.members}
+            query={mentions.mentionQuery}
+            position={mentions.autocompletePosition}
+            visible={mentions.showAutocomplete && mentions.mentionQuery !== "" && currentMentionRange?.type === "user"}
+            onSelect={mentions.handleUserSelect}
+            onClose={mentions.closeAutocomplete}
+          />
+          
+          <ChannelAutocomplete
+            rooms={mentions.rooms}
+            query={mentions.mentionQuery}
+            position={mentions.autocompletePosition}
+            visible={mentions.showAutocomplete && mentions.mentionQuery !== "" && currentMentionRange?.type === "channel"}
+            onSelect={mentions.handleChannelSelect}
+            onClose={mentions.closeAutocomplete}
+          />
+        </>
       )}
     </>
   );

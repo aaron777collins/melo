@@ -11,6 +11,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ServerSettingsSidebar } from "@/components/server/settings/server-settings-sidebar";
 import { RoleManager } from "@/components/server/role-manager";
+import { MemberList } from "@/components/server/member-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -249,11 +250,10 @@ export function ServerSettings({
         
       case "members":
         return (
-          <PlaceholderTab
-            title="Members"
-            description="Manage server members, view roles, and moderate users."
-            icon={Users}
-            comingSoon={true}
+          <MemberList
+            serverId={serverId}
+            userPowerLevel={userPowerLevel}
+            spaceName={space.name}
           />
         );
         

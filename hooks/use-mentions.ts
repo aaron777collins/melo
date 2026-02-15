@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback, useRef, useMemo } from "react";
-import { RoomMember } from "matrix-js-sdk";
+import { RoomMember, Room } from "matrix-js-sdk";
 import { useRoom } from "./use-room";
+import { useSpaces } from "./use-spaces";
 
 // =============================================================================
 // Types & Interfaces
@@ -15,11 +16,18 @@ interface MentionUser {
   username: string;
 }
 
+interface MentionChannel {
+  id: string;
+  name: string;
+  type: "text" | "voice" | "announcement";
+}
+
 interface MentionRange {
   start: number;
   end: number;
   query: string;
   isActive: boolean;
+  type: "user" | "channel";
 }
 
 interface UseMentionsReturn {
@@ -29,7 +37,7 @@ interface UseMentionsReturn {
   showAutocomplete: boolean;
   
   /**
-   * Current mention query (text after @)
+   * Current mention query (text after @ or #)
    */
   mentionQuery: string;
   
@@ -47,7 +55,12 @@ interface UseMentionsReturn {
   members: RoomMember[];
   
   /**
-   * Handle input change to detect @ mentions
+   * Array of rooms for channel autocomplete
+   */
+  rooms: Room[];
+  
+  /**
+   * Handle input change to detect @ or # mentions
    */
   handleInputChange: (value: string, selectionStart: number, inputElement: HTMLInputElement) => void;
   
@@ -55,6 +68,11 @@ interface UseMentionsReturn {
    * Handle user selection from autocomplete
    */
   handleUserSelect: (user: MentionUser) => void;
+  
+  /**
+   * Handle channel selection from autocomplete
+   */
+  handleChannelSelect: (channel: MentionChannel) => void;
   
   /**
    * Close the autocomplete dropdown
@@ -72,10 +90,12 @@ interface UseMentionsReturn {
   parseMentions: (content: string) => {
     text: string;
     mentions: Array<{
-      userId: string;
+      userId?: string;
+      channelId?: string;
       displayName: string;
       offset: number;
       length: number;
+      type: "user" | "channel";
     }>;
   };
 }
@@ -85,17 +105,19 @@ interface UseMentionsReturn {
 // =============================================================================
 
 /**
- * Find @ symbols and their positions in text
+ * Find @ and # symbols and their positions in text
  */
 function findMentionTriggers(text: string, cursorPosition: number): MentionRange | null {
-  // Look backwards from cursor to find the nearest @
+  // Look backwards from cursor to find the nearest @ or #
   let start = -1;
+  let type: MentionRange['type'] = 'user';
   for (let i = cursorPosition - 1; i >= 0; i--) {
     const char = text[i];
     
-    // Found @ - this could be start of mention
-    if (char === "@") {
+    // Found trigger symbol
+    if (char === "@" || char === "#") {
       start = i;
+      type = char === "@" ? "user" : "channel";
       break;
     }
     
@@ -118,7 +140,7 @@ function findMentionTriggers(text: string, cursorPosition: number): MentionRange
     end = i + 1;
   }
   
-  // Extract the query (everything after @)
+  // Extract the query (everything after trigger symbol)
   const query = text.substring(start + 1, cursorPosition);
   
   // Validate that cursor is within this mention
@@ -129,6 +151,7 @@ function findMentionTriggers(text: string, cursorPosition: number): MentionRange
     end,
     query,
     isActive,
+    type,
   };
 }
 
@@ -155,7 +178,7 @@ function calculateAutocompletePosition(
   tempSpan.style.position = "absolute";
   tempSpan.style.whiteSpace = "pre";
   
-  // Measure text up to the @ symbol
+  // Measure text up to the @ or # symbol
   const textBeforeMention = inputElement.value.substring(0, mentionStart);
   tempSpan.textContent = textBeforeMention;
   
@@ -177,11 +200,13 @@ function calculateAutocompletePosition(
 function replaceMention(
   text: string,
   mentionRange: MentionRange,
-  user: MentionUser
+  item: MentionUser | MentionChannel
 ): { newText: string; newCursorPos: number } {
   const before = text.substring(0, mentionRange.start);
   const after = text.substring(mentionRange.end);
-  const mentionText = `@${user.username}`;
+  const mentionText = mentionRange.type === "user" 
+    ? `@${(item as MentionUser).username}` 
+    : `#${(item as MentionChannel).name}`;
   
   const newText = before + mentionText + after;
   const newCursorPos = before.length + mentionText.length;
@@ -194,13 +219,15 @@ function replaceMention(
 // =============================================================================
 
 /**
- * Hook for handling @user mentions in chat input
+ * Hook for handling @user and #channel mentions in chat input
  * 
  * Provides autocomplete functionality, position calculation, and mention parsing
- * for Matrix-based user mentions in chat messages.
+ * for Matrix-based mentions in chat messages.
  */
 export function useMentions(roomId: string): UseMentionsReturn {
   const { members } = useRoom(roomId);
+  // TODO: Implement space functionality when useSpace hook is available
+  const space = null;
   
   // State
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -216,6 +243,17 @@ export function useMentions(roomId: string): UseMentionsReturn {
   const activeMembers = useMemo(() => {
     return members.filter(member => member.membership === "join");
   }, [members]);
+
+  // Get relevant rooms for channel mentions
+  const spaceRooms = useMemo(() => {
+    if (!space) return [];
+    // TODO: Add filter for space-related rooms
+    return space.getJoinedRooms().filter(room => {
+      // You might want more sophisticated filtering 
+      // based on room type, permissions, etc.
+      return room.roomId !== roomId;
+    });
+  }, [space, roomId]);
   
   // =============================================================================
   // Event Handlers
@@ -258,11 +296,49 @@ export function useMentions(roomId: string): UseMentionsReturn {
   const handleUserSelect = useCallback((user: MentionUser) => {
     if (!currentMentionRange || !inputElementRef.current) return;
     
+    // Ensure the current mention is a user
+    if (currentMentionRange.type !== "user") return;
+    
     // Replace the mention in the text
     const { newText, newCursorPos } = replaceMention(
       currentValue,
       currentMentionRange,
       user
+    );
+    
+    // Update input value and cursor position
+    const inputElement = inputElementRef.current;
+    inputElement.value = newText;
+    inputElement.setSelectionRange(newCursorPos, newCursorPos);
+    
+    // Update state
+    setCurrentValue(newText);
+    setShowAutocomplete(false);
+    setCurrentMentionRange(null);
+    setMentionQuery("");
+    
+    // Focus back on input
+    inputElement.focus();
+    
+    // Trigger input event to notify parent components
+    const event = new Event("input", { bubbles: true });
+    inputElement.dispatchEvent(event);
+  }, [currentValue, currentMentionRange]);
+  
+  /**
+   * Handle channel selection from autocomplete
+   */
+  const handleChannelSelect = useCallback((channel: MentionChannel) => {
+    if (!currentMentionRange || !inputElementRef.current) return;
+    
+    // Ensure the current mention is a channel
+    if (currentMentionRange.type !== "channel") return;
+    
+    // Replace the mention in the text
+    const { newText, newCursorPos } = replaceMention(
+      currentValue,
+      currentMentionRange,
+      channel
     );
     
     // Update input value and cursor position
@@ -305,17 +381,21 @@ export function useMentions(roomId: string): UseMentionsReturn {
    */
   const parseMentions = useCallback((content: string) => {
     const mentions: Array<{
-      userId: string;
+      userId?: string;
+      channelId?: string;
       displayName: string;
       offset: number;
       length: number;
+      type: "user" | "channel";
     }> = [];
     
-    // Find all @username patterns
-    const mentionRegex = /@(\w+)/g;
+    // Find all @username and #channel patterns
+    const userMentionRegex = /@(\w+)/g;
+    const channelMentionRegex = /#(\w+)/g;
     let match;
     
-    while ((match = mentionRegex.exec(content)) !== null) {
+    // Find user mentions
+    while ((match = userMentionRegex.exec(content)) !== null) {
       const username = match[1];
       const mentionText = match[0]; // Full @username
       
@@ -333,6 +413,28 @@ export function useMentions(roomId: string): UseMentionsReturn {
           displayName: user.name || user.rawDisplayName || user.userId,
           offset: match.index!,
           length: mentionText.length,
+          type: "user",
+        });
+      }
+    }
+    
+    // Find channel mentions
+    while ((match = channelMentionRegex.exec(content)) !== null) {
+      const channelName = match[1];
+      const mentionText = match[0]; // Full #channelname
+      
+      // Find the corresponding channel
+      const channel = spaceRooms.find(room => 
+        (room.name || "").toLowerCase().replace(/\s+/g, "-") === channelName.toLowerCase()
+      );
+      
+      if (channel) {
+        mentions.push({
+          channelId: channel.roomId,
+          displayName: channel.name || "Unnamed Channel",
+          offset: match.index!,
+          length: mentionText.length,
+          type: "channel",
         });
       }
     }
@@ -341,7 +443,7 @@ export function useMentions(roomId: string): UseMentionsReturn {
       text: content,
       mentions,
     };
-  }, [activeMembers]);
+  }, [activeMembers, spaceRooms]);
   
   // =============================================================================
   // Return Value
@@ -352,8 +454,10 @@ export function useMentions(roomId: string): UseMentionsReturn {
     mentionQuery,
     autocompletePosition,
     members: activeMembers,
+    rooms: spaceRooms,
     handleInputChange,
     handleUserSelect,
+    handleChannelSelect,
     closeAutocomplete,
     getCurrentValue,
     parseMentions,

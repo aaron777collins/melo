@@ -16,6 +16,7 @@ import { CreateRoleModal } from "@/components/modals/create-role-modal";
 import { KickUserModal } from "@/components/modals/kick-user-modal";
 import { BanUserModal } from "@/components/modals/ban-user-modal";
 import { ConfirmDeleteModal } from "@/components/modals/confirm-delete-modal";
+import { MemberRoleEditorModal } from "@/components/modals/member-role-editor-modal";
 import { PinnedMessages } from "@/components/pinned-messages";
 
 export function ModalProvider() {
@@ -44,6 +45,7 @@ export function ModalProvider() {
       <KickUserModal />
       <BanUserModal />
       <ConfirmDeleteModal />
+      <MemberRoleEditorModal />
       <PinnedMessages />
       {/* TODO: Add more modals as they're created */}
     </>

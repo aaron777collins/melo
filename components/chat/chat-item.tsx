@@ -114,7 +114,7 @@ function getAvatarUrl(event: MatrixEvent): string | undefined {
 /**
  * Gets message content from Matrix event with proper type handling
  */
-function getMessageContent(event: MatrixEvent): { text: string; isMarkdown: boolean } {
+function getMessageContent(event: MatrixEvent): { text: string; isMarkdown: boolean; hasFormattedBody: boolean; formattedBody?: string } {
   const content = event.getContent();
   
   // Handle different message types
@@ -123,19 +123,112 @@ function getMessageContent(event: MatrixEvent): { text: string; isMarkdown: bool
     const hasFormatted = content.format === "org.matrix.custom.html" && content.formatted_body;
     return {
       text: content.body || "",
-      isMarkdown: !hasFormatted // Use markdown if no HTML formatting
+      isMarkdown: !hasFormatted, // Use markdown if no HTML formatting
+      hasFormattedBody: hasFormatted,
+      formattedBody: content.formatted_body
     };
   } else if (content.msgtype === "m.emote") {
     return {
       text: `*${content.body}*`,
-      isMarkdown: true
+      isMarkdown: true,
+      hasFormattedBody: false
     };
   }
   
   return {
     text: content.body || "[Message]",
-    isMarkdown: false
+    isMarkdown: false,
+    hasFormattedBody: false
   };
+}
+
+/**
+ * Parse and highlight @mentions in message text
+ */
+function parseMentions(text: string, currentUserId?: string): JSX.Element[] {
+  if (!text) return [];
+  
+  const mentionRegex = /@(\w+)/g;
+  const parts: JSX.Element[] = [];
+  let lastIndex = 0;
+  let match;
+  let partIndex = 0;
+  
+  while ((match = mentionRegex.exec(text)) !== null) {
+    const beforeText = text.substring(lastIndex, match.index);
+    const mentionText = match[0]; // Full @username
+    const username = match[1];
+    const isCurrentUser = currentUserId?.includes(username);
+    
+    // Add text before mention
+    if (beforeText) {
+      parts.push(
+        <span key={`text-${partIndex++}`}>{beforeText}</span>
+      );
+    }
+    
+    // Add highlighted mention
+    parts.push(
+      <span
+        key={`mention-${partIndex++}`}
+        className={cn(
+          "px-1 py-0.5 rounded text-sm font-medium",
+          isCurrentUser
+            ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"
+            : "bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-600 cursor-pointer"
+        )}
+        title={`Mentioned user: ${username}`}
+      >
+        {mentionText}
+      </span>
+    );
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text after last mention
+  const remainingText = text.substring(lastIndex);
+  if (remainingText) {
+    parts.push(
+      <span key={`text-${partIndex++}`}>{remainingText}</span>
+    );
+  }
+  
+  // If no mentions found, return original text
+  if (parts.length === 0) {
+    parts.push(<span key="original">{text}</span>);
+  }
+  
+  return parts;
+}
+
+/**
+ * Parse Matrix HTML formatted body to highlight mentions
+ */
+function parseFormattedMentions(formattedBody: string, currentUserId?: string): JSX.Element {
+  // For Matrix HTML formatted body with mentions, we need to safely render HTML
+  // while highlighting mention links
+  
+  // Simple approach: look for Matrix mention links and highlight them
+  const mentionLinkRegex = /<a href="https:\/\/matrix\.to\/#\/(@[^"]+)"[^>]*>([^<]+)<\/a>/g;
+  let processedHtml = formattedBody;
+  
+  // Replace Matrix mention links with our highlighted spans
+  processedHtml = processedHtml.replace(mentionLinkRegex, (match, userId, displayText) => {
+    const isCurrentUser = userId === currentUserId;
+    const highlightClass = isCurrentUser
+      ? "px-1 py-0.5 rounded text-sm font-medium bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200 dark:ring-indigo-800"
+      : "px-1 py-0.5 rounded text-sm font-medium bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-600 cursor-pointer";
+    
+    return `<span class="${highlightClass}" title="Mentioned user: ${displayText}">${displayText}</span>`;
+  });
+  
+  return (
+    <div 
+      className="inline"
+      dangerouslySetInnerHTML={{ __html: processedHtml }}
+    />
+  );
 }
 
 /**
@@ -464,7 +557,7 @@ export function ChatItem({
   const timestamp = new Date(event.getTs());
   const displayName = getDisplayName(event);
   const avatarUrl = getAvatarUrl(event);
-  const { text: content, isMarkdown } = getMessageContent(event);
+  const { text: content, isMarkdown, hasFormattedBody, formattedBody } = getMessageContent(event);
   const attachment = getAttachment(event);
   const isEdited = isMessageEdited(event);
   
@@ -640,50 +733,64 @@ export function ChatItem({
         
         {/* Message Content */}
         <div className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
-          {isMarkdown ? (
+          {hasFormattedBody && formattedBody ? (
+            // Matrix HTML formatted content (may contain mentions)
+            <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1">
+              {parseFormattedMentions(formattedBody, currentUserId)}
+            </div>
+          ) : isMarkdown ? (
+            // Markdown content with mention highlighting
             <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-code:bg-zinc-200 dark:prose-code:bg-zinc-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-zinc-100 dark:prose-pre:bg-zinc-800">
-            <ReactMarkdown
-              components={{
-                // Custom components for better Discord-style rendering
-                p: ({ children }) => <p className="my-1">{children}</p>,
-                code: ({ children, className, ...props }) => {
-                  const match = /language-(\w+)/.exec(className || '');
-                  // If no language class and it's short, treat as inline
-                  const isCodeBlock = match || (typeof children === 'string' && children.includes('\n'));
-                  
-                  if (!isCodeBlock) {
+              <ReactMarkdown
+                components={{
+                  // Custom components for better Discord-style rendering
+                  p: ({ children }) => (
+                    <p className="my-1">
+                      {typeof children === 'string' 
+                        ? parseMentions(children, currentUserId)
+                        : children
+                      }
+                    </p>
+                  ),
+                  code: ({ children, className, ...props }) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    // If no language class and it's short, treat as inline
+                    const isCodeBlock = match || (typeof children === 'string' && children.includes('\n'));
+                    
+                    if (!isCodeBlock) {
+                      return (
+                        <code 
+                          className="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-sm font-mono" 
+                          {...props}
+                        >
+                          {children}
+                        </code>
+                      );
+                    }
                     return (
-                      <code 
-                        className="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-sm font-mono" 
-                        {...props}
-                      >
+                      <code className={`font-mono text-sm ${className || ''}`} {...props}>
                         {children}
                       </code>
                     );
-                  }
-                  return (
-                    <code className={`font-mono text-sm ${className || ''}`} {...props}>
+                  },
+                  pre: ({ children }) => (
+                    <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto">
                       {children}
-                    </code>
-                  );
-                },
-                pre: ({ children }) => (
-                  <pre className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-md overflow-x-auto">
-                    {children}
-                  </pre>
-                ),
-                blockquote: ({ children }) => (
-                  <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic">
-                    {children}
-                  </blockquote>
-                ),
-              }}
-            >
-              {content}
-            </ReactMarkdown>
+                    </pre>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-zinc-300 dark:border-zinc-600 pl-4 italic">
+                      {children}
+                    </blockquote>
+                  ),
+                }}
+              >
+                {content}
+              </ReactMarkdown>
             </div>
           ) : (
-            <p>{content}</p>
+            // Plain text with mention highlighting
+            <p>{parseMentions(content, currentUserId)}</p>
           )}
         </div>
         

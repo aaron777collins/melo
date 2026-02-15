@@ -474,7 +474,7 @@ export function DeviceManager({ profile }: DeviceManagerProps) {
       
       // Convert to sessions
       const deviceSessions = devices.devices.map(device => 
-        matrixDeviceToSession(device, currentDeviceId || undefined)
+        matrixDeviceToSession(device as unknown as MatrixDevice, currentDeviceId || undefined)
       );
       
       // Sort by last active (most recent first)

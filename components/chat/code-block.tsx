@@ -23,7 +23,7 @@ hljs.registerLanguage('rust', rust);
 hljs.registerLanguage('go', go);
 
 // Language aliases and detection
-const LANGUAGE_ALIASES = {
+const LANGUAGE_ALIASES: Record<string, string> = {
   js: 'javascript',
   ts: 'typescript',
   py: 'python',

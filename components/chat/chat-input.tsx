@@ -90,7 +90,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     }
   }, [form, roomId, mentions]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = useCallback(async (values: z.infer<typeof formSchema>) => {
     if (isLoading) return;
     
     setIsLoading(true);
@@ -101,10 +101,10 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
         const { text, mentions: parsedMentions } = mentions.parseMentions(values.content);
         
         // Create base message content
-        const messageContent: any = {
-          msgtype: "m.text",
+        const messageContent = {
+          msgtype: "m.text" as const,
           body: text,
-        };
+        } as any;
         
         // Add Matrix-compliant mentions if any exist
         if (parsedMentions.length > 0) {
@@ -173,7 +173,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [roomId, client, isReady, apiUrl, query, isLoading, form, mentions, router]);
 
   // Handle key press for submit
   const handleKeyPress = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -193,11 +193,11 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
       if (roomId && client && isReady) {
         // Send GIF via Matrix
         const messageContent = {
-          msgtype: "m.text",
+          msgtype: "m.text" as const,
           body: gifUrl, // Send GIF URL as message body
           format: "org.matrix.custom.html",
           formatted_body: `<img src="${gifUrl}" alt="GIF" style="max-width: 300px; max-height: 300px;" />`,
-        };
+        } as any;
         
         await client.sendMessage(roomId, messageContent);
       } else if (apiUrl && query) {
@@ -270,7 +270,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         disabled={isLoading}
                         className="h-6 w-6 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition"
                       >
-                        <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" />
+                        <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" aria-label="GIF picker" />
                       </Button>
                       
                       {/* Emoji picker */}

@@ -20,9 +20,11 @@ import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useMentions } from "@/hooks/use-mentions";
+import { useEmojiAutocomplete } from "@/hooks/use-emoji-autocomplete";
 import { EmojiPicker } from "@/components/emoji-picker";
 import { MentionAutocomplete } from "./mention-autocomplete";
 import { ChannelAutocomplete } from "./channel-autocomplete";
+import { EmojiAutocomplete } from "./emoji-autocomplete";
 
 interface ChatInputProps {
   /**
@@ -65,6 +67,9 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
   // Mentions functionality (only if roomId provided)
   const mentions = useMentions(roomId || "");
   
+  // Emoji autocomplete functionality
+  const emojiAutocomplete = useEmojiAutocomplete();
+  
   // Form state
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,7 +79,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Handle input changes for mention detection
+  // Handle input changes for mention and emoji detection
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const selectionStart = event.target.selectionStart || 0;
@@ -86,7 +91,12 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     if (roomId && inputRef.current) {
       mentions.handleInputChange(value, selectionStart, inputRef.current);
     }
-  }, [form, roomId, mentions]);
+    
+    // Handle emoji detection (always enabled)
+    if (inputRef.current) {
+      emojiAutocomplete.handleInputChange(value, selectionStart, inputRef.current);
+    }
+  }, [form, roomId, mentions, emojiAutocomplete]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (isLoading) return;
@@ -332,6 +342,16 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
           />
         </>
       )}
+
+      {/* Emoji autocomplete (always available) */}
+      <EmojiAutocomplete
+        emojis={emojiAutocomplete.filteredEmojis}
+        query={emojiAutocomplete.emojiQuery}
+        position={emojiAutocomplete.autocompletePosition}
+        visible={emojiAutocomplete.showAutocomplete}
+        onSelect={emojiAutocomplete.handleEmojiSelect}
+        onClose={emojiAutocomplete.closeAutocomplete}
+      />
     </>
   );
 }

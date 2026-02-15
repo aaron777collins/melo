@@ -245,7 +245,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                           onOpen("messageFile", { apiUrl, query });
                         }
                       }}
-                      className="absolute top-7 left-8 h-[24px] w-[24px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 transition rounded-full p-1 flex items-center justify-center"
+                      className="absolute top-6 left-6 md:top-7 md:left-8 h-[32px] w-[32px] md:h-[24px] md:w-[24px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 transition rounded-full p-1 flex items-center justify-center"
                     >
                       <Plus className="text-white dark:text-[#313338]" />
                     </button>
@@ -255,14 +255,14 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                       ref={inputRef}
                       placeholder={placeholder}
                       disabled={isLoading || (isMatrixMode && !isReady)}
-                      className="px-14 py-6 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200 pr-20"
+                      className="pl-16 pr-20 md:px-14 py-6 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200"
                       value={field.value}
                       onChange={handleInputChange}
                       onKeyPress={handleKeyPress}
                     />
                     
                     {/* Right side controls */}
-                    <div className="absolute top-7 right-8 flex items-center gap-2">
+                    <div className="absolute top-6 right-6 md:top-7 md:right-8 flex items-center gap-2">
                       {/* GIF picker button */}
                       <Button
                         type="button"
@@ -270,7 +270,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         variant="ghost"
                         onClick={handleGifClick}
                         disabled={isLoading}
-                        className="h-6 w-6 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition"
+                        className="h-8 w-8 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition md:h-6 md:w-6"
                         title="Add GIF"
                       >
                         <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" />
@@ -296,7 +296,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                           type="submit"
                           size="sm"
                           disabled={isLoading || !field.value.trim()}
-                          className="h-6 w-6 p-0 bg-indigo-600 hover:bg-indigo-700"
+                          className="h-8 w-8 p-0 bg-indigo-600 hover:bg-indigo-700 md:h-6 md:w-6"
                         >
                           <Send className="h-3 w-3" />
                         </Button>

@@ -33,6 +33,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { type MatrixProfile } from "@/lib/current-profile";
+import { SettingsSearch } from "@/components/settings/settings-search";
 
 // =============================================================================
 // Types
@@ -241,6 +242,11 @@ export function SettingsSidebar({
           </div>
         </div>
       </div>
+
+      {/* Search */}
+      <div className="p-3 border-b border-zinc-800">
+        <SettingsSearch />
+      </div>
       
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-2">
@@ -262,7 +268,7 @@ export function SettingsSidebar({
                     key={item.id}
                     onClick={() => router.push(item.href)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-2 py-1.5 rounded-md text-sm font-medium transition-colors",
+                      "w-full flex items-center gap-3 px-2 py-2.5 rounded-md text-sm font-medium transition-colors min-h-[44px]",
                       active
                         ? "bg-zinc-700/60 text-white"
                         : item.isDanger

@@ -16,6 +16,7 @@ import { useModal } from "@/hooks/use-modal-store";
 import { useThreads } from "@/hooks/use-threads";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useMessageEdit } from "@/hooks/use-message-edit";
+import { LinkPreview, extractUrls } from "./link-preview";
 
 // =============================================================================
 // Types & Interfaces
@@ -915,6 +916,28 @@ export function ChatItem({
             )}
           </div>
         )}
+        
+        {/* Link Previews */}
+        {!isRedacted && !editState.isEditing && (() => {
+          const urls = extractUrls(content);
+          return urls.length > 0 && (
+            <div className="mt-2 space-y-2">
+              {urls.slice(0, 3).map((url, index) => (
+                <LinkPreview
+                  key={`${url}-${index}`}
+                  url={url}
+                  variant="card"
+                  maxWidth="450px"
+                />
+              ))}
+              {urls.length > 3 && (
+                <p className="text-xs text-muted-foreground">
+                  + {urls.length - 3} more link{urls.length - 3 !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+          );
+        })()}
         
         {/* Attachment Display */}
         {attachment && !isRedacted && <AttachmentDisplay attachment={attachment} />}

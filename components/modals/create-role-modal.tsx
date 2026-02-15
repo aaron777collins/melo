@@ -7,7 +7,7 @@
  * and Matrix power level mapping.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,6 +52,14 @@ import {
   type RoleIcon,
   type CreateRoleData
 } from "@/lib/matrix/roles";
+import { PermissionEditor } from "@/components/server/permission-editor";
+import {
+  HaosPermissions,
+  PERMISSION_TEMPLATES,
+  getPermissionTemplate,
+  calculateRequiredPowerLevel,
+  validatePermissions
+} from "@/lib/matrix/permissions";
 
 // =============================================================================
 // Form Schema & Types
@@ -68,6 +76,7 @@ const createRoleSchema = z.object({
   powerLevel: z.number()
     .min(0, "Power level must be at least 0")
     .max(100, "Power level cannot exceed 100"),
+  template: z.string().optional(),
 });
 
 type CreateRoleForm = z.infer<typeof createRoleSchema>;
@@ -271,6 +280,10 @@ export function CreateRoleModal() {
   const { isOpen, onClose, type, data } = useModal();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<HaosPermissions>(() => {
+    const memberTemplate = getPermissionTemplate('member');
+    return memberTemplate?.permissions || {} as HaosPermissions;
+  });
 
   const isModalOpen = isOpen && type === "createRole";
   const { space, serverId, userPowerLevel = 50 } = data;
@@ -282,16 +295,50 @@ export function CreateRoleModal() {
       color: getDefaultColorForPowerLevel(25),
       icon: "shield",
       powerLevel: 25,
+      template: "member",
     },
   });
 
   const watchedColor = form.watch("color");
   const watchedIcon = form.watch("icon");
   const watchedPowerLevel = form.watch("powerLevel");
+  const watchedTemplate = form.watch("template");
 
   // =============================================================================
   // Handlers
   // =============================================================================
+
+  const handlePermissionsChange = (newPermissions: HaosPermissions) => {
+    setPermissions(newPermissions);
+    
+    // Update power level if permissions require it
+    const requiredLevel = calculateRequiredPowerLevel(newPermissions);
+    if (requiredLevel > watchedPowerLevel) {
+      form.setValue("powerLevel", Math.min(requiredLevel, userPowerLevel - 1));
+    }
+  };
+
+  const handlePowerLevelChange = (newPowerLevel: number) => {
+    form.setValue("powerLevel", Math.min(newPowerLevel, userPowerLevel - 1));
+  };
+
+  const handleTemplateChange = React.useCallback((templateId: string) => {
+    if (!templateId) return;
+    
+    const template = getPermissionTemplate(templateId);
+    if (template) {
+      setPermissions(template.permissions);
+      form.setValue("color", template.color);
+      form.setValue("powerLevel", Math.min(template.recommendedPowerLevel, userPowerLevel - 1));
+    }
+  }, [form, userPowerLevel]);
+
+  // Update permissions when template changes
+  React.useEffect(() => {
+    if (watchedTemplate) {
+      handleTemplateChange(watchedTemplate);
+    }
+  }, [watchedTemplate, handleTemplateChange]);
 
   const onSubmit = async (values: CreateRoleForm) => {
     if (!serverId) {
@@ -315,6 +362,12 @@ export function CreateRoleModal() {
         throw new Error(powerValidation.error);
       }
 
+      // Validate permissions
+      const permissionValidation = validatePermissions(permissions, values.powerLevel);
+      if (!permissionValidation.valid) {
+        throw new Error(permissionValidation.errors[0]);
+      }
+
       // Create role data
       const roleData: CreateRoleData = {
         name: values.name.trim(),
@@ -323,6 +376,7 @@ export function CreateRoleModal() {
         powerLevel: values.powerLevel,
         isHoist: true,
         isMentionable: true,
+        permissions,
       };
 
       // Create the role
@@ -355,7 +409,7 @@ export function CreateRoleModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#2B2D31] text-white border-zinc-700 max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-[#2B2D31] text-white border-zinc-700 max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-center">
             Create Role
@@ -462,6 +516,48 @@ export function CreateRoleModal() {
               )}
             />
 
+            {/* Template Selection */}
+            <FormField
+              control={form.control}
+              name="template"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Permission Template</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="bg-zinc-800/50 border-zinc-600 text-white">
+                        <SelectValue placeholder="Select a permission template..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PERMISSION_TEMPLATES.map((template) => (
+                          <SelectItem 
+                            key={template.id} 
+                            value={template.id}
+                            disabled={template.recommendedPowerLevel >= userPowerLevel}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: template.color }}
+                              />
+                              <div>
+                                <div className="font-medium">{template.name}</div>
+                                <div className="text-xs text-zinc-400">{template.description}</div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormDescription>
+                    Choose a base template that matches the role&apos;s intended purpose.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Power Level */}
             <FormField
               control={form.control}
@@ -483,6 +579,20 @@ export function CreateRoleModal() {
                 </FormItem>
               )}
             />
+
+            {/* Permission Editor */}
+            <div className="space-y-3">
+              <div className="text-sm font-medium text-white">Detailed Permissions</div>
+              <PermissionEditor
+                permissions={permissions}
+                powerLevel={watchedPowerLevel}
+                maxPowerLevel={userPowerLevel}
+                onPermissionsChange={handlePermissionsChange}
+                onPowerLevelChange={handlePowerLevelChange}
+                showPowerLevelInfo={false}
+                compact={true}
+              />
+            </div>
           </form>
         </Form>
 

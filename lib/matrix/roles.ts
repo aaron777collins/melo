@@ -28,6 +28,8 @@ export interface CreateRoleData {
   isHoist?: boolean;
   /** Whether role is mentionable */
   isMentionable?: boolean;
+  /** Granular permissions (optional - will use template if not provided) */
+  permissions?: import('./permissions').HaosPermissions;
 }
 
 /**
@@ -313,7 +315,7 @@ export async function createCustomRole(
       memberCount: 0,
       position: existingRoles.length + 1,
       isDefault: false,
-      permissions: getClosestPermissionTemplate(roleData.powerLevel),
+      permissions: roleData.permissions || getClosestPermissionTemplate(roleData.powerLevel),
       createdAt: new Date().toISOString(),
     };
 
@@ -418,7 +420,7 @@ export async function canManageRoles(roomId: string, userId: string): Promise<bo
   }
 }
 
-export default {
+const rolesService = {
   createCustomRole,
   getCustomRoles,
   assignRoleToUser,
@@ -433,3 +435,5 @@ export default {
   ROLE_PERMISSION_TEMPLATES,
   DEFAULT_ROLE_COLORS,
 };
+
+export default rolesService;

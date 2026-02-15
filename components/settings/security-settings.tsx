@@ -57,6 +57,7 @@ import {
 import { getCryptoState, isCryptoReady } from "@/lib/matrix/client";
 import { SecuritySetupModal } from "@/components/modals/security-setup-modal";
 import { DeviceManagement } from "./device-management";
+import { useSecurityPrompt } from "@/hooks/use-security-prompt";
 
 // =============================================================================
 // Types
@@ -398,70 +399,41 @@ function CrossSigningBootstrapDialog({ onComplete }: { onComplete: () => void })
  * Cross-signing reset dialog
  */
 function CrossSigningResetDialog({ onComplete }: { onComplete: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [resetting, setResetting] = useState(false);
+  const { requestDestructiveConfirmation } = useSecurityPrompt();
 
   const handleReset = useCallback(async () => {
-    setResetting(true);
-    try {
-      const success = await resetCrossSigning();
-      if (success) {
-        setOpen(false);
-        onComplete();
+    requestDestructiveConfirmation(
+      "Reset Cross-Signing",
+      "This will remove your cross-signing keys and reset your security setup.",
+      [
+        "Your cross-signing keys will be deleted",
+        "Device verification will be disabled",
+        "Other users may see security warnings",
+        "You'll need to set up cross-signing again",
+        "This action cannot be undone"
+      ],
+      "Reset Cross-Signing",
+      async () => {
+        try {
+          const success = await resetCrossSigning();
+          if (success) {
+            onComplete();
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.error("Reset failed:", error);
+          return false;
+        }
       }
-    } catch (error) {
-      console.error("Reset failed:", error);
-    } finally {
-      setResetting(false);
-    }
-  }, [onComplete]);
+    );
+  }, [onComplete, requestDestructiveConfirmation]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Reset
-        </Button>
-      </DialogTrigger>
-      
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Reset Cross-Signing</DialogTitle>
-          <DialogDescription>
-            This will remove your cross-signing keys and reset your security setup.
-            Other users may need to re-verify your identity.
-          </DialogDescription>
-        </DialogHeader>
-
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Warning:</strong> This action cannot be undone. Your devices will no longer
-            be automatically verified, and other users may see security warnings.
-          </AlertDescription>
-        </Alert>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={handleReset} disabled={resetting}>
-            {resetting ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Resetting...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reset Cross-Signing
-              </>
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <Button variant="outline" size="sm" onClick={handleReset}>
+      <RefreshCw className="h-4 w-4 mr-2" />
+      Reset
+    </Button>
   );
 }
 
@@ -644,7 +616,7 @@ function SecretStorageCard() {
   const [status, setStatus] = useState<SecretStorageStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
-  const [resetting, setResetting] = useState(false);
+  const { requestDestructiveConfirmation } = useSecurityPrompt();
 
   const loadStatus = useCallback(async () => {
     setLoading(true);
@@ -670,25 +642,35 @@ function SecretStorageCard() {
   }, [loadStatus]);
 
   const handleReset = useCallback(async () => {
-    if (!confirm("Are you sure you want to reset secret storage? This will remove your secure backup and you may lose access to encrypted messages.")) {
-      return;
-    }
-
-    setResetting(true);
-    try {
-      const success = await resetSecretStorage();
-      if (success) {
-        await loadStatus();
-        console.log("Secret Storage Reset: Your secure backup has been reset");
-      } else {
-        console.error("Reset Failed: Failed to reset secret storage");
+    requestDestructiveConfirmation(
+      "Reset Secret Storage",
+      "This will remove your secure backup and reset your secret storage.",
+      [
+        "Your secure backup will be deleted",
+        "You may lose access to encrypted messages",
+        "Key recovery will no longer be possible",
+        "You'll need to set up backup again",
+        "This action cannot be undone"
+      ],
+      "Reset Backup",
+      async () => {
+        try {
+          const success = await resetSecretStorage();
+          if (success) {
+            await loadStatus();
+            console.log("Secret Storage Reset: Your secure backup has been reset");
+            return true;
+          } else {
+            console.error("Reset Failed: Failed to reset secret storage");
+            return false;
+          }
+        } catch (error) {
+          console.error("Reset Failed:", error instanceof Error ? error.message : "Unknown error");
+          return false;
+        }
       }
-    } catch (error) {
-      console.error("Reset Failed:", error instanceof Error ? error.message : "Unknown error");
-    } finally {
-      setResetting(false);
-    }
-  }, [loadStatus]);
+    );
+  }, [loadStatus, requestDestructiveConfirmation]);
 
   const handleSetupComplete = useCallback(() => {
     loadStatus();
@@ -825,20 +807,10 @@ function SecretStorageCard() {
                 onClick={handleReset}
                 variant="outline"
                 size="sm"
-                disabled={resetting}
                 className="text-destructive hover:text-destructive"
               >
-                {resetting ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Resetting...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Reset Backup
-                  </>
-                )}
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Reset Backup
               </Button>
             </div>
           )}

@@ -47,7 +47,9 @@ export type ModalType =
   | "muteUser"
   // Role Management
   | "createRole"
-  | "memberRoleEditor";
+  | "memberRoleEditor"
+  // Security Prompts
+  | "securityPrompt";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -118,6 +120,9 @@ interface ModalData {
   // Invite modal
   /** Pre-generated invite URL for sharing */
   inviteUrl?: string;
+  // Security prompts
+  /** Configuration for security prompt modal */
+  securityPromptConfig?: import("@/components/modals/security-prompt-modal").SecurityPromptConfig;
 }
 
 interface ModalStore {

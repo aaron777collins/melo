@@ -21,6 +21,7 @@ import { MemberRoleEditorModal } from "@/components/modals/member-role-editor-mo
 import { InviteModal } from "@/components/modals/invite-modal";
 import { GifPickerModal } from "@/components/modals/gif-picker-modal";
 import { PinnedMessages } from "@/components/pinned-messages";
+import { SecurityPromptModal } from "@/components/modals/security-prompt-modal";
 
 export function ModalProvider() {
   const [isMounted, setIsMounted] = useState(false);
@@ -53,6 +54,7 @@ export function ModalProvider() {
       <InviteModal />
       <GifPickerModal />
       <PinnedMessages />
+      <SecurityPromptModal />
       {/* TODO: Add more modals as they're created */}
     </>
   );

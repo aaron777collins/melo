@@ -36,6 +36,7 @@ import {
 import { useModal } from "@/hooks/use-modal-store";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { createModerationService } from "@/lib/matrix/moderation";
+import { useSecurityPrompt } from "@/hooks/use-security-prompt";
 import { toast } from "sonner";
 
 // Duration options in milliseconds
@@ -54,6 +55,7 @@ const banFormSchema = z.object({
 export function BanUserModal() {
   const { isOpen, onClose, type, data } = useModal();
   const { client } = useMatrixClient();
+  const { requestDestructiveConfirmation } = useSecurityPrompt();
   const [isLoading, setIsLoading] = useState(false);
 
   const isModalOpen = isOpen && type === "banUser";
@@ -75,45 +77,73 @@ export function BanUserModal() {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      
-      const moderationService = createModerationService(client);
-      const currentUserId = client.getUserId()!;
-      
-      // Convert duration
-      const durationMs = BAN_DURATIONS[values.duration];
-      
-      // Use serverId as roomId (Matrix Space acts as the main room)
-      const result = await moderationService.banUser(
-        serverId,
-        currentUserId,
-        targetUser.id,
-        { 
-          reason: values.reason || undefined,
-          duration: durationMs
-        }
-      );
+    // Show security confirmation before executing the ban
+    const durationText = values.duration === "permanent" ? "permanently" : `for ${getDurationLabel(values.duration)}`;
+    
+    const consequences = [
+      `${targetUser.name} will be immediately removed from the server`,
+      `They will be banned ${durationText}`,
+      "They cannot rejoin unless unbanned by a moderator",
+      "Their messages will remain visible",
+      "This action will be logged in the audit log"
+    ];
 
-      if (result.success) {
-        const durationText = values.duration === "permanent" ? "permanently" : `for ${values.duration}`;
-        toast.success(`${targetUser.name} has been banned ${durationText}`);
-        form.reset();
-        onClose();
-        
-        // TODO: Schedule unban if duration > 0
-        if (durationMs > 0) {
-          console.log(`Scheduled unban for ${targetUser.name} in ${durationMs}ms`);
-        }
-      } else {
-        toast.error(result.error || "Failed to ban user");
-      }
-    } catch (error) {
-      console.error("Error banning user:", error);
-      toast.error("An unexpected error occurred while banning the user");
-    } finally {
-      setIsLoading(false);
+    if (values.reason) {
+      consequences.push(`Ban reason: "${values.reason}"`);
     }
+
+    requestDestructiveConfirmation(
+      "Confirm User Ban",
+      `Are you sure you want to ban "${targetUser.name}" from this server?`,
+      consequences,
+      `Ban ${durationText === "permanently" ? "Permanently" : `for ${getDurationLabel(values.duration)}`}`,
+      async () => {
+        try {
+          setIsLoading(true);
+          
+          const moderationService = createModerationService(client);
+          const currentUserId = client.getUserId()!;
+          
+          // Convert duration
+          const durationMs = BAN_DURATIONS[values.duration];
+          
+          // Use serverId as roomId (Matrix Space acts as the main room)
+          const result = await moderationService.banUser(
+            serverId,
+            currentUserId,
+            targetUser.id,
+            { 
+              reason: values.reason || undefined,
+              duration: durationMs
+            }
+          );
+
+          if (result.success) {
+            toast.success(`${targetUser.name} has been banned ${durationText}`);
+            form.reset();
+            onClose();
+            
+            // TODO: Schedule unban if duration > 0
+            if (durationMs > 0) {
+              console.log(`Scheduled unban for ${targetUser.name} in ${durationMs}ms`);
+            }
+            return true;
+          } else {
+            toast.error(result.error || "Failed to ban user");
+            return false;
+          }
+        } catch (error) {
+          console.error("Error banning user:", error);
+          toast.error("An unexpected error occurred while banning the user");
+          return false;
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      {
+        icon: "warning"
+      }
+    );
   };
 
   const handleClose = () => {

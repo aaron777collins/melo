@@ -596,18 +596,40 @@ export class MatrixModerationService {
       }
 
       // Get all moderation log state events
-      const stateEvents = room.currentState.events.get('org.haos.moderation.log');
+      const stateEvents = room.currentState.events.get('org.haos.moderation.log' as any);
       if (!stateEvents) {
         return [];
       }
 
-      const logs = [];
-      for (const [, event] of stateEvents.events) {
-        const content = event.getContent();
+      const logs: Array<{
+        action: string;
+        moderatorId: string;
+        targetUserId: string;
+        eventId: string;
+        roomId: string;
+        reason: string;
+        timestamp: string;
+        isOwnMessage?: boolean;
+        metadata?: any;
+      }> = [];
+      
+      // stateEvents is a Map<string, MatrixEvent>
+      stateEvents.forEach((event, stateKey) => {
+        const content = event.getContent() as any;
         if (content.action && content.timestamp) {
-          logs.push(content);
+          logs.push(content as {
+            action: string;
+            moderatorId: string;
+            targetUserId: string;
+            eventId: string;
+            roomId: string;
+            reason: string;
+            timestamp: string;
+            isOwnMessage?: boolean;
+            metadata?: any;
+          });
         }
-      }
+      });
 
       // Sort by timestamp (newest first) and limit
       logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());

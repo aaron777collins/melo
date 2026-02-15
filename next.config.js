@@ -6,6 +6,36 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig = {
   // serverActions is stable in Next.js 14, no longer experimental
   output: "standalone",
+  
+  // Security headers configuration
+  async headers() {
+    return [
+      {
+        // Apply security headers to all routes
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          // Note: CSP and other dynamic headers are handled in middleware.ts
+          // to support environment-specific configurations
+        ]
+      }
+    ];
+  },
   webpack: (config, { dev, isServer }) => {
     config.externals.push({
       "utf-8-validate": "commonjs utf-8-validate",

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "smile",
+    "emoji": "😊",
+    "keywords": ["happy", "pleased", "face"]
+  },
+  {
+    "name": "heart",
+    "emoji": "❤️",
+    "keywords": ["love", "romantic", "red"]
+  },
+  {
+    "name": "laugh",
+    "emoji": "😂",
+    "keywords": ["funny", "joy", "tears"]
+  },
+  {
+    "name": "thumbsup",
+    "emoji": "👍",
+    "keywords": ["good", "approve", "like"]
+  }
+]

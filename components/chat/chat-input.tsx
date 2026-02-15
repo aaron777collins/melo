@@ -23,7 +23,6 @@ import { useMentions } from "@/hooks/use-mentions";
 import { EmojiPicker } from "@/components/emoji-picker";
 import { MentionAutocomplete } from "./mention-autocomplete";
 import { ChannelAutocomplete } from "./channel-autocomplete";
-import { GifPicker } from "./gif-picker";
 
 interface ChatInputProps {
   /**
@@ -73,7 +72,6 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [showGifPicker, setShowGifPicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Handle input changes for mention detection
@@ -90,7 +88,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     }
   }, [form, roomId, mentions]);
 
-  const onSubmit = useCallback(async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (isLoading) return;
     
     setIsLoading(true);
@@ -101,10 +99,10 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
         const { text, mentions: parsedMentions } = mentions.parseMentions(values.content);
         
         // Create base message content
-        const messageContent = {
-          msgtype: "m.text" as const,
+        const messageContent: any = {
+          msgtype: "m.text",
           body: text,
-        } as any;
+        };
         
         // Add Matrix-compliant mentions if any exist
         if (parsedMentions.length > 0) {
@@ -115,7 +113,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
           for (const mention of parsedMentions) {
             const beforeMention = formattedBody.substring(0, mention.offset + offset);
             const afterMention = formattedBody.substring(mention.offset + offset + mention.length);
-            
+
             let mentionHtml: string;
             if (mention.type === "user") {
               mentionHtml = `<a href="https://matrix.to/#/${mention.userId}">${mention.displayName}</a>`;
@@ -173,7 +171,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     } finally {
       setIsLoading(false);
     }
-  }, [roomId, client, isReady, apiUrl, query, isLoading, form, mentions, router]);
+  };
 
   // Handle key press for submit
   const handleKeyPress = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -183,39 +181,43 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     }
   }, [form, onSubmit]);
 
-  // Handle GIF selection
-  const handleGifSelect = useCallback(async (gifUrl: string) => {
-    if (isLoading) return;
-    
-    setIsLoading(true);
-    
-    try {
-      if (roomId && client && isReady) {
-        // Send GIF via Matrix
-        const messageContent = {
-          msgtype: "m.text" as const,
-          body: gifUrl, // Send GIF URL as message body
-          format: "org.matrix.custom.html",
-          formatted_body: `<img src="${gifUrl}" alt="GIF" style="max-width: 300px; max-height: 300px;" />`,
-        } as any;
+  // Handle GIF selection using modal
+  const handleGifClick = useCallback(() => {
+    onOpen("gifPicker", {
+      onGifSelect: async (gifUrl: string) => {
+        if (isLoading) return;
         
-        await client.sendMessage(roomId, messageContent);
-      } else if (apiUrl && query) {
-        // Legacy API-based sending
-        const url = qs.stringifyUrl({
-          url: apiUrl,
-          query
-        });
+        setIsLoading(true);
+        
+        try {
+          if (roomId && client && isReady) {
+            // Send GIF via Matrix
+            const messageContent: any = {
+              msgtype: "m.text",
+              body: gifUrl, // Send GIF URL as message body
+              format: "org.matrix.custom.html",
+              formatted_body: `<img src="${gifUrl}" alt="GIF" style="max-width: 300px; max-height: 300px;" />`,
+            };
+            
+            await client.sendMessage(roomId, messageContent);
+          } else if (apiUrl && query) {
+            // Legacy API-based sending
+            const url = qs.stringifyUrl({
+              url: apiUrl,
+              query
+            });
 
-        await axios.post(url, { content: gifUrl });
-        router.refresh();
+            await axios.post(url, { content: gifUrl });
+            router.refresh();
+          }
+        } catch (error) {
+          console.error("Failed to send GIF:", error);
+        } finally {
+          setIsLoading(false);
+        }
       }
-    } catch (error) {
-      console.error("Failed to send GIF:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [roomId, client, isReady, apiUrl, query, isLoading, router]);
+    });
+  }, [roomId, client, isReady, apiUrl, query, isLoading, router, onOpen]);
 
   const isMatrixMode = Boolean(roomId && client && isReady);
   const placeholder = `Message ${type === "conversation" ? name : "#" + name}`;
@@ -266,11 +268,12 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={() => setShowGifPicker(true)}
+                        onClick={handleGifClick}
                         disabled={isLoading}
                         className="h-6 w-6 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition"
+                        title="Add GIF"
                       >
-                        <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" aria-label="GIF picker" />
+                        <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" />
                       </Button>
                       
                       {/* Emoji picker */}
@@ -306,13 +309,6 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
           />
         </form>
       </Form>
-      
-      {/* GIF picker modal */}
-      <GifPicker
-        isOpen={showGifPicker}
-        onClose={() => setShowGifPicker(false)}
-        onGifSelect={handleGifSelect}
-      />
 
       {/* Mention autocomplete (Matrix mode only) */}
       {isMatrixMode && (

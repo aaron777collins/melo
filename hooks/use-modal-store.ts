@@ -39,6 +39,8 @@ export type ModalType =
   | "threadView"
   | "reportMessage"
   | "emojiPicker"
+  // GIF Picker
+  | "gifPicker"
   // User moderation
   | "kickUser"
   | "banUser"
@@ -86,6 +88,9 @@ interface ModalData {
   // Emoji picker callback
   /** Callback when emoji is selected */
   onSelect?: (emoji: string) => void;
+  // GIF picker callback
+  /** Callback when GIF is selected */
+  onGifSelect?: (gifUrl: string) => void;
   // Role creation
   /** Current user's power level (for role creation validation) */
   userPowerLevel?: number;

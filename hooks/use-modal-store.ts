@@ -38,7 +38,11 @@ export type ModalType =
   // Threading
   | "threadView"
   | "reportMessage"
-  | "emojiPicker";
+  | "emojiPicker"
+  // User moderation
+  | "kickUser"
+  // Role Management
+  | "createRole";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -79,6 +83,18 @@ interface ModalData {
   // Emoji picker callback
   /** Callback when emoji is selected */
   onSelect?: (emoji: string) => void;
+  // Role creation
+  /** Current user's power level (for role creation validation) */
+  userPowerLevel?: number;
+  // User moderation
+  /** User to kick from server/room */
+  targetUser?: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
+  /** Server/space context for moderation action */
+  serverId?: string;
 }
 
 interface ModalStore {

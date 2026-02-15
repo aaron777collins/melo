@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MatrixSpace } from "@/lib/matrix/types/space";
 import { MatrixRole } from "@/components/server/role-manager";
+import { useModal } from "@/hooks/use-modal-store";
 import {
   Shield,
   Users,
@@ -129,6 +130,8 @@ function RolesTab({
   serverId: string; 
   userPowerLevel: number;
 }) {
+  const { onOpen } = useModal();
+
   const handleRoleReorder = (roles: MatrixRole[]) => {
     console.log("Roles reordered:", roles);
     // TODO: Implement Matrix power level updates
@@ -145,8 +148,11 @@ function RolesTab({
   };
 
   const handleRoleCreate = () => {
-    console.log("Create new role");
-    // TODO: Open role creation modal
+    onOpen("createRole", {
+      space,
+      serverId,
+      userPowerLevel,
+    });
   };
 
   return (

@@ -1,18 +1,32 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Member, Profile } from "@/lib/haos-types";
-import { Crown, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Crown, ShieldAlert, ShieldCheck, UserX, Ban, MoreVertical } from "lucide-react";
 
 import { UserAvatar } from "@/components/user-avatar";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useModal } from "@/hooks/use-modal-store";
+import { useMatrixClient } from "@/hooks/use-matrix-client";
+import { createModerationService } from "@/lib/matrix/moderation";
 
 interface MemberSidebarProps {
   members: (Member & { profile: Profile })[];
   onlineMembers?: string[]; // Array of online member IDs
   className?: string;
+  /** Server/Space ID for moderation actions */
+  serverId?: string;
+  /** Room ID for context */
+  roomId?: string;
 }
 
 const roleIconMap = {
@@ -27,7 +41,7 @@ const roleColorMap = {
   ADMIN: "text-rose-500"
 };
 
-export function MemberSidebar({ members, onlineMembers = [], className }: MemberSidebarProps) {
+export function MemberSidebar({ members, onlineMembers = [], className, serverId, roomId }: MemberSidebarProps) {
   // Group members by online status and role
   const groupedMembers = React.useMemo(() => {
     const online = members.filter(member => onlineMembers.includes(member.id));
@@ -65,6 +79,8 @@ export function MemberSidebar({ members, onlineMembers = [], className }: Member
                     key={member.id} 
                     member={member} 
                     isOnline={true}
+                    serverId={serverId}
+                    roomId={roomId}
                   />
                 ))}
               </div>
@@ -90,6 +106,8 @@ export function MemberSidebar({ members, onlineMembers = [], className }: Member
                     key={member.id} 
                     member={member} 
                     isOnline={false}
+                    serverId={serverId}
+                    roomId={roomId}
                   />
                 ))}
               </div>
@@ -113,60 +131,178 @@ export function MemberSidebar({ members, onlineMembers = [], className }: Member
 interface MemberItemProps {
   member: Member & { profile: Profile };
   isOnline: boolean;
+  serverId?: string;
+  roomId?: string;
 }
 
-function MemberItem({ member, isOnline }: MemberItemProps) {
+function MemberItem({ member, isOnline, serverId, roomId }: MemberItemProps) {
+  const { onOpen } = useModal();
+  const { client } = useMatrixClient();
+  const [canKick, setCanKick] = useState(false);
+  const [canBan, setCanBan] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'moderator' | 'member'>('member');
+
   const roleIcon = roleIconMap[member.role as keyof typeof roleIconMap];
   const roleColor = roleColorMap[member.role as keyof typeof roleColorMap];
 
-  return (
-    <ActionTooltip
-      side="left"
-      label={`${member.profile.name}${member.role !== 'GUEST' ? ` • ${member.role}` : ''}`}
-    >
-      <div className="group flex items-center gap-x-2 w-full p-2 rounded-md transition hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 cursor-pointer">
-        {/* Avatar with online indicator */}
-        <div className="relative">
-          <UserAvatar 
-            src={member.profile.imageUrl}
-            className="h-8 w-8"
-          />
-          {/* Online status indicator */}
-          <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-[#2b2d31] ${
-            isOnline ? 'bg-green-500' : 'bg-zinc-500'
-          }`} />
-        </div>
+  // Check permissions when component mounts or dependencies change
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!client || !serverId) return;
+      
+      const currentUserId = client.getUserId();
+      if (!currentUserId) return;
 
-        <div className="flex-1 min-w-0">
-          {/* Name with role color */}
-          <div className="flex items-center gap-1">
-            <p className={`text-sm font-medium truncate ${
-              isOnline 
-                ? `text-zinc-900 dark:text-zinc-100 ${member.role !== 'GUEST' ? roleColor : ''}` 
-                : 'text-zinc-500 dark:text-zinc-400'
-            }`}>
-              {member.profile.name}
-            </p>
-            {roleIcon && (
-              <div className="flex-shrink-0">
-                {roleIcon}
-              </div>
-            )}
+      // Skip permission checks for self
+      if (currentUserId === member.id) {
+        setCanKick(false);
+        setCanBan(false);
+        return;
+      }
+
+      const moderationService = createModerationService(client);
+      
+      try {
+        const [kickPermission, banPermission, currentUserRole] = await Promise.all([
+          moderationService.hasPermission(serverId, currentUserId, 'KICK', member.id),
+          moderationService.hasPermission(serverId, currentUserId, 'BAN', member.id),
+          moderationService.getUserRole(serverId, currentUserId)
+        ]);
+
+        setCanKick(kickPermission);
+        setCanBan(banPermission);
+        setUserRole(currentUserRole);
+      } catch (error) {
+        console.error('Error checking permissions:', error);
+        setCanKick(false);
+        setCanBan(false);
+      }
+    };
+
+    checkPermissions();
+  }, [client, serverId, member.id]);
+
+  const handleKickUser = () => {
+    if (!serverId || !canKick) return;
+
+    onOpen("kickUser", {
+      targetUser: {
+        id: member.id,
+        name: member.profile.name,
+        avatarUrl: member.profile.imageUrl
+      },
+      serverId,
+      roomId
+    });
+  };
+
+  const handleBanUser = () => {
+    if (!serverId || !canBan) return;
+
+    // TODO: Implement ban user modal (similar to kick)
+    console.log('Ban user not implemented yet:', member.profile.name);
+  };
+
+  const handleViewProfile = () => {
+    onOpen("userProfile", {
+      userId: member.id,
+      spaceId: serverId
+    });
+  };
+
+  // Check if current user can moderate this member
+  const showModerationMenu = (canKick || canBan) && client?.getUserId() !== member.id;
+
+  return (
+    <div className="group flex items-center gap-x-2 w-full p-2 rounded-md transition hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 relative">
+      {/* Avatar with online indicator */}
+      <div className="relative">
+        <ActionTooltip
+          side="left"
+          label={`${member.profile.name}${member.role !== 'GUEST' ? ` • ${member.role}` : ''}`}
+        >
+          <div onClick={handleViewProfile} className="cursor-pointer hover:opacity-80 transition-opacity">
+            <UserAvatar 
+              src={member.profile.imageUrl}
+              className="h-8 w-8"
+            />
+            {/* Online status indicator */}
+            <div className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-[#2b2d31] ${
+              isOnline ? 'bg-green-500' : 'bg-zinc-500'
+            }`} />
           </div>
-          
-          {/* Optional status or activity */}
-          {member.role === 'ADMIN' && (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Administrator
-            </p>
-          )}
-          {member.role === 'MODERATOR' && (
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Moderator
-            </p>
+        </ActionTooltip>
+      </div>
+
+      <div className="flex-1 min-w-0" onClick={handleViewProfile}>
+        {/* Name with role color */}
+        <div className="flex items-center gap-1 cursor-pointer">
+          <p className={`text-sm font-medium truncate ${
+            isOnline 
+              ? `text-zinc-900 dark:text-zinc-100 ${member.role !== 'GUEST' ? roleColor : ''}` 
+              : 'text-zinc-500 dark:text-zinc-400'
+          }`}>
+            {member.profile.name}
+          </p>
+          {roleIcon && (
+            <div className="flex-shrink-0">
+              {roleIcon}
+            </div>
           )}
         </div>
+        
+        {/* Optional status or activity */}
+        {member.role === 'ADMIN' && (
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Administrator
+          </p>
+        )}
+        {member.role === 'MODERATOR' && (
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Moderator
+          </p>
+        )}
       </div>
-    </ActionTooltip>
+
+      {/* Moderation Menu */}
+      {showModerationMenu && (
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center justify-center h-6 w-6 rounded hover:bg-zinc-600/50 transition-colors">
+                <MoreVertical className="h-4 w-4 text-zinc-400 hover:text-zinc-300" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="left" className="w-48">
+              <DropdownMenuItem onClick={handleViewProfile}>
+                View Profile
+              </DropdownMenuItem>
+              
+              {(canKick || canBan) && <DropdownMenuSeparator />}
+              
+              {canKick && (
+                <DropdownMenuItem 
+                  onClick={handleKickUser}
+                  className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                >
+                  <UserX className="h-4 w-4 mr-2" />
+                  Kick User
+                </DropdownMenuItem>
+              )}
+              
+              {canBan && (
+                <DropdownMenuItem 
+                  onClick={handleBanUser}
+                  className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  Ban User
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+    </div>
   );
 }

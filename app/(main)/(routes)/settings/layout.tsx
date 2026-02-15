@@ -30,7 +30,7 @@ export default async function SettingsLayout({
     <div className="h-full flex">
       {/* Settings Sidebar - Hidden on mobile */}
       <SectionErrorBoundary name="settings-sidebar">
-        <div className="hidden lg:flex">
+        <div className="hidden md:flex">
           <SettingsSidebar profile={profile} />
         </div>
       </SectionErrorBoundary>
@@ -38,7 +38,7 @@ export default async function SettingsLayout({
       {/* Main Content */}
       <div className="flex-1 bg-white dark:bg-[#313338] overflow-y-auto">
         {/* Mobile Settings Toggle - Only shown on mobile */}
-        <div className="lg:hidden p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#313338]">
+        <div className="md:hidden p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#313338]">
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">Settings</h1>
             <SectionErrorBoundary name="mobile-settings-toggle">

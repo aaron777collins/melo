@@ -23,11 +23,11 @@ export function MobileSettingsToggle({ profile }: MobileSettingsToggleProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="lg:hidden">
+        <Button variant="ghost" size="icon" className="md:hidden">
           <Menu />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 w-60">
+      <SheetContent side="left" className="p-0">
         <SettingsSidebar profile={profile} />
       </SheetContent>
     </Sheet>

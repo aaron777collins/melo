@@ -60,6 +60,11 @@ interface UseMentionsReturn {
   rooms: Room[];
   
   /**
+   * Current mention range being typed (includes type: "user" | "channel")
+   */
+  currentMentionRange: MentionRange | null;
+  
+  /**
    * Handle input change to detect @ or # mentions
    */
   handleInputChange: (value: string, selectionStart: number, inputElement: HTMLInputElement) => void;
@@ -245,15 +250,11 @@ export function useMentions(roomId: string): UseMentionsReturn {
   }, [members]);
 
   // Get relevant rooms for channel mentions
-  const spaceRooms = useMemo(() => {
-    if (!space) return [];
-    // TODO: Add filter for space-related rooms
-    return space.getJoinedRooms().filter(room => {
-      // You might want more sophisticated filtering 
-      // based on room type, permissions, etc.
-      return room.roomId !== roomId;
-    });
-  }, [space, roomId]);
+  // TODO: Implement space functionality when useSpace hook is available
+  const spaceRooms: Room[] = useMemo(() => {
+    // Space functionality not yet implemented - return empty array for now
+    return [];
+  }, []);
   
   // =============================================================================
   // Event Handlers
@@ -455,6 +456,7 @@ export function useMentions(roomId: string): UseMentionsReturn {
     autocompletePosition,
     members: activeMembers,
     rooms: spaceRooms,
+    currentMentionRange,
     handleInputChange,
     handleUserSelect,
     handleChannelSelect,

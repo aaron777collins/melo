@@ -233,7 +233,7 @@ export function ProfileForm({ profile, onUpdate }: ProfileFormProps) {
         await client.setAccountData('org.haos.profile.bio' as any, {
           bio: data.bio,
           updated: Date.now(),
-        });
+        } as any);
       }
 
       setUpdateState({ 

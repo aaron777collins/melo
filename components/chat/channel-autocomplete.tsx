@@ -67,7 +67,7 @@ interface ChannelAutocompleteProps {
 function roomToChannelMention(room: Room): ChannelMention {
   // Determine channel type based on room state
   let type: ChannelMention['type'] = "text";
-  const createEvent = room.currentState.getStateEvents("m.room.create", "");
+  const createEvent = room.currentState?.getStateEvents("m.room.create", "");
   const roomType = createEvent?.getContent()?.type;
   
   switch (roomType) {
@@ -81,10 +81,14 @@ function roomToChannelMention(room: Room): ChannelMention {
       type = "text";
   }
   
+  // Extract topic safely - getStateEvents with stateKey returns single event
+  const topicEvent = room.currentState?.getStateEvents("m.room.topic", "");
+  const topic = topicEvent?.getContent()?.topic as string | undefined;
+
   return {
     id: room.roomId,
-    name: room.name || room.canonicalAlias || "Unnamed Channel",
-    topic: room.currentState.getStateEvents("m.room.topic", "")[0]?.getContent()?.topic,
+    name: room.name || room.getCanonicalAlias() || "Unnamed Channel",
+    topic,
     type
   };
 }

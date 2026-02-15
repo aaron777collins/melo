@@ -114,11 +114,14 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
             const beforeMention = formattedBody.substring(0, mention.offset + offset);
             const afterMention = formattedBody.substring(mention.offset + offset + mention.length);
             
-            let mentionHtml;
+            let mentionHtml: string;
             if (mention.type === "user") {
               mentionHtml = `<a href="https://matrix.to/#/${mention.userId}">${mention.displayName}</a>`;
             } else if (mention.type === "channel") {
               mentionHtml = `<a href="#/channels/${mention.channelId}">#${mention.displayName}</a>`;
+            } else {
+              // Skip unknown mention types
+              continue;
             }
             
             formattedBody = beforeMention + mentionHtml + afterMention;
@@ -263,7 +266,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
             members={mentions.members}
             query={mentions.mentionQuery}
             position={mentions.autocompletePosition}
-            visible={mentions.showAutocomplete && mentions.mentionQuery !== "" && currentMentionRange?.type === "user"}
+            visible={mentions.showAutocomplete && mentions.mentionQuery !== "" && mentions.currentMentionRange?.type === "user"}
             onSelect={mentions.handleUserSelect}
             onClose={mentions.closeAutocomplete}
           />
@@ -272,7 +275,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
             rooms={mentions.rooms}
             query={mentions.mentionQuery}
             position={mentions.autocompletePosition}
-            visible={mentions.showAutocomplete && mentions.mentionQuery !== "" && currentMentionRange?.type === "channel"}
+            visible={mentions.showAutocomplete && mentions.mentionQuery !== "" && mentions.currentMentionRange?.type === "channel"}
             onSelect={mentions.handleChannelSelect}
             onClose={mentions.closeAutocomplete}
           />

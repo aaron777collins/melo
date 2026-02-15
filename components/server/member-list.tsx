@@ -327,7 +327,7 @@ export function MemberList({ serverId, userPowerLevel, spaceName }: MemberListPr
               id: userId,
               userId,
               name: roomMember.name || userId.split(':')[0].slice(1),
-              imageUrl: roomMember.getAvatarUrl(client.baseUrl, 256, 256, "crop") || "",
+              imageUrl: roomMember.getAvatarUrl(client.baseUrl, 256, 256, "crop", false, true) || "",
               email: "",
               createdAt: new Date(),
               updatedAt: new Date(),
@@ -418,7 +418,7 @@ export function MemberList({ serverId, userPowerLevel, spaceName }: MemberListPr
           </Badge>
           {canManageRoles && (
             <Button 
-              onClick={() => onOpen("createInvite", { serverId })}
+              onClick={() => onOpen("invite", { serverId })}
               className="bg-indigo-500 hover:bg-indigo-600"
             >
               <UserPlus className="h-4 w-4 mr-2" />

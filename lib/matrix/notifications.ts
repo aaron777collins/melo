@@ -9,7 +9,7 @@
  * - Integration with Matrix client events
  */
 
-import { MatrixClient, MatrixEvent, Room, RoomMember } from "matrix-js-sdk";
+import { MatrixClient, MatrixEvent, Room, RoomMember, RoomEvent, RoomMemberEvent } from "matrix-js-sdk";
 import { getClient } from "./client";
 
 // =============================================================================
@@ -356,8 +356,8 @@ export class MatrixNotificationService {
       this.handleMatrixEvent(event);
     };
 
-    this.client.on("Room.timeline", timelineListener);
-    this.client.on("RoomMember.membership", membershipListener);
+    this.client.on(RoomEvent.Timeline, timelineListener);
+    this.client.on(RoomMemberEvent.Membership, membershipListener);
 
     this.listeners.set("timeline", timelineListener);
     this.listeners.set("membership", membershipListener);
@@ -373,9 +373,9 @@ export class MatrixNotificationService {
 
     this.listeners.forEach((listener, eventType) => {
       if (eventType === "timeline") {
-        this.client!.off("Room.timeline", listener as any);
+        this.client!.off(RoomEvent.Timeline, listener as any);
       } else if (eventType === "membership") {
-        this.client!.off("RoomMember.membership", listener as any);
+        this.client!.off(RoomMemberEvent.Membership, listener as any);
       }
     });
 
@@ -417,9 +417,7 @@ export class MatrixNotificationService {
       roomId: event.getRoomId()!,
       eventId: event.getId()!,
       senderId: event.getSender()!,
-      avatar: eventRoom.getMember(event.getSender()!)?.getAvatarUrl(
-        this.client.baseUrl, 32, 32, "crop"
-      ),
+      avatar: undefined, // TODO: Fix avatar URL generation with correct Matrix SDK params
       actions: template.actions
     };
 

@@ -309,11 +309,8 @@ export class EmailNotificationService {
     const messageContent = event.getContent().body || "";
     const timestamp = new Date(event.getTs()).toLocaleString();
     
-    // Create avatar HTML
-    const avatarUrl = room.getMember(sender)?.getAvatarUrl(baseUrl, 40, 40, "crop");
-    const avatarHtml = avatarUrl 
-      ? `<img src="${avatarUrl}" alt="${senderName}" style="width: 40px; height: 40px; border-radius: 50%;" />`
-      : `<div style="width: 40px; height: 40px; border-radius: 50%; background: #6b7280; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">${senderName.charAt(0).toUpperCase()}</div>`;
+    // Create avatar HTML (simplified for now)
+    const avatarHtml = `<div style="width: 40px; height: 40px; border-radius: 50%; background: #6b7280; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">${senderName.charAt(0).toUpperCase()}</div>`;
     
     // Build links
     const roomLink = `${baseUrl}/rooms/${room.roomId}${event.getId() ? `#${event.getId()}` : ''}`;

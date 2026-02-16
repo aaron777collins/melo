@@ -1,24 +1,65 @@
 /**
  * Privacy & Safety Settings Page
  * 
- * Comprehensive privacy controls and safety features
+ * Comprehensive privacy controls and safety features with Matrix account data integration
  */
 
+"use client";
+
 import React from "react";
-import { currentProfile } from "@/lib/current-profile";
-import { redirect } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Shield } from "lucide-react";
+import { Shield, MessageCircle, Eye, Activity, Users } from "lucide-react";
 import { SettingsHeader } from "@/components/settings/settings-header";
+import { BlockedUsersList } from "@/components/privacy/blocked-users-list";
+import { UserSearchBlock } from "@/components/privacy/user-search-block";
+import { usePrivacySettings } from "@/hooks/use-privacy-settings";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export default async function PrivacySettingsPage() {
-  const profile = await currentProfile();
-  if (!profile) {
-    return redirect("/");
+export default function PrivacySettingsPage() {
+  const { settings, isLoading, error, updateSetting } = usePrivacySettings();
+
+  if (isLoading) {
+    return (
+      <div className="h-full p-6 overflow-y-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="space-y-3">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Separator />
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full p-6 overflow-y-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <SettingsHeader
+            title="Privacy & Safety"
+            description="Control who can contact you and how your data is used across the platform."
+            icon={<Shield className="h-6 w-6" />}
+          />
+          <Alert variant="destructive">
+            <AlertDescription>
+              Failed to load privacy settings: {error}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  if (!settings) {
+    return null;
   }
 
   return (
@@ -33,130 +74,194 @@ export default async function PrivacySettingsPage() {
 
         <Separator />
 
-        {/* Direct Messages */}
+        {/* Direct Messages Privacy */}
         <Card>
           <CardHeader>
-            <CardTitle>Direct Messages</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              Direct Messages
+            </CardTitle>
             <CardDescription>
-              Control who can send you direct messages
+              Control who can send you direct messages and friend requests
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="dm-everyone">Allow direct messages from server members</Label>
-                <p className="text-sm text-muted-foreground">
-                  Members of servers you share can message you directly
-                </p>
-              </div>
-              <Switch id="dm-everyone" defaultChecked />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="dm-friends">Allow direct messages from friends</Label>
-                <p className="text-sm text-muted-foreground">
-                  People you&apos;ve added as friends can message you
-                </p>
-              </div>
-              <Switch id="dm-friends" defaultChecked />
+          <CardContent className="space-y-6">
+            {/* DM Privacy Level */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Who can send you direct messages</Label>
+              <Select 
+                value={settings.dmPrivacy} 
+                onValueChange={(value: 'everyone' | 'friends' | 'nobody') => 
+                  updateSetting('dmPrivacy', value)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select DM privacy level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="everyone">Everyone</SelectItem>
+                  <SelectItem value="friends">Friends Only</SelectItem>
+                  <SelectItem value="nobody">Nobody</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                {settings.dmPrivacy === 'everyone' && "Anyone can send you direct messages"}
+                {settings.dmPrivacy === 'friends' && "Only people you've added as friends can message you"}
+                {settings.dmPrivacy === 'nobody' && "No one can send you direct messages"}
+              </p>
             </div>
 
+            {/* Friend Requests */}
             <div className="space-y-3">
-              <Label>Friend requests</Label>
-              <Select defaultValue="everyone">
+              <Label className="text-sm font-medium">Who can send you friend requests</Label>
+              <Select 
+                value={settings.friendRequestPrivacy} 
+                onValueChange={(value: 'everyone' | 'friends-of-friends' | 'server-members' | 'nobody') => 
+                  updateSetting('friendRequestPrivacy', value)
+                }
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select who can send friend requests" />
+                  <SelectValue placeholder="Select friend request privacy" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="everyone">Everyone</SelectItem>
                   <SelectItem value="friends-of-friends">Friends of Friends</SelectItem>
                   <SelectItem value="server-members">Server Members Only</SelectItem>
-                  <SelectItem value="none">No One</SelectItem>
+                  <SelectItem value="nobody">Nobody</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </CardContent>
         </Card>
 
-        {/* Server Privacy */}
+        {/* Online Status & Activity */}
         <Card>
           <CardHeader>
-            <CardTitle>Server Privacy</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Online Status & Visibility
+            </CardTitle>
             <CardDescription>
-              Control your visibility and interactions in servers
+              Control what others can see about your online presence
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="server-activity">Show current activity</Label>
+                <Label htmlFor="online-status">Show online status</Label>
                 <p className="text-sm text-muted-foreground">
-                  Display what you&apos;re doing in your status
+                  Let others see when you're online, away, or offline
                 </p>
               </div>
-              <Switch id="server-activity" defaultChecked />
+              <Switch 
+                id="online-status" 
+                checked={settings.showOnlineStatus}
+                onCheckedChange={(checked) => updateSetting('showOnlineStatus', checked)}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="activity-status">Share activity status</Label>
+                <p className="text-sm text-muted-foreground">
+                  Display what you're doing in your status (e.g., "Playing a game")
+                </p>
+              </div>
+              <Switch 
+                id="activity-status" 
+                checked={settings.shareActivityStatus}
+                onCheckedChange={(checked) => updateSetting('shareActivityStatus', checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Message Privacy */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Message Privacy
+            </CardTitle>
+            <CardDescription>
+              Control message-related privacy features
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="read-receipts">Send read receipts</Label>
+                <p className="text-sm text-muted-foreground">
+                  Let others know when you've read their messages
+                </p>
+              </div>
+              <Switch 
+                id="read-receipts" 
+                checked={settings.showReadReceipts}
+                onCheckedChange={(checked) => updateSetting('showReadReceipts', checked)}
+              />
             </div>
             
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="typing-indicator">Show typing indicator</Label>
                 <p className="text-sm text-muted-foreground">
-                  Let others know when you&apos;re typing a message
+                  Let others know when you're typing a message
                 </p>
               </div>
-              <Switch id="typing-indicator" defaultChecked />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="read-receipts">Send read receipts</Label>
-                <p className="text-sm text-muted-foreground">
-                  Let others know when you&apos;ve read their messages
-                </p>
-              </div>
-              <Switch id="read-receipts" />
+              <Switch 
+                id="typing-indicator" 
+                checked={settings.showTypingIndicator}
+                onCheckedChange={(checked) => updateSetting('showTypingIndicator', checked)}
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Data & Privacy */}
+        {/* Block/Unblock Users */}
         <Card>
           <CardHeader>
-            <CardTitle>Data & Privacy</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              User Management
+            </CardTitle>
             <CardDescription>
-              Manage how your data is collected and used
+              Block or unblock users to control who can interact with you
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="analytics">Allow analytics</Label>
-                <p className="text-sm text-muted-foreground">
-                  Help improve the platform with anonymous usage data
-                </p>
-              </div>
-              <Switch id="analytics" defaultChecked />
-            </div>
+          <CardContent className="space-y-6">
+            {/* Add User to Block */}
+            <UserSearchBlock />
             
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="personalized-tips">Personalized tips</Label>
-                <p className="text-sm text-muted-foreground">
-                  Receive tips and suggestions based on your usage
-                </p>
-              </div>
-              <Switch id="personalized-tips" defaultChecked />
-            </div>
+            <Separator />
+            
+            {/* Blocked Users List */}
+            <BlockedUsersList />
+          </CardContent>
+        </Card>
 
-            <div className="space-y-3">
-              <Label>Data download</Label>
-              <p className="text-sm text-muted-foreground mb-2">
-                Request a copy of your data stored on our servers
+        {/* Data Privacy Notice */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Data & Privacy Notice</CardTitle>
+            <CardDescription>
+              Information about how your privacy settings are stored
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>
+                • Your privacy settings are securely stored using Matrix account data and synchronized across your devices.
               </p>
-              <button className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors">
-                Request Data Package
-              </button>
+              <p>
+                • Blocked users are maintained using the Matrix ignored users list for compatibility across Matrix clients.
+              </p>
+              <p>
+                • Privacy settings only affect interactions within this HAOS instance and may not apply to other Matrix clients.
+              </p>
+              <p>
+                • Some settings may take a few moments to take effect across all your devices.
+              </p>
             </div>
           </CardContent>
         </Card>

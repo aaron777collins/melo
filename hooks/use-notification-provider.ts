@@ -13,6 +13,7 @@
 import { useEffect, useState } from "react";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useNotifications } from "@/hooks/use-notifications";
+import { getNotificationService } from "@/lib/matrix/notifications";
 
 // =============================================================================
 // Types

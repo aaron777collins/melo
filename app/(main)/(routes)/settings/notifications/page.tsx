@@ -11,7 +11,9 @@ import { redirect } from "next/navigation";
 import { currentProfile } from "@/lib/current-profile";
 import { NotificationForm } from "@/components/settings/notification-form";
 import { Separator } from "@/components/ui/separator";
-import { Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Bell, Settings, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export const metadata = {
   title: "Notification Settings - HAOS",
@@ -30,9 +32,19 @@ export default async function NotificationsPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Page Header */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Bell className="h-6 w-6" />
-            <h1 className="text-2xl font-bold">Notification Settings</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="h-6 w-6" />
+              <h1 className="text-2xl font-bold">Notification Settings</h1>
+            </div>
+            
+            <Link href="/settings/notifications/advanced">
+              <Button variant="outline">
+                <Settings className="h-4 w-4 mr-2" />
+                Advanced Settings
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
           </div>
           <p className="text-muted-foreground">
             Manage notification preferences for servers and channels. Set per-server defaults and override settings for specific channels.

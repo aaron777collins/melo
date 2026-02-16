@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +11,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const SUPPORT_CATEGORIES = [
   { value: 'technical', label: 'Technical Support' },
@@ -19,6 +21,7 @@ const SUPPORT_CATEGORIES = [
 ];
 
 export const ContactForm: React.FC = () => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     email: '',
     category: '',
@@ -30,21 +33,13 @@ export const ContactForm: React.FC = () => {
     
     // Basic validation
     if (!formData.email || !formData.category || !formData.message) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill out all fields.',
-        variant: 'destructive'
-      });
+      toast.error('Please fill out all fields.');
       return;
     }
 
     // TODO: Implement actual support ticket submission
     // This would typically involve sending data to a backend service
-    toast({
-      title: 'Support Request Submitted',
-      description: 'We will get back to you via email soon.',
-      variant: 'default'
-    });
+    toast.success('Support request submitted! We will get back to you via email soon.');
 
     // Reset form
     setFormData({ email: '', category: '', message: '' });

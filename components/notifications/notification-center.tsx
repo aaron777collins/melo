@@ -21,7 +21,7 @@ import {
   Users,
   UserPlus,
   Hash,
-  Thread,
+  MessageSquare,
   Heart,
   ChevronDown,
   ChevronUp,
@@ -74,7 +74,7 @@ function getNotificationIcon(type: NotificationType) {
     case NotificationType.RoomInvite:
       return UserPlus;
     case NotificationType.ThreadReply:
-      return Thread;
+      return MessageSquare;
     case NotificationType.Reaction:
       return Heart;
     case NotificationType.RoomMessage:

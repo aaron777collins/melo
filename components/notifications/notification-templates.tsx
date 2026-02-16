@@ -17,7 +17,7 @@ import {
   AtSign,
   Users,
   UserPlus,
-  Thread,
+  MessageSquare,
   Heart,
   Hash,
   Settings,
@@ -113,7 +113,7 @@ const NOTIFICATION_TYPES = [
     type: NotificationType.ThreadReply,
     name: "Thread Replies",
     description: "Replies to threads you're participating in",
-    icon: Thread,
+    icon: MessageSquare,
     color: "text-purple-500"
   },
   {
@@ -383,8 +383,8 @@ function TemplateEditor({ template, onSave, onCancel }: TemplateEditorProps) {
                       // Add variable to title/body on click
                       const textarea = document.activeElement as HTMLTextAreaElement | HTMLInputElement;
                       if (textarea && (textarea.id === 'title' || textarea.id === 'body')) {
-                        const start = textarea.selectionStart;
-                        const end = textarea.selectionEnd;
+                        const start = textarea.selectionStart || 0;
+                        const end = textarea.selectionEnd || 0;
                         const value = textarea.value;
                         const newValue = value.slice(0, start) + variable.variable + value.slice(end);
                         

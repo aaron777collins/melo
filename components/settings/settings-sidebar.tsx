@@ -25,7 +25,9 @@ import {
   Globe,
   Smartphone,
   ChevronLeft,
-  X
+  X,
+  UserMinus,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -97,6 +99,26 @@ function getNavSections(): SettingsNavSection[] {
           label: "Security",
           icon: Lock,
           href: `${basePath}/security`,
+        },
+      ],
+    },
+
+    // Account section
+    {
+      title: "ACCOUNT",
+      items: [
+        {
+          id: "data-export",
+          label: "Data Export",
+          icon: Download,
+          href: `${basePath}/data-export`,
+        },
+        {
+          id: "account-deletion",
+          label: "Account Deletion",
+          icon: UserMinus,
+          href: `${basePath}/account/delete`,
+          isDanger: true,
         },
       ],
     },

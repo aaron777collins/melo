@@ -7,6 +7,7 @@ import { Users, X } from "lucide-react";
 import { MemberSidebar } from "@/components/chat/member-sidebar";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { SectionErrorBoundary } from "@/components/error-boundary";
+import { useChatSwipeGestures } from "@/hooks/use-swipe-gestures";
 import { cn } from "@/lib/utils";
 
 interface ChatLayoutProps {
@@ -38,15 +39,32 @@ export function ChatLayout({
 }: ChatLayoutProps) {
   const [showMemberSidebar, setShowMemberSidebar] = useState(true);
 
+  // Swipe gestures for mobile navigation
+  const swipeRef = useChatSwipeGestures({
+    onShowMembers: () => {
+      if (members.length > 0 && showMembersToggle) {
+        setShowMemberSidebar(true);
+      }
+    },
+    onHideSidebar: () => {
+      if (showMemberSidebar) {
+        setShowMemberSidebar(false);
+      }
+    }
+  });
+
   return (
     <div className={cn("flex h-full relative", className)}>
-      {/* Main content area */}
-      <div className={cn(
-        "flex-1 flex flex-col transition-all duration-200",
-        showMemberSidebar && showMembersToggle 
-          ? "mr-0 lg:mr-60" // Make space for sidebar on large screens
-          : "mr-0"
-      )}>
+      {/* Main content area with swipe gestures */}
+      <div 
+        ref={swipeRef as React.RefObject<HTMLDivElement>}
+        className={cn(
+          "flex-1 flex flex-col transition-all duration-200",
+          showMemberSidebar && showMembersToggle 
+            ? "mr-0 lg:mr-60" // Make space for sidebar on large screens
+            : "mr-0"
+        )}
+      >
         {children}
         
         {/* Member toggle button - floating on mobile, integrated on desktop */}

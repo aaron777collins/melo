@@ -15,7 +15,13 @@ const openSans = Open_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "HAOS",
-  description: "Home Automation OS - Discord-style interface for Matrix"
+  description: "Home Automation OS - Discord-style interface for Matrix",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({

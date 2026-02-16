@@ -8,6 +8,50 @@ body,
   height: 100%;
 }
 
+/* Mobile optimization */
+@media (max-width: 768px) {
+  /* Prevent zoom on input focus (iOS) */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Improve touch targets */
+  button,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Smooth scrolling on mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Touch-friendly scrollbars */
+@media (hover: none) and (pointer: coarse) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:active {
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

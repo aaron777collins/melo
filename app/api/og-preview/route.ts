@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering for this route since it uses request.url
+export const dynamic = 'force-dynamic';
+
 /**
  * OpenGraph metadata interface
  */

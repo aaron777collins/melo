@@ -21,12 +21,12 @@ import { useModal } from "@/hooks/use-modal-store";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useMentions } from "@/hooks/use-mentions";
 import { useEmojiAutocomplete } from "@/hooks/use-emoji-autocomplete";
-import { useAccessibility } from "@/hooks/use-accessibility";
+import { useAccessibility } from "@/src/hooks/use-accessibility";
 import { EmojiPicker } from "@/components/emoji-picker";
 import { MentionAutocomplete } from "./mention-autocomplete";
 import { ChannelAutocomplete } from "./channel-autocomplete";
 import { EmojiAutocomplete } from "./emoji-autocomplete";
-import { createAriaLabel } from "@/lib/accessibility";
+import { createAriaLabel } from "@/src/lib/accessibility";
 
 interface ChatInputProps {
   /**

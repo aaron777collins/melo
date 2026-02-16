@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useSpaces, useUnreadDMCount } from "@/hooks/use-spaces";
-import { useAccessibility } from "@/hooks/use-accessibility";
+import { useAccessibility } from "@/src/hooks/use-accessibility";
 import { cn } from "@/lib/utils";
 
 /**
@@ -45,7 +45,7 @@ export function NavigationSidebar() {
   const toolbarId = useId();
 
   return (
-    <nav
+    <div
       id={sidebarId}
       role="navigation"
       aria-label="Server and channel navigation"

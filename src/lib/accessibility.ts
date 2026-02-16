@@ -63,8 +63,8 @@ export const trapFocus = (element: HTMLElement) => {
 };
 
 // Keyboard navigation utilities
-export const createKeyboardHandler = (handlers: Record<string, (event: KeyboardEvent) => void>) => {
-  return (event: KeyboardEvent) => {
+export const createKeyboardHandler = (handlers: Record<string, (event: React.KeyboardEvent | KeyboardEvent) => void>) => {
+  return (event: React.KeyboardEvent) => {
     const key = event.key;
     const handler = handlers[key];
     
@@ -116,7 +116,7 @@ export const restoreFocus = (previousFocus: HTMLElement | null) => {
 
 // Escape key handler
 export const useEscapeKey = (callback: () => void) => {
-  return (event: KeyboardEvent) => {
+  return (event: React.KeyboardEvent | KeyboardEvent) => {
     if (event.key === 'Escape') {
       callback();
     }

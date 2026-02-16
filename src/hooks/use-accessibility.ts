@@ -11,7 +11,7 @@ import {
   prefersHighContrast,
   shouldReduceMotion,
   isHighContrastMode
-} from '@/lib/accessibility';
+} from '@/src/lib/accessibility';
 
 interface AccessibilitySettings {
   reducedMotion: boolean;

@@ -1,66 +1,104 @@
 import { NextResponse } from "next/server";
-import { getClient, getCryptoState } from "@/lib/matrix/client";
 
 export async function GET() {
   try {
-    const checks: Record<string, boolean> = {};
-    let overallStatus = "ready";
-    const details: Record<string, any> = {};
+    const matrixHomeserver = process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL;
+    
+    if (!matrixHomeserver) {
+      return NextResponse.json(
+        { 
+          status: "not ready", 
+          timestamp: new Date().toISOString(),
+          error: "Matrix homeserver URL not configured",
+          checks: {
+            matrix: {
+              status: "failed",
+              error: "NEXT_PUBLIC_MATRIX_HOMESERVER_URL not set"
+            }
+          }
+        },
+        { status: 503 }
+      );
+    }
 
-    // Check Matrix client connectivity
-    const client = getClient();
-    if (client) {
-      // Check if client is connected and syncing
-      const syncState = client.getSyncState();
-      checks.matrixClient = !!client;
-      checks.matrixSync = syncState === "SYNCING" || syncState === "PREPARED";
-      details.matrixSyncState = syncState;
-      
-      // Check crypto state if E2EE is enabled
-      try {
-        const cryptoState = getCryptoState();
-        checks.matrixCrypto = cryptoState.status === "ready" || cryptoState.status === "uninitialized";
-        details.matrixCryptoStatus = cryptoState.status;
-        
-        if (cryptoState.status === "error") {
-          details.matrixCryptoError = cryptoState.error?.message;
+    // Check Matrix homeserver connectivity with timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+    try {
+      const response = await fetch(`${matrixHomeserver}/_matrix/client/versions`, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
         }
-      } catch (error) {
-        checks.matrixCrypto = true; // Don't fail if crypto is not initialized
-        details.matrixCryptoStatus = "not_available";
+      });
+      
+      clearTimeout(timeout);
+      
+      const matrixStatus = {
+        status: response.ok ? "healthy" : "unhealthy",
+        statusCode: response.status,
+        url: `${matrixHomeserver}/_matrix/client/versions`
+      };
+
+      if (!response.ok) {
+        return NextResponse.json(
+          { 
+            status: "not ready", 
+            timestamp: new Date().toISOString(),
+            error: "Matrix homeserver not responding correctly",
+            checks: {
+              matrix: matrixStatus
+            }
+          },
+          { status: 503 }
+        );
       }
-    } else {
-      checks.matrixClient = false;
-      checks.matrixSync = false;
-      details.matrixSyncState = "no_client";
+
+      // All checks passed
+      return NextResponse.json(
+        { 
+          status: "ready", 
+          timestamp: new Date().toISOString(),
+          checks: {
+            matrix: matrixStatus
+          }
+        },
+        { status: 200 }
+      );
+
+    } catch (fetchError) {
+      clearTimeout(timeout);
+      
+      const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown error';
+      const isTimeout = errorMessage.includes('abort') || errorMessage.includes('timeout');
+      
+      return NextResponse.json(
+        { 
+          status: "not ready", 
+          timestamp: new Date().toISOString(),
+          error: isTimeout ? "Matrix homeserver connection timeout" : "Matrix homeserver connection failed",
+          checks: {
+            matrix: {
+              status: "failed",
+              error: errorMessage,
+              url: `${matrixHomeserver}/_matrix/client/versions`
+            }
+          }
+        },
+        { status: 503 }
+      );
     }
-
-    // Determine overall status
-    const failedChecks = Object.entries(checks).filter(([_, passed]) => !passed);
-    if (failedChecks.length > 0) {
-      overallStatus = "not_ready";
-      details.failedChecks = failedChecks.map(([check]) => check);
-    }
-
-    const readinessStatus = {
-      status: overallStatus,
-      timestamp: new Date().toISOString(),
-      checks,
-      details,
-    };
-
-    const statusCode = overallStatus === "ready" ? 200 : 503;
-    return NextResponse.json(readinessStatus, { status: statusCode });
 
   } catch (error) {
+    console.error("Readiness check error:", error);
     return NextResponse.json(
       { 
-        status: "not_ready", 
+        status: "not ready", 
         timestamp: new Date().toISOString(),
         error: "Readiness check failed",
-        details: {
-          errorMessage: error instanceof Error ? error.message : "Unknown error"
-        }
+        details: error instanceof Error ? error.message : "Unknown error"
       },
       { status: 503 }
     );

@@ -7,6 +7,7 @@ import { MatrixAuthProvider } from "@/components/providers/matrix-auth-provider"
 import { MatrixProvider } from "@/components/providers/matrix-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ServiceWorkerProvider, PWAInstallPrompt } from "@/components/providers/service-worker-provider";
+import { OnboardingProvider } from "@/components/providers/onboarding-provider";
 import { AppErrorBoundary, SectionErrorBoundary } from "@/components/error-boundary";
 
 import type { Metadata } from "next";
@@ -57,15 +58,19 @@ export default function RootLayout({
             >
               <SectionErrorBoundary name="matrix-auth">
                 <MatrixAuthProvider>
-                  <SectionErrorBoundary name="matrix-client">
-                    <MatrixProvider>
-                      <SectionErrorBoundary name="modals">
-                        <ModalProvider />
+                  <SectionErrorBoundary name="onboarding">
+                    <OnboardingProvider>
+                      <SectionErrorBoundary name="matrix-client">
+                        <MatrixProvider>
+                          <SectionErrorBoundary name="modals">
+                            <ModalProvider />
+                          </SectionErrorBoundary>
+                          <SectionErrorBoundary name="query-provider">
+                            <QueryProvider>{children}</QueryProvider>
+                          </SectionErrorBoundary>
+                        </MatrixProvider>
                       </SectionErrorBoundary>
-                      <SectionErrorBoundary name="query-provider">
-                        <QueryProvider>{children}</QueryProvider>
-                      </SectionErrorBoundary>
-                    </MatrixProvider>
+                    </OnboardingProvider>
                   </SectionErrorBoundary>
                 </MatrixAuthProvider>
               </SectionErrorBoundary>

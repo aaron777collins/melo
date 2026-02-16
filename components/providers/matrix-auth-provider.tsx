@@ -56,6 +56,7 @@ import {
   logoutAction,
   registerAction,
 } from "@/lib/matrix/actions/auth";
+import { markUserAsNew } from "@/hooks/use-onboarding";
 
 // =============================================================================
 // Types
@@ -383,6 +384,10 @@ export function MatrixAuthProvider({
           setUser(result.data.user);
           setSession(result.data.session);
           onAuthChange?.(result.data.user);
+          
+          // Mark user as new to trigger onboarding flow
+          markUserAsNew();
+          
           return true;
         } else {
           setError(result.error.message);

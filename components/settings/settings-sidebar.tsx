@@ -27,7 +27,8 @@ import {
   ChevronLeft,
   X,
   UserMinus,
-  Download
+  Download,
+  BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -164,6 +165,12 @@ function getNavSections(): SettingsNavSection[] {
     {
       title: "ADVANCED",
       items: [
+        {
+          id: "tutorial",
+          label: "Tutorial & Help",
+          icon: BookOpen,
+          href: `${basePath}/tutorial`,
+        },
         {
           id: "keybinds",
           label: "Keybinds",

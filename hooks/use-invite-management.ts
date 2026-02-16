@@ -76,8 +76,8 @@ export function useInviteManagement(
   }, [roomId, inviteService]);
 
   // Auto-cleanup expired invites
-  const cleanupExpiredInvites = useCallback(() => {
-    if (!inviteService) return;
+  const cleanupExpiredInvites = useCallback((): number => {
+    if (!inviteService) return 0;
 
     const expiredInvites = invites.filter(invite => invite.isExpired);
     expiredInvites.forEach(invite => {

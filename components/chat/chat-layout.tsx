@@ -116,9 +116,9 @@ export function ChatLayout({
       >
         {children}
         
-        {/* Member toggle button - floating on mobile, integrated on desktop */}
+        {/* Member toggle button - mobile optimized positioning */}
         {showMembersToggle && members.length > 0 && (
-          <div className="absolute top-2 right-2 z-10 lg:hidden">
+          <div className="absolute top-3 right-3 z-10 lg:hidden">
             <ActionTooltip
               label={showMemberSidebar ? "Hide Members (Alt+M)" : "Show Members (Alt+M)"}
               side="left"
@@ -127,13 +127,14 @@ export function ChatLayout({
                 id={toggleButtonId}
                 onClick={handleMemberSidebarToggle}
                 className={cn(
-                  "p-2 bg-zinc-900/80 hover:bg-zinc-900 text-white rounded-md transition-colors focus-enhanced",
+                  "p-3 bg-zinc-900/80 hover:bg-zinc-900 active:bg-zinc-800 text-white rounded-lg transition-colors focus-enhanced min-w-[44px] min-h-[44px] flex items-center justify-center",
                   effectivePreferences.highContrast && "high-contrast-button"
                 )}
                 aria-label={showMemberSidebar ? "Hide member list" : "Show member list"}
                 aria-expanded={showMemberSidebar}
                 aria-controls={memberSidebarId}
                 aria-keyshortcuts="Alt+M"
+                style={{ touchAction: 'manipulation' }}
               >
                 {showMemberSidebar ? (
                   <X className="h-4 w-4" aria-hidden="true" />

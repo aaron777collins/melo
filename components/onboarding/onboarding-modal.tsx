@@ -404,7 +404,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
             <DialogTitle className="flex items-center space-x-2">
               {currentStepData.icon}
               <span>{currentStepData.title}</span>
-              {currentStepData.isAdvanced && (
+              {'isAdvanced' in currentStepData && currentStepData.isAdvanced && (
                 <Badge variant="secondary" className="text-xs">Advanced</Badge>
               )}
             </DialogTitle>
@@ -473,8 +473,8 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
           </div>
           
           <div className="flex space-x-2">
-            {currentStepData.actionLabel ? (
-              <Button onClick={() => handleAction(currentStepData.actionUrl)}>
+            {'actionLabel' in currentStepData && currentStepData.actionLabel ? (
+              <Button onClick={() => handleAction('actionUrl' in currentStepData ? currentStepData.actionUrl : undefined)}>
                 {currentStepData.actionLabel}
               </Button>
             ) : (

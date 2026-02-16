@@ -58,11 +58,11 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         queue: jobStats,
-        jobTypes: jobTypeStats.map(stat => ({
+        jobTypes: jobTypeStats.map((stat: any) => ({
           type: stat.type,
           count: stat._count.type,
         })),
-        recentActivity: recentActivity.map(stat => ({
+        recentActivity: recentActivity.map((stat: any) => ({
           status: stat.status,
           type: stat.type,
           count: stat._count.status,

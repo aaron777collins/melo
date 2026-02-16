@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import accessibility styles */
+@import "../src/styles/accessibility.css";
+
 html,
 body,
 :root {

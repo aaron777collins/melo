@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useId } from "react";
 
 import { NavigationAction } from "@/components/navigation/navigation-action";
 import { NavigationDM } from "@/components/navigation/navigation-dm";
@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useSpaces, useUnreadDMCount } from "@/hooks/use-spaces";
+import { useAccessibility } from "@/hooks/use-accessibility";
 import { cn } from "@/lib/utils";
 
 /**
@@ -36,64 +37,102 @@ import { cn } from "@/lib/utils";
 export function NavigationSidebar() {
   const { spaces, isLoading } = useSpaces();
   const unreadDMCount = useUnreadDMCount();
+  const { effectivePreferences, announceNavigation } = useAccessibility();
+  
+  // Generate unique IDs for accessibility
+  const sidebarId = useId();
+  const serverListId = useId();
+  const toolbarId = useId();
 
   return (
-    <div
+    <nav
+      id={sidebarId}
+      role="navigation"
+      aria-label="Server and channel navigation"
       className={cn(
         "space-y-4 flex flex-col h-full items-center",
         "text-primary w-full py-3",
-        "dark:bg-[#1e1f22] bg-[#e3e5e8]"
+        "dark:bg-[#1e1f22] bg-[#e3e5e8]",
+        effectivePreferences.highContrast && "high-contrast-bg high-contrast-border",
+        effectivePreferences.enhancedFocus && "keyboard-navigable"
       )}
     >
       {/* DM Shortcut Button */}
-      <NavigationDM unreadCount={unreadDMCount} />
+      <div role="button" tabIndex={0} aria-describedby={`${sidebarId}-dm-help`}>
+        <NavigationDM unreadCount={unreadDMCount} />
+      </div>
+      <div id={`${sidebarId}-dm-help`} className="sr-only">
+        Direct messages. {unreadDMCount > 0 ? `${unreadDMCount} unread messages.` : 'No unread messages.'}
+      </div>
 
       {/* Separator */}
-      <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mx-auto" />
+      <Separator 
+        className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mx-auto" 
+        role="separator"
+        aria-label="Separator between direct messages and servers"
+      />
 
       {/* Scrollable Server List */}
-      <ScrollArea className="flex-1 w-full">
+      <ScrollArea 
+        className={`flex-1 w-full scrollable-area ${effectivePreferences.enhancedFocus ? 'keyboard-navigable' : ''}`}
+        role="region"
+        aria-labelledby={`${serverListId}-title`}
+      >
+        <h2 id={`${serverListId}-title`} className="sr-only">Server list</h2>
+        
         {isLoading ? (
-          // Loading skeleton
-          <div className="flex flex-col items-center gap-4">
+          // Loading skeleton with accessibility
+          <div className="flex flex-col items-center gap-4" role="status" aria-live="polite">
+            <span className="sr-only">Loading servers...</span>
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="mx-3 h-[48px] w-[48px] rounded-[24px] bg-zinc-700/50 animate-pulse"
+                className={`mx-3 h-[48px] w-[48px] rounded-[24px] bg-zinc-700/50 ${effectivePreferences.reducedMotion ? '' : 'animate-pulse'}`}
+                aria-hidden="true"
               />
             ))}
           </div>
         ) : spaces.length > 0 ? (
           // Server list
-          <div className="flex flex-col items-center gap-2">
-            {spaces.map((space) => (
-              <NavigationItem
-                key={space.id}
-                id={space.id}
-                imageUrl={space.avatarUrl}
-                name={space.name}
-                hasUnread={space.hasUnread}
-                mentionCount={space.mentionCount}
-              />
+          <div 
+            className="flex flex-col items-center gap-2" 
+            role="list"
+            aria-label={`${spaces.length} servers`}
+          >
+            {spaces.map((space, index) => (
+              <div key={space.id} role="listitem" tabIndex={0}>
+                <NavigationItem
+                  id={space.id}
+                  imageUrl={space.avatarUrl}
+                  name={space.name}
+                  hasUnread={space.hasUnread}
+                  mentionCount={space.mentionCount}
+                />
+              </div>
             ))}
           </div>
         ) : (
           // Empty state - no servers yet
-          <div className="flex flex-col items-center px-2 py-4">
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
+          <div className="flex flex-col items-center px-2 py-4" role="status">
+            <p className={`text-xs text-zinc-500 dark:text-zinc-400 text-center ${effectivePreferences.highContrast ? 'high-contrast-text' : ''}`}>
               No servers yet
             </p>
           </div>
         )}
 
         {/* Add Server Button - at bottom of scrollable area */}
-        <div className="mt-4">
+        <div className="mt-4" role="button" tabIndex={0}>
           <NavigationAction />
         </div>
       </ScrollArea>
 
       {/* Bottom section - Mode toggle and user panel */}
-      <div className="pb-3 mt-auto w-full">
+      <div 
+        className="pb-3 mt-auto w-full"
+        role="toolbar"
+        aria-label="User settings and preferences"
+        id={toolbarId}
+      >
         <div className="flex justify-center mb-4">
           <ModeToggle />
         </div>

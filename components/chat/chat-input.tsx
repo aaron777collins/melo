@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useId } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,10 +21,12 @@ import { useModal } from "@/hooks/use-modal-store";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useMentions } from "@/hooks/use-mentions";
 import { useEmojiAutocomplete } from "@/hooks/use-emoji-autocomplete";
+import { useAccessibility } from "@/hooks/use-accessibility";
 import { EmojiPicker } from "@/components/emoji-picker";
 import { MentionAutocomplete } from "./mention-autocomplete";
 import { ChannelAutocomplete } from "./channel-autocomplete";
 import { EmojiAutocomplete } from "./emoji-autocomplete";
+import { createAriaLabel } from "@/lib/accessibility";
 
 interface ChatInputProps {
   /**
@@ -63,6 +65,13 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
   const { onOpen } = useModal();
   const router = useRouter();
   const { client, isReady } = useMatrixClient();
+  const { announce, effectivePreferences } = useAccessibility();
+  
+  // Generate unique IDs for accessibility
+  const inputId = useId();
+  const attachmentButtonId = useId();
+  const gifButtonId = useId();
+  const sendButtonId = useId();
   
   // Mentions functionality (only if roomId provided)
   const mentions = useMentions(roomId || "");
@@ -155,6 +164,9 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
         // Send the message via Matrix
         await client.sendMessage(roomId, messageContent);
         
+        // Announce message sent for screen readers
+        announce(`Message sent to ${type === "conversation" ? name : "#" + name}`, 'polite');
+        
         // Optional: Send notifications to mentioned users/channels
         for (const mention of parsedMentions) {
           console.log(`Mentioned ${mention.type}: ${mention.displayName} (${mention.type === "user" ? mention.userId : mention.channelId})`);
@@ -235,16 +247,21 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form 
+          onSubmit={form.handleSubmit(onSubmit)}
+          role="form"
+          aria-label={`Message input for ${type === "conversation" ? name : "#" + name}`}
+        >
           <FormField
             control={form.control}
             name="content"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="relative p-4 pb-6">
+                  <div className={`relative p-4 pb-6 ${effectivePreferences.enhancedFocus ? 'keyboard-navigable' : ''}`}>
                     {/* File attachment button */}
                     <button
+                      id={attachmentButtonId}
                       type="button"
                       onClick={() => {
                         if (isMatrixMode) {
@@ -254,61 +271,87 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                           // Legacy API file upload
                           onOpen("messageFile", { apiUrl, query });
                         }
+                        announce("File attachment dialog opened", 'polite');
                       }}
-                      className="absolute top-6 left-6 md:top-7 md:left-8 h-[32px] w-[32px] md:h-[24px] md:w-[24px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 transition rounded-full p-1 flex items-center justify-center"
+                      disabled={isLoading}
+                      className="absolute top-6 left-6 md:top-7 md:left-8 h-[32px] w-[32px] md:h-[24px] md:w-[24px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 transition rounded-full p-1 flex items-center justify-center focus-enhanced"
+                      aria-label="Attach file to message"
+                      title="Attach file"
                     >
-                      <Plus className="text-white dark:text-[#313338]" />
+                      <Plus className="text-white dark:text-[#313338]" aria-hidden="true" />
                     </button>
                     
                     {/* Main input */}
                     <Input
+                      id={inputId}
                       ref={inputRef}
                       placeholder={placeholder}
                       disabled={isLoading || (isMatrixMode && !isReady)}
-                      className="pl-16 pr-20 md:px-14 py-6 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200"
+                      className={`pl-16 pr-20 md:px-14 py-6 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200 ${effectivePreferences.highContrast ? 'high-contrast-input' : ''}`}
                       value={field.value}
                       onChange={handleInputChange}
                       onKeyPress={handleKeyPress}
+                      aria-label={`Type message for ${type === "conversation" ? name : "#" + name}`}
+                      aria-describedby={`${inputId}-help`}
+                      role="textbox"
+                      aria-multiline="false"
+                      aria-autocomplete="list"
+                      aria-expanded={mentions.showAutocomplete || emojiAutocomplete.showAutocomplete}
                     />
                     
+                    {/* Screen reader help text */}
+                    <div id={`${inputId}-help`} className="sr-only">
+                      Press Enter to send message. Use @ for mentions, : for emojis. Use Tab to navigate to other controls.
+                    </div>
+                    
                     {/* Right side controls */}
-                    <div className="absolute top-6 right-6 md:top-7 md:right-8 flex items-center gap-2">
+                    <div className="absolute top-6 right-6 md:top-7 md:right-8 flex items-center gap-2" role="toolbar" aria-label="Message formatting tools">
                       {/* GIF picker button */}
                       <Button
+                        id={gifButtonId}
                         type="button"
                         size="sm"
                         variant="ghost"
                         onClick={handleGifClick}
                         disabled={isLoading}
-                        className="h-8 w-8 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition md:h-6 md:w-6"
+                        className="h-8 w-8 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition md:h-6 md:w-6 focus-enhanced"
+                        aria-label="Add GIF to message"
                         title="Add GIF"
                       >
-                        <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" />
+                        <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" aria-hidden="true" />
                       </Button>
                       
                       {/* Emoji picker */}
-                      <EmojiPicker
-                        onChange={(emoji: string) => {
-                          const newValue = `${field.value} ${emoji}`;
-                          form.setValue("content", newValue);
-                          
-                          // Update mentions if in Matrix mode
-                          if (roomId && inputRef.current) {
-                            inputRef.current.value = newValue;
-                            mentions.handleInputChange(newValue, newValue.length, inputRef.current);
-                          }
-                        }}
-                      />
+                      <div role="button" aria-label="Add emoji to message" tabIndex={0}>
+                        <EmojiPicker
+                          onChange={(emoji: string) => {
+                            const newValue = `${field.value} ${emoji}`;
+                            form.setValue("content", newValue);
+                            
+                            // Update mentions if in Matrix mode
+                            if (roomId && inputRef.current) {
+                              inputRef.current.value = newValue;
+                              mentions.handleInputChange(newValue, newValue.length, inputRef.current);
+                            }
+                            
+                            announce(`Added emoji ${emoji}`, 'polite');
+                          }}
+                        />
+                      </div>
                       
                       {/* Send button (Matrix mode only) */}
                       {isMatrixMode && (
                         <Button
+                          id={sendButtonId}
                           type="submit"
                           size="sm"
                           disabled={isLoading || !field.value.trim()}
-                          className="h-8 w-8 p-0 bg-indigo-600 hover:bg-indigo-700 md:h-6 md:w-6"
+                          className="h-8 w-8 p-0 bg-indigo-600 hover:bg-indigo-700 md:h-6 md:w-6 focus-enhanced"
+                          aria-label={`Send message to ${type === "conversation" ? name : "#" + name}`}
+                          title="Send message (Enter)"
                         >
-                          <Send className="h-3 w-3" />
+                          <Send className="h-3 w-3" aria-hidden="true" />
+                          {isLoading && <span className="sr-only">Sending message...</span>}
                         </Button>
                       )}
                     </div>

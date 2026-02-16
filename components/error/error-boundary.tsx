@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorFallbackProps } from "./error-fallback";
+import { getErrorReportingManager, type ErrorContext } from "@/lib/monitoring/error-reporter";
 
 // =============================================================================
 // Types
@@ -45,6 +46,64 @@ interface ErrorBoundaryProps {
 
 class ErrorReportingService {
   static async reportError(error: Error, errorInfo: ErrorInfo, context: {
+    level: string;
+    name?: string;
+    errorId: string;
+    timestamp: string;
+    userAgent: string;
+    url: string;
+    userId?: string;
+    sessionId?: string;
+    retryCount: number;
+  }) {
+    try {
+      // Get the error reporting manager instance
+      const errorReporter = getErrorReportingManager();
+      
+      // Check if error reporting is enabled
+      if (!errorReporter.isEnabled()) {
+        console.warn('[ErrorBoundary] Error reporting disabled');
+        return;
+      }
+
+      // Transform context to match ErrorContext interface
+      const errorContext: Partial<ErrorContext> = {
+        errorId: context.errorId,
+        level: context.level as 'app' | 'page' | 'section' | 'component',
+        component: context.name,
+        route: typeof window !== 'undefined' ? window.location.pathname : undefined,
+        userId: context.userId,
+        sessionId: context.sessionId || this.generateSessionId(),
+        userAgent: context.userAgent,
+        retryCount: context.retryCount,
+        extra: {
+          componentStack: errorInfo.componentStack,
+          errorBoundary: true,
+        },
+        tags: {
+          'error.source': 'error-boundary',
+          'error.boundary.level': context.level,
+          'error.boundary.name': context.name || 'unnamed',
+        },
+      };
+
+      // Report error through the unified service
+      const reportId = await errorReporter.reportError(error, errorContext);
+      
+      if (reportId) {
+        console.log(`[ErrorBoundary] Error reported successfully: ${reportId}`);
+      } else {
+        console.warn('[ErrorBoundary] Error reporting failed or was filtered');
+      }
+
+    } catch (reportingError) {
+      // Fallback to legacy reporting if the new system fails
+      console.error('[ErrorBoundary] Unified error reporting failed, using fallback:', reportingError);
+      await this.legacyReportError(error, errorInfo, context);
+    }
+  }
+
+  private static async legacyReportError(error: Error, errorInfo: ErrorInfo, context: {
     level: string;
     name?: string;
     errorId: string;
@@ -96,13 +155,6 @@ class ErrorReportingService {
     // Send to monitoring service in production
     if (process.env.NODE_ENV === 'production') {
       try {
-        // In a real implementation, this would integrate with services like:
-        // - Sentry
-        // - Bugsnag  
-        // - Custom error reporting endpoint
-        // - Matrix homeserver error logging
-        
-        // Example implementation:
         await fetch('/api/errors/report', {
           method: 'POST',
           headers: {
@@ -124,6 +176,17 @@ class ErrorReportingService {
         console.error('Error reporting failed:', reportingError);
       }
     }
+  }
+
+  private static generateSessionId(): string {
+    if (typeof window === 'undefined') return 'server-session';
+    
+    let sessionId = sessionStorage.getItem('haos-error-boundary-session');
+    if (!sessionId) {
+      sessionId = `eb-session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      sessionStorage.setItem('haos-error-boundary-session', sessionId);
+    }
+    return sessionId;
   }
 
   static getErrorLogs(): any[] {

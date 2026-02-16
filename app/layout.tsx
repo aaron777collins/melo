@@ -11,6 +11,7 @@ import { OnboardingProvider } from "@/components/providers/onboarding-provider";
 import { OnboardingWizardProvider } from "@/components/providers/onboarding-wizard-provider";
 import { AppErrorBoundary, SectionErrorBoundary } from "@/components/error/error-boundary";
 import { ErrorReportingProvider } from "@/hooks/use-error-reporting";
+import { EnhancedErrorReportingProvider } from "@/components/providers/error-reporting-provider";
 
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
@@ -50,11 +51,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn(openSans.className, "bg-white dark:bg-[#313338]")}>
         <AppErrorBoundary>
-          <ErrorReportingProvider config={{ 
-            enableAutomaticReporting: process.env.NODE_ENV === 'production',
-            enableUserFeedback: true,
-            environment: process.env.NODE_ENV as any || 'development'
-          }}>
+          <EnhancedErrorReportingProvider>
+            <ErrorReportingProvider config={{ 
+              enableAutomaticReporting: process.env.NODE_ENV === 'production',
+              enableUserFeedback: true,
+              environment: process.env.NODE_ENV as any || 'development'
+            }}>
             <ServiceWorkerProvider>
               <PWAInstallPrompt />
               <ThemeProvider
@@ -85,7 +87,8 @@ export default function RootLayout({
                 </SectionErrorBoundary>
               </ThemeProvider>
             </ServiceWorkerProvider>
-          </ErrorReportingProvider>
+            </ErrorReportingProvider>
+          </EnhancedErrorReportingProvider>
         </AppErrorBoundary>
       </body>
     </html>

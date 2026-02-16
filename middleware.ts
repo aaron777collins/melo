@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { rateLimit, getRateLimitConfig, addRateLimitHeaders, createRateLimitResponse } from "./lib/rate-limiting";
+import { loggingMiddleware } from "./middleware/logging-middleware";
+import { generateCorrelationId } from "./lib/logging/logger";
 
 /**
  * Middleware for authentication and security headers
@@ -95,40 +97,91 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const startTime = Date.now();
   
-  // Apply rate limiting to API routes
-  if (pathname.startsWith('/api/')) {
-    try {
-      const config = await getRateLimitConfig(request);
-      const result = await rateLimit(request, config);
-      
-      if (!result.allowed) {
-        // Rate limit exceeded - return 429 response
-        return createRateLimitResponse(result, config.message);
+  // Generate correlation ID for request tracing
+  const correlationId = request.headers.get('x-correlation-id') || generateCorrelationId();
+  
+  // Create a new request with correlation ID
+  const requestWithCorrelation = new Request(request.url, {
+    method: request.method,
+    headers: {
+      ...Object.fromEntries(request.headers.entries()),
+      'x-correlation-id': correlationId,
+    },
+    body: request.body,
+  });
+  
+  try {
+    // Apply logging middleware first for all requests
+    await loggingMiddleware(request);
+    
+    // Apply rate limiting to API routes
+    if (pathname.startsWith('/api/')) {
+      try {
+        const config = await getRateLimitConfig(request);
+        const result = await rateLimit(request, config);
+        
+        if (!result.allowed) {
+          // Rate limit exceeded - return 429 response with logging headers
+          const rateLimitResponse = createRateLimitResponse(result, config.message);
+          rateLimitResponse.headers.set('x-correlation-id', correlationId);
+          rateLimitResponse.headers.set('x-processing-time', `${Date.now() - startTime}ms`);
+          return applySecurityHeaders(rateLimitResponse);
+        }
+        
+        // Rate limit passed - continue with request and add headers
+        const response = NextResponse.next();
+        addRateLimitHeaders(response, result);
+        response.headers.set('x-correlation-id', correlationId);
+        response.headers.set('x-processing-time', `${Date.now() - startTime}ms`);
+        return applySecurityHeaders(response);
+      } catch (error) {
+        console.error('[RATE_LIMIT]', { 
+          error: error instanceof Error ? error.message : 'Unknown error',
+          correlationId,
+          path: pathname,
+          method: request.method,
+        });
+        // If rate limiting fails, continue without it (fail open)
+        const response = NextResponse.next();
+        response.headers.set('x-correlation-id', correlationId);
+        response.headers.set('x-processing-time', `${Date.now() - startTime}ms`);
+        return applySecurityHeaders(response);
       }
-      
-      // Rate limit passed - continue with request and add headers
+    }
+    
+    // Allow public routes
+    if (publicRoutes.some(route => pathname.startsWith(route))) {
       const response = NextResponse.next();
-      addRateLimitHeaders(response, result);
-      return applySecurityHeaders(response);
-    } catch (error) {
-      console.error('[RATE_LIMIT]', error);
-      // If rate limiting fails, continue without it (fail open)
-      const response = NextResponse.next();
+      response.headers.set('x-correlation-id', correlationId);
+      response.headers.set('x-processing-time', `${Date.now() - startTime}ms`);
       return applySecurityHeaders(response);
     }
-  }
-  
-  // Allow public routes
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+    
+    // TODO: Check Matrix session token
+    // For now, allow all requests (development mode)
     const response = NextResponse.next();
+    response.headers.set('x-correlation-id', correlationId);
+    response.headers.set('x-processing-time', `${Date.now() - startTime}ms`);
     return applySecurityHeaders(response);
+  } catch (error) {
+    // Log middleware errors with correlation context
+    console.error('[MIDDLEWARE_ERROR]', {
+      error: error instanceof Error ? error.message : 'Unknown middleware error',
+      correlationId,
+      path: pathname,
+      method: request.method,
+      processingTime: `${Date.now() - startTime}ms`,
+    });
+    
+    // Return error response with correlation headers
+    const errorResponse = NextResponse.next();
+    errorResponse.headers.set('x-correlation-id', correlationId);
+    errorResponse.headers.set('x-processing-time', `${Date.now() - startTime}ms`);
+    errorResponse.headers.set('x-error', 'middleware-error');
+    return applySecurityHeaders(errorResponse);
   }
-  
-  // TODO: Check Matrix session token
-  // For now, allow all requests (development mode)
-  const response = NextResponse.next();
-  return applySecurityHeaders(response);
 }
 
 export const config = {
@@ -137,3 +190,4 @@ export const config = {
 
 // Security headers implementation completed - p12-13-security-headers
 // API rate limiting implementation completed - p12-1-rate-limiting
+// Logging infrastructure implementation completed - p12-6-logging-infrastructure

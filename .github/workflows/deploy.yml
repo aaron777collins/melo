@@ -1,0 +1,93 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+        
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+        
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+          
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+      
+    - name: Run linting
+      run: pnpm lint
+      
+    - name: Run build
+      run: pnpm build
+      env:
+        NODE_ENV: production
+        
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+      
+    - name: Run E2E tests
+      run: pnpm test:e2e
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: .next/
+        retention-days: 5
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: development
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        path: .next/
+        
+    - name: Deploy to dev2.aaroncollins.info
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.DEV2_HOST }}
+        username: ${{ secrets.DEV2_USERNAME }}
+        key: ${{ secrets.DEV2_SSH_KEY }}
+        script: |
+          cd /var/www/haos-v2
+          git pull origin master
+          pnpm install --frozen-lockfile
+          pnpm build
+          pm2 reload haos-v2 || pm2 start ecosystem.config.js --only haos-v2
+          
+    - name: Health check
+      run: |
+        sleep 30
+        curl -f https://dev2.aaroncollins.info/api/health || exit 1

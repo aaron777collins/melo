@@ -34,7 +34,7 @@ interface TouchData {
 /**
  * Hook for adding swipe gesture support to any element
  */
-export function useSwipeGestures(
+export function useSwipeGestures<T extends HTMLElement = HTMLDivElement>(
   callbacks: SwipeCallbacks = {},
   options: SwipeOptions = {}
 ) {
@@ -52,7 +52,7 @@ export function useSwipeGestures(
   } = callbacks;
 
   const touchDataRef = useRef<TouchData | null>(null);
-  const elementRef = useRef<HTMLElement | null>(null);
+  const elementRef = useRef<T | null>(null);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (preventDefault) {

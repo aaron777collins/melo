@@ -19,6 +19,7 @@ import { MuteUserModal } from "@/components/modals/mute-user-modal";
 import { ConfirmDeleteModal } from "@/components/modals/confirm-delete-modal";
 import { MemberRoleEditorModal } from "@/components/modals/member-role-editor-modal";
 import { InviteModal } from "@/components/modals/invite-modal";
+import { RevokeInviteModal } from "@/components/modals/revoke-invite-modal";
 import { GifPickerModal } from "@/components/modals/gif-picker-modal";
 import { PinnedMessages } from "@/components/pinned-messages";
 import { SecurityPromptModal } from "@/components/modals/security-prompt-modal";
@@ -52,6 +53,7 @@ export function ModalProvider() {
       <ConfirmDeleteModal />
       <MemberRoleEditorModal />
       <InviteModal />
+      <RevokeInviteModal />
       <GifPickerModal />
       <PinnedMessages />
       <SecurityPromptModal />

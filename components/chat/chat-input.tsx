@@ -259,7 +259,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
               <FormItem>
                 <FormControl>
                   <div className={`relative p-4 pb-6 ${effectivePreferences.enhancedFocus ? 'keyboard-navigable' : ''}`}>
-                    {/* File attachment button */}
+                    {/* File attachment button - optimized for mobile touch */}
                     <button
                       id={attachmentButtonId}
                       type="button"
@@ -274,20 +274,21 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         announce("File attachment dialog opened", 'polite');
                       }}
                       disabled={isLoading}
-                      className="absolute top-6 left-6 md:top-7 md:left-8 h-[32px] w-[32px] md:h-[24px] md:w-[24px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 transition rounded-full p-1 flex items-center justify-center focus-enhanced"
+                      className="absolute top-5 left-5 md:top-7 md:left-8 h-[44px] w-[44px] md:h-[32px] md:w-[32px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 active:bg-zinc-700 dark:active:bg-zinc-200 transition-colors rounded-full p-2 md:p-1 flex items-center justify-center focus-enhanced"
                       aria-label="Attach file to message"
                       title="Attach file"
+                      style={{ touchAction: 'manipulation' }}
                     >
-                      <Plus className="text-white dark:text-[#313338]" aria-hidden="true" />
+                      <Plus className="h-5 w-5 md:h-4 md:w-4 text-white dark:text-[#313338]" aria-hidden="true" />
                     </button>
                     
-                    {/* Main input */}
+                    {/* Main input - optimized for mobile */}
                     <Input
                       id={inputId}
                       ref={inputRef}
                       placeholder={placeholder}
                       disabled={isLoading || (isMatrixMode && !isReady)}
-                      className={`pl-16 pr-20 md:px-14 py-6 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200 ${effectivePreferences.highContrast ? 'high-contrast-input' : ''}`}
+                      className={`pl-[60px] pr-[140px] md:pl-14 md:pr-20 py-4 md:py-6 text-base md:text-sm bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200 rounded-lg ${effectivePreferences.highContrast ? 'high-contrast-input' : ''}`}
                       value={field.value}
                       onChange={handleInputChange}
                       onKeyPress={handleKeyPress}
@@ -297,6 +298,10 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                       aria-multiline="false"
                       aria-autocomplete="list"
                       aria-expanded={mentions.showAutocomplete || emojiAutocomplete.showAutocomplete}
+                      style={{ 
+                        fontSize: '16px', // Prevents zoom on iOS
+                        touchAction: 'manipulation' 
+                      }}
                     />
                     
                     {/* Screen reader help text */}
@@ -304,8 +309,8 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                       Press Enter to send message. Use @ for mentions, : for emojis. Use Tab to navigate to other controls.
                     </div>
                     
-                    {/* Right side controls */}
-                    <div className="absolute top-6 right-6 md:top-7 md:right-8 flex items-center gap-2" role="toolbar" aria-label="Message formatting tools">
+                    {/* Right side controls - mobile optimized */}
+                    <div className="absolute top-4 right-3 md:top-7 md:right-8 flex items-center gap-2 md:gap-2" role="toolbar" aria-label="Message formatting tools">
                       {/* GIF picker button */}
                       <Button
                         id={gifButtonId}
@@ -314,15 +319,22 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         variant="ghost"
                         onClick={handleGifClick}
                         disabled={isLoading}
-                        className="h-8 w-8 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 transition md:h-6 md:w-6 focus-enhanced"
+                        className="h-11 w-11 md:h-8 md:w-8 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 active:bg-zinc-400 dark:active:bg-zinc-500 transition-colors rounded-lg md:rounded focus-enhanced"
                         aria-label="Add GIF to message"
                         title="Add GIF"
+                        style={{ touchAction: 'manipulation' }}
                       >
-                        <Image className="h-4 w-4 text-zinc-600 dark:text-zinc-300" aria-hidden="true" />
+                        <Image className="h-5 w-5 md:h-4 md:w-4 text-zinc-600 dark:text-zinc-300" aria-hidden="true" />
                       </Button>
                       
                       {/* Emoji picker */}
-                      <div role="button" aria-label="Add emoji to message" tabIndex={0}>
+                      <div 
+                        role="button" 
+                        aria-label="Add emoji to message" 
+                        tabIndex={0}
+                        className="h-11 w-11 md:h-8 md:w-8 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 active:bg-zinc-400 dark:active:bg-zinc-500 transition-colors rounded-lg md:rounded flex items-center justify-center"
+                        style={{ touchAction: 'manipulation' }}
+                      >
                         <EmojiPicker
                           onChange={(emoji: string) => {
                             const newValue = `${field.value} ${emoji}`;
@@ -346,11 +358,12 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                           type="submit"
                           size="sm"
                           disabled={isLoading || !field.value.trim()}
-                          className="h-8 w-8 p-0 bg-indigo-600 hover:bg-indigo-700 md:h-6 md:w-6 focus-enhanced"
+                          className="h-11 w-11 md:h-8 md:w-8 p-0 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:bg-gray-400 transition-colors rounded-lg md:rounded focus-enhanced"
                           aria-label={`Send message to ${type === "conversation" ? name : "#" + name}`}
                           title="Send message (Enter)"
+                          style={{ touchAction: 'manipulation' }}
                         >
-                          <Send className="h-3 w-3" aria-hidden="true" />
+                          <Send className="h-5 w-5 md:h-3 md:w-3" aria-hidden="true" />
                           {isLoading && <span className="sr-only">Sending message...</span>}
                         </Button>
                       )}

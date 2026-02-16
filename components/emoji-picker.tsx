@@ -28,12 +28,25 @@ export function EmojiPicker({ onChange }: EmojiPickerProps) {
         className="bg-transparent border-none shadow-none drop-shadow-none mb-16"
         sideOffset={40}
         side="right"
+        align="end"
+        avoidCollisions={true}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        alignOffset={-20}
+        collisionPadding={{ left: 8, right: 8, top: 8, bottom: 8 }}
       >
-        <Picker
-          theme={resolvedTheme}
-          data={data}
-          onEmojiSelect={(emoji: any) => onChange(emoji.native)}
-        />
+        <div className="max-w-[320px] sm:max-w-none">
+          <Picker
+            theme={resolvedTheme}
+            data={data}
+            onEmojiSelect={(emoji: any) => onChange(emoji.native)}
+            previewPosition="none"
+            skinTonePosition="search"
+            maxFrequentRows={2}
+            perLine={8}
+            emojiSize={20}
+            emojiButtonSize={32}
+          />
+        </div>
       </PopoverContent>
     </Popover>
   );

@@ -18,6 +18,8 @@ import { useThreads } from "@/hooks/use-threads";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useMessageEdit } from "@/hooks/use-message-edit";
 import { LinkPreview, extractUrls } from "./link-preview";
+import { useChatMessageSwipe } from "@/hooks/use-message-swipe-gestures";
+import { useMobileEmojiReactions } from "@/components/mobile/mobile-emoji-reactions";
 
 // =============================================================================
 // Types & Interfaces
@@ -575,6 +577,9 @@ export function ChatItem({
   // Require the Matrix client for reaction operations
   const { client: matrixClient } = useMatrixClient();
   
+  // Mobile emoji reactions hook
+  const { openReactionPicker, ReactionPickerComponent } = useMobileEmojiReactions();
+  
   // Message editing functionality
   const { 
     editState, 
@@ -622,25 +627,32 @@ export function ChatItem({
       return;
     }
 
-    // Open emoji picker modal 
-    onOpen("emojiPicker", {
-      onSelect: async (selectedEmoji: string) => {
-        try {
-          // Send Matrix reaction event
-          // Use type assertion since m.reaction isn't in TimelineEvents but is valid
-          await matrixClient.sendEvent(roomId, "m.reaction" as any, {
-            "m.relates_to": {
-              event_id: event.getId(),
-              key: selectedEmoji,
-              rel_type: "m.annotation"
-            }
-          });
-        } catch (error) {
-          console.error("Failed to send reaction:", error);
-          // TODO: Show user-friendly error toast
+    // Use mobile-optimized picker on mobile devices
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    
+    if (isMobile) {
+      openReactionPicker(event, roomId);
+    } else {
+      // Desktop emoji picker modal 
+      onOpen("emojiPicker", {
+        onSelect: async (selectedEmoji: string) => {
+          try {
+            // Send Matrix reaction event
+            // Use type assertion since m.reaction isn't in TimelineEvents but is valid
+            await matrixClient.sendEvent(roomId, "m.reaction" as any, {
+              "m.relates_to": {
+                event_id: event.getId(),
+                key: selectedEmoji,
+                rel_type: "m.annotation"
+              }
+            });
+          } catch (error) {
+            console.error("Failed to send reaction:", error);
+            // TODO: Show user-friendly error toast
+          }
         }
-      }
-    });
+      });
+    }
   };
   
   // Toggle (add/remove) a reaction
@@ -711,11 +723,37 @@ export function ChatItem({
     }
   };
   
+  // Mobile swipe gestures for common actions
+  const { elementRef: swipeRef, isSwipeActive } = useChatMessageSwipe(
+    event,
+    {
+      onReply: () => {
+        onReply?.(event);
+      },
+      onReact: () => {
+        handleAddReaction();
+      },
+      onCopy: () => {
+        navigator.clipboard.writeText(content);
+        // TODO: Show toast notification
+      },
+      onEdit: canEditMessage(event) ? () => {
+        startEditing(event);
+      } : undefined,
+      onDelete: isCurrentUser ? () => {
+        // TODO: Show delete confirmation
+        console.log('Delete message:', event.getId());
+      } : undefined
+    }
+  );
+  
   return (
     <div 
+      ref={swipeRef}
       className={cn(
         "relative group flex items-start gap-x-2 p-2 hover:bg-black/5 dark:hover:bg-white/5 transition-colors",
-        isCurrentUser && "bg-indigo-100/10 dark:bg-indigo-900/10"
+        isCurrentUser && "bg-indigo-100/10 dark:bg-indigo-900/10",
+        isSwipeActive && "touch-none select-none"
       )}
       onMouseEnter={() => {
         setShowReactions(true);
@@ -725,7 +763,27 @@ export function ChatItem({
         setShowReactions(false);
         setShowActions(false);
       }}
+      style={{
+        touchAction: 'pan-y', // Allow vertical scrolling but handle horizontal swipes
+      }}
     >
+      {/* Swipe action hints - shown during swipe */}
+      {isSwipeActive && (
+        <>
+          {/* Reply hint (right side) */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-center bg-blue-500 text-white rounded-l-lg opacity-80 z-10">
+            <MessageSquare className="h-5 w-5" />
+          </div>
+          
+          {/* React hint (left side) */}
+          <div className="absolute right-0 top-0 bottom-0 w-16 flex items-center justify-center bg-yellow-500 text-white rounded-r-lg opacity-80 z-10">
+            <Plus className="h-5 w-5" />
+          </div>
+        </>
+      )}
+      
+      {/* Main message content wrapper */}
+      <div className="flex items-start gap-x-2 w-full">
       {/* Avatar Column */}
       <div className="flex-shrink-0">
         {isFirstInGroup ? (
@@ -1018,21 +1076,25 @@ export function ChatItem({
         )}
       </div>
 
-      {/* Message Actions */}
-      {!isRedacted && (
-        <MessageActions
-          event={event}
-          roomId={roomId}
-          show={showActions}
-          currentUserId={currentUserId}
-          onReply={onReply}
-          onEdit={handleStartEdit}
-          onReaction={(emoji) => {
-            // Handle reaction via existing handler
-            handleAddReaction();
-          }}
-        />
-      )}
+        {/* Message Actions */}
+        {!isRedacted && (
+          <MessageActions
+            event={event}
+            roomId={roomId}
+            show={showActions}
+            currentUserId={currentUserId}
+            onReply={onReply}
+            onEdit={handleStartEdit}
+            onReaction={(emoji) => {
+              // Handle reaction via existing handler
+              handleAddReaction();
+            }}
+          />
+        )}
+      </div>
+      
+      {/* Mobile Emoji Reaction Picker */}
+      <ReactionPickerComponent />
     </div>
   );
 }

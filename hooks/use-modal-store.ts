@@ -49,7 +49,9 @@ export type ModalType =
   | "createRole"
   | "memberRoleEditor"
   // Security Prompts
-  | "securityPrompt";
+  | "securityPrompt"
+  // Invite Management
+  | "revokeInvite";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -123,6 +125,11 @@ interface ModalData {
   // Security prompts
   /** Configuration for security prompt modal */
   securityPromptConfig?: import("@/components/modals/security-prompt-modal").SecurityPromptConfig;
+  // Invite revocation
+  /** Invite to revoke */
+  inviteToRevoke?: import("@/lib/matrix/invites").InviteLink;
+  /** Callback after successful revocation */
+  onInviteRevoked?: () => void;
 }
 
 interface ModalStore {

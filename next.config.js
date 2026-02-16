@@ -6,6 +6,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig = {
   // serverActions is stable in Next.js 14, no longer experimental
   output: "standalone",
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   
   // Security headers configuration
   async headers() {

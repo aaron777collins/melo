@@ -9,7 +9,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import { glob } from 'glob';
 
 interface EndpointInfo {
   path: string;
@@ -505,6 +504,24 @@ This document provides detailed information about all HAOS API endpoints, automa
 }
 
 /**
+ * Recursively find route files
+ */
+function findRouteFiles(dir: string, files: string[] = []): string[] {
+  const items = fs.readdirSync(dir, { withFileTypes: true });
+  
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      findRouteFiles(fullPath, files);
+    } else if (item.name === 'route.ts') {
+      files.push(fullPath);
+    }
+  }
+  
+  return files;
+}
+
+/**
  * Main execution function
  */
 async function main() {
@@ -512,10 +529,8 @@ async function main() {
     console.log('🔍 Scanning for API route files...');
     
     // Find all route files
-    const routeFiles = await glob('app/api/**/route.ts', { 
-      cwd: process.cwd(),
-      absolute: true 
-    });
+    const apiDir = path.join(process.cwd(), 'app', 'api');
+    const routeFiles = findRouteFiles(apiDir);
     
     console.log(`📄 Found ${routeFiles.length} route files`);
     

@@ -1,0 +1,1419 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "HAOS API",
+    "version": "0.1.0",
+    "description": "Home Assistant for Open Source - Matrix-based communication platform",
+    "contact": {
+      "name": "HAOS Team",
+      "url": "https://github.com/aaron777collins/haos-v2"
+    }
+  },
+  "servers": [
+    {
+      "url": "{protocol}://{host}/api",
+      "description": "HAOS API Server",
+      "variables": {
+        "protocol": {
+          "enum": [
+            "http",
+            "https"
+          ],
+          "default": "https"
+        },
+        "host": {
+          "default": "localhost:3000",
+          "description": "HAOS server host"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/api/_disabled/livekit": {
+      "get": {
+        "tags": [
+          "Real-time"
+        ],
+        "parameters": [
+          {
+            "name": "room",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "room parameter"
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "username parameter"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/jobs/{jobId}/logs": {
+      "get": {
+        "summary": "Job Logs API",
+        "description": "Provides endpoints for job log management.\n/",
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "jobId identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/admin/jobs/{jobId}": {
+      "get": {
+        "summary": "Individual Job Management API",
+        "description": "Provides endpoints for managing specific jobs.\n/",
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "jobId identifier"
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "reason parameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Individual Job Management API",
+        "description": "Provides endpoints for managing specific jobs.\n/",
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "jobId identifier"
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "reason parameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Individual Job Management API",
+        "description": "Provides endpoints for managing specific jobs.\n/",
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "jobId identifier"
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "reason parameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/admin/jobs": {
+      "get": {
+        "summary": "List Background Jobs",
+        "description": "Retrieves a paginated list of background jobs with optional filtering by status and type.\nSupports sorting and limiting results.\n/api/admin/jobs:\n  get:\n    summary: List background jobs\n    description: Get paginated list of jobs with filtering and sorting options\n    tags: [Admin]\n    security:\n      - cookieAuth: []\n    parameters:\n      - in: query\n        name: status\n        schema:\n          type: string\n          enum: [pending, running, completed, failed]\n        description: Filter jobs by status\n      - in: query\n        name: type\n        schema:\n          type: string\n        description: Filter jobs by type\n      - $ref: '#/components/parameters/limitParam'\n      - $ref: '#/components/parameters/offsetParam'\n      - $ref: '#/components/parameters/orderByParam'\n      - $ref: '#/components/parameters/orderDirParam'\n    responses:\n      200:\n        description: List of jobs retrieved successfully\n        content:\n          application/json:\n            schema:\n              type: object\n              properties:\n                success:\n                  type: boolean\n                  example: true\n                data:\n                  type: array\n                  items:\n                    $ref: '#/components/schemas/BackgroundJob'\n                pagination:\n                  type: object\n                  properties:\n                    limit:\n                      type: integer\n                    offset:\n                      type: integer\n                    orderBy:\n                      type: string\n                    orderDir:\n                      type: string\n      401:\n        $ref: '#/components/responses/Unauthorized'\n      500:\n        $ref: '#/components/responses/Error'\n/",
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "status parameter"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "type parameter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "limit parameter"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "offset parameter"
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "orderBy parameter"
+          },
+          {
+            "name": "orderDir",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "orderDir parameter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Background Job",
+        "description": "Creates a new background job with the specified type and payload.\nJobs are executed asynchronously by worker processes.\n/api/admin/jobs:\n  post:\n    summary: Create new background job\n    description: Add a new job to the background processing queue\n    tags: [Admin]\n    security:\n      - cookieAuth: []\n    requestBody:\n      required: true\n      content:\n        application/json:\n          schema:\n            type: object\n            required:\n              - type\n              - payload\n            properties:\n              type:\n                type: string\n                description: Job type (must be a registered job handler)\n                example: notification\n              payload:\n                type: object\n                description: Job-specific data\n                example:\n                  userId: \"@alice:example.com\"\n                  message: \"Welcome to HAOS!\"\n              options:\n                type: object\n                description: Job execution options\n                properties:\n                  priority:\n                    type: integer\n                    minimum: 0\n                    maximum: 10\n                    description: Job priority (higher numbers = higher priority)\n                    example: 1\n                  delay:\n                    type: integer\n                    description: Delay before execution in milliseconds\n                    example: 5000\n                  retries:\n                    type: integer\n                    description: Maximum retry attempts\n                    example: 3\n    responses:\n      200:\n        description: Job created successfully\n        content:\n          application/json:\n            schema:\n              type: object\n              properties:\n                success:\n                  type: boolean\n                  example: true\n                data:\n                  $ref: '#/components/schemas/BackgroundJob'\n      400:\n        description: Invalid job type or missing required fields\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/ErrorResponse'\n      401:\n        $ref: '#/components/responses/Unauthorized'\n      500:\n        $ref: '#/components/responses/Error'\n/",
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "status parameter"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "type parameter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "limit parameter"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "offset parameter"
+          },
+          {
+            "name": "orderBy",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "orderBy parameter"
+          },
+          {
+            "name": "orderDir",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "orderDir parameter"
+          }
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/admin/jobs/stats": {
+      "get": {
+        "summary": "Job Queue Statistics API",
+        "description": "Provides job queue statistics and metrics.\n/",
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/admin/workers": {
+      "get": {
+        "summary": "Workers Management API",
+        "description": "Provides endpoints for worker process management and monitoring.\n/",
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Workers Management API",
+        "description": "Provides endpoints for worker process management and monitoring.\n/",
+        "tags": [
+          "Admin"
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Matrix Authentication Login",
+        "description": "Authenticates a user with Matrix homeserver credentials and establishes a session.\nReturns user information and sets HTTP-only session cookies.\n/api/auth/login:\n  post:\n    summary: Login with Matrix credentials\n    description: Authenticate user with Matrix homeserver and create session\n    tags: [Authentication]\n    requestBody:\n      required: true\n      content:\n        application/json:\n          schema:\n            type: object\n            required:\n              - username\n              - password\n            properties:\n              username:\n                type: string\n                description: Matrix username (without @ or homeserver)\n                example: alice\n              password:\n                type: string\n                description: Matrix account password\n                example: secure_password123\n              homeserverUrl:\n                type: string\n                format: uri\n                description: Matrix homeserver URL (optional, uses default if not provided)\n                example: https://matrix.example.com\n    responses:\n      200:\n        description: Login successful\n        headers:\n          Set-Cookie:\n            description: HTTP-only session cookie\n            schema:\n              type: string\n        content:\n          application/json:\n            schema:\n              type: object\n              properties:\n                success:\n                  type: boolean\n                  example: true\n                data:\n                  type: object\n                  properties:\n                    session:\n                      $ref: '#/components/schemas/MatrixSession'\n                    user:\n                      $ref: '#/components/schemas/MatrixUser'\n      400:\n        description: Missing required fields\n        content:\n          application/json:\n            schema:\n              type: object\n              properties:\n                success:\n                  type: boolean\n                  example: false\n                error:\n                  type: object\n                  properties:\n                    code:\n                      type: string\n                      example: M_BAD_JSON\n                    message:\n                      type: string\n                      example: Username and password are required\n      401:\n        description: Invalid credentials\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/ErrorResponse'\n      500:\n        description: Login failed\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/ErrorResponse'\n/",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/channels": {
+      "patch": {
+        "deprecated": true,
+        "tags": [
+          "General"
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "General"
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "General"
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/direct-messages": {
+      "get": {
+        "deprecated": true,
+        "tags": [
+          "General"
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "General"
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health Check Endpoint",
+        "description": "Returns system health status including memory usage, uptime, and environment info.\nThis endpoint is used by monitoring systems and load balancers.\n/api/health:\n  get:\n    summary: Check system health\n    description: Returns detailed system health information including memory usage, uptime, and version\n    tags: [System]\n    responses:\n      200:\n        description: System is healthy\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/HealthStatus'\n      503:\n        description: System is unhealthy\n        content:\n          application/json:\n            schema:\n              type: object\n              properties:\n                status:\n                  type: string\n                  example: unhealthy\n                timestamp:\n                  type: string\n                  format: date-time\n                error:\n                  type: string\n                  example: Health check failed\n/",
+        "tags": [
+          "System"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live": {
+      "get": {
+        "tags": [
+          "Real-time"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/members/{memberId}": {
+      "patch": {
+        "deprecated": true,
+        "tags": [
+          "Members"
+        ],
+        "parameters": [
+          {
+            "name": "memberId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "memberId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "Members"
+        ],
+        "parameters": [
+          {
+            "name": "memberId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "memberId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "Members"
+        ],
+        "parameters": [
+          {
+            "name": "memberId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "memberId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/messages": {
+      "post": {
+        "summary": "POST /api/messages",
+        "description": "Send a message to a Matrix room\nQuery params:\n- channelId: Matrix room ID to send message to\n- serverId: Parent space ID (for logging/validation)\nBody:\n- content: Message text\n/",
+        "tags": [
+          "General"
+        ],
+        "parameters": [
+          {
+            "name": "channelId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "channelId parameter"
+          },
+          {
+            "name": "serverId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "serverId parameter"
+          }
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/og-preview": {
+      "get": {
+        "summary": "API route handler for OpenGraph metadata extraction",
+        "description": "/",
+        "tags": [
+          "General"
+        ],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "url parameter"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "HTTP 408",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "HTTP 413",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ready": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servers/{serverId}/audit-log": {
+      "get": {
+        "summary": "GET /api/servers/[serverId]/audit-log",
+        "description": "Fetches audit log entries for a server with filtering and pagination.\nRequires moderator+ permissions.\n/",
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "page parameter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "limit parameter"
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "action parameter"
+          },
+          {
+            "name": "actorId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "actorId parameter"
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "startDate parameter"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "endDate parameter"
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /api/servers/[serverId]/audit-log",
+        "description": "Creates a new audit log entry.\nUsed internally by other parts of the system to log actions.\n/",
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "page parameter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "limit parameter"
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "action parameter"
+          },
+          {
+            "name": "actorId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "actorId parameter"
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "startDate parameter"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "endDate parameter"
+          }
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servers/{serverId}/invite-code": {
+      "patch": {
+        "deprecated": true,
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servers/{serverId}/leave": {
+      "patch": {
+        "deprecated": true,
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "deprecated": true,
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servers/{serverId}": {
+      "patch": {
+        "deprecated": true,
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "deprecated": true,
+        "tags": [
+          "Servers"
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "serverId identifier"
+          }
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/servers": {
+      "post": {
+        "summary": "Server (Space) API",
+        "description": "Creating servers is now handled client-side via Matrix SDK in InitialModal.\nThis API route is deprecated.\n/",
+        "deprecated": true,
+        "tags": [
+          "General"
+        ],
+        "responses": {
+          "410": {
+            "description": "Gone (Deprecated)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/test-rate-limit": {
+      "get": {
+        "summary": "Test endpoint for verifying rate limiting functionality",
+        "description": "/",
+        "tags": [
+          "General"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Test endpoint for verifying rate limiting functionality",
+        "description": "/",
+        "tags": [
+          "General"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session",
+        "description": "Session cookie from login endpoint"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "RateLimitError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "rateLimit": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "remaining": {
+                    "type": "integer"
+                  },
+                  "reset": {
+                    "type": "integer"
+                  },
+                  "used": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "System",
+      "description": "System health and status endpoints"
+    },
+    {
+      "name": "Authentication",
+      "description": "User authentication and session management"
+    },
+    {
+      "name": "Admin",
+      "description": "Administrative functions (requires admin role)"
+    },
+    {
+      "name": "Servers",
+      "description": "Matrix space/server management"
+    },
+    {
+      "name": "Channels",
+      "description": "Matrix room/channel operations"
+    },
+    {
+      "name": "Members",
+      "description": "User and member management"
+    },
+    {
+      "name": "Real-time",
+      "description": "Live communication features"
+    },
+    {
+      "name": "General",
+      "description": "General utility endpoints"
+    }
+  ]
+}

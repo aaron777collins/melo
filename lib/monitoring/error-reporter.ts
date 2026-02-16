@@ -345,7 +345,7 @@ export class ErrorReportingManager implements ErrorReportingService {
         message: error.message,
         stack: error.stack,
         name: error.name,
-        cause: error.cause?.toString(),
+        cause: (error as any).cause?.toString(),
       },
       level: context.level || 'component',
       component: context.component,

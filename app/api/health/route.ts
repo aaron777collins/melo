@@ -1,5 +1,41 @@
 import { NextResponse } from "next/server";
 
+/**
+ * Health Check Endpoint
+ * 
+ * Returns system health status including memory usage, uptime, and environment info.
+ * This endpoint is used by monitoring systems and load balancers.
+ * 
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Check system health
+ *     description: Returns detailed system health information including memory usage, uptime, and version
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: System is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthStatus'
+ *       503:
+ *         description: System is unhealthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: unhealthy
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 error:
+ *                   type: string
+ *                   example: Health check failed
+ */
 export async function GET() {
   try {
     // Get memory usage info

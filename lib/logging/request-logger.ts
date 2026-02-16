@@ -55,7 +55,10 @@ export class RequestLogger implements IRequestLogger {
       ...DEFAULT_REQUEST_CONFIG, 
       service: 'haos-v2-requests',
       environment: process.env.NODE_ENV || 'development',
-      ...config 
+      ...config,
+      // Ensure service is always defined
+      service: config.service || 'haos-v2-requests',
+      environment: config.environment || process.env.NODE_ENV || 'development',
     };
   }
 

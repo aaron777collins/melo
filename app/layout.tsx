@@ -6,7 +6,8 @@ import { ModalProvider } from "@/components/providers/modal-provider";
 import { MatrixAuthProvider } from "@/components/providers/matrix-auth-provider";
 import { MatrixProvider } from "@/components/providers/matrix-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
-import { ServiceWorkerProvider, PWAInstallPrompt } from "@/components/providers/service-worker-provider";
+import { ServiceWorkerProvider } from "@/components/providers/service-worker-provider";
+import { PWAInstallPrompt } from "@/components/pwa/install-prompt";
 import { OnboardingProvider } from "@/components/providers/onboarding-provider";
 import { OnboardingWizardProvider } from "@/components/providers/onboarding-wizard-provider";
 import { AppErrorBoundary, SectionErrorBoundary } from "@/components/error/error-boundary";
@@ -58,7 +59,7 @@ export default function RootLayout({
               environment: process.env.NODE_ENV as any || 'development'
             }}>
             <ServiceWorkerProvider>
-              <PWAInstallPrompt />
+              <PWAInstallPrompt variant="minimal" />
               <ThemeProvider
                 attribute="class"
                 defaultTheme="dark"

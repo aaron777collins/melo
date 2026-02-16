@@ -72,32 +72,21 @@ export class SentryErrorReportingService implements ErrorReportingService {
           release: process.env.NEXT_PUBLIC_SENTRY_RELEASE || process.env.VERCEL_GIT_COMMIT_SHA || 'unknown',
           dist: process.env.NEXT_PUBLIC_SENTRY_DIST || 'unknown',
 
-          // HAOS-specific integrations
-          integrations: [
-            // Only include integrations that are available in this version
-            ...(this.sentry.browserTracingIntegration ? [{
-              // Browser integrations
-              ...this.sentry.browserTracingIntegration({
+          // Use default integrations with optional tracing
+          ...(this.config.enableTracing && {
+            integrations: [
+              // Include basic tracing if available
+              ...(this.sentry.BrowserTracing ? [new this.sentry.BrowserTracing({
                 tracingOrigins: [
                   'localhost',
                   /^https:\/\/.*\.aaroncollins\.info/,
                   /^https:\/\/.*\.matrix\.org/,
                 ],
-              })
-            }] : []),
-            
-            // Session replay for debugging (if available)
-            ...(this.sentry.replayIntegration ? [{
-              ...this.sentry.replayIntegration({
-                maskAllText: false, // Be careful with privacy
-                maskAllInputs: true, // Always mask form inputs
-                sampleRate: 0.1, // Sample 10% of sessions
-                errorSampleRate: 1.0, // Sample 100% of sessions with errors
-              })
-            }] : []),
-            
-            ...(this.config.integrations || []),
-          ],
+              })] : []),
+              
+              ...(this.config.integrations || []),
+            ],
+          }),
 
           // Filter and enhance errors before sending
           beforeSend: (event, hint) => {

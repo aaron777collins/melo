@@ -1,3 +1,62 @@
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/.*\.(?:png|jpg|jpeg|svg|gif|ico|webp)$/i,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'images',
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 86400, // 24 hours
+        },
+      },
+    },
+    {
+      urlPattern: /^https:\/\/.*\/_next\/static\/.*/i,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'static-resources',
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 86400,
+        },
+      },
+    },
+    {
+      urlPattern: /^https:\/\/.*\/api\/.*/i,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'api-cache',
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 300, // 5 minutes
+        },
+        networkTimeoutSeconds: 10,
+      },
+    },
+    {
+      urlPattern: /^https:\/\/.*\/_matrix\/client\/.*/i,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'matrix-api-cache',
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 600, // 10 minutes
+        },
+        networkTimeoutSeconds: 15,
+      },
+    },
+  ],
+  buildExcludes: [/middleware-manifest\.json$/],
+  fallbacks: {
+    document: '/offline',
+  },
+});
+
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
@@ -96,4 +155,4 @@ const nextConfig = {
   productionBrowserSourceMaps: false, // Disable source maps in production
 };
 
-module.exports = withBundleAnalyzer(nextConfig);
+module.exports = withPWA(withBundleAnalyzer(nextConfig));

@@ -8,7 +8,67 @@ import { NextRequest, NextResponse } from "next/server";
 import { jobQueue } from "@/lib/jobs/queue";
 import { getAvailableJobTypes } from "@/lib/jobs/handlers";
 
-// GET /api/admin/jobs - List jobs with filtering
+/**
+ * List Background Jobs
+ * 
+ * Retrieves a paginated list of background jobs with optional filtering by status and type.
+ * Supports sorting and limiting results.
+ * 
+ * @swagger
+ * /api/admin/jobs:
+ *   get:
+ *     summary: List background jobs
+ *     description: Get paginated list of jobs with filtering and sorting options
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, running, completed, failed]
+ *         description: Filter jobs by status
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filter jobs by type
+ *       - $ref: '#/components/parameters/limitParam'
+ *       - $ref: '#/components/parameters/offsetParam'
+ *       - $ref: '#/components/parameters/orderByParam'
+ *       - $ref: '#/components/parameters/orderDirParam'
+ *     responses:
+ *       200:
+ *         description: List of jobs retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/BackgroundJob'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     limit:
+ *                       type: integer
+ *                     offset:
+ *                       type: integer
+ *                     orderBy:
+ *                       type: string
+ *                     orderDir:
+ *                       type: string
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/Error'
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -48,7 +108,82 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/jobs - Create a new job
+/**
+ * Create Background Job
+ * 
+ * Creates a new background job with the specified type and payload.
+ * Jobs are executed asynchronously by worker processes.
+ * 
+ * @swagger
+ * /api/admin/jobs:
+ *   post:
+ *     summary: Create new background job
+ *     description: Add a new job to the background processing queue
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *               - payload
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 description: Job type (must be a registered job handler)
+ *                 example: notification
+ *               payload:
+ *                 type: object
+ *                 description: Job-specific data
+ *                 example:
+ *                   userId: "@alice:example.com"
+ *                   message: "Welcome to HAOS!"
+ *               options:
+ *                 type: object
+ *                 description: Job execution options
+ *                 properties:
+ *                   priority:
+ *                     type: integer
+ *                     minimum: 0
+ *                     maximum: 10
+ *                     description: Job priority (higher numbers = higher priority)
+ *                     example: 1
+ *                   delay:
+ *                     type: integer
+ *                     description: Delay before execution in milliseconds
+ *                     example: 5000
+ *                   retries:
+ *                     type: integer
+ *                     description: Maximum retry attempts
+ *                     example: 3
+ *     responses:
+ *       200:
+ *         description: Job created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/BackgroundJob'
+ *       400:
+ *         description: Invalid job type or missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/Error'
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

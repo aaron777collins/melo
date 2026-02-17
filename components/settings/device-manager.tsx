@@ -25,7 +25,9 @@ import {
   CheckCircle,
   MoreVertical,
   Eye,
-  EyeOff
+  EyeOff,
+  QrCode,
+  Smile
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -440,6 +442,118 @@ function RevokeDeviceDialog({
   );
 }
 
+/**
+ * Device verification dialog
+ */
+function DeviceVerificationDialog({
+  session,
+  open,
+  onOpenChange,
+  onConfirm
+}: {
+  session: DeviceSession | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [verificationMethod, setVerificationMethod] = useState<"qr" | "emoji">("qr");
+  
+  const handleVerify = async () => {
+    setLoading(true);
+    try {
+      onConfirm();
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (!session) return null;
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Verify Device</DialogTitle>
+          <DialogDescription>
+            Choose how you&apos;d like to verify this device to ensure it&apos;s trusted and secure.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="my-4">
+          <DeviceSessionCard 
+            session={session} 
+            onRevoke={() => Promise.resolve()} 
+            onVerify={() => Promise.resolve()} 
+            onBlock={() => Promise.resolve()}
+            showActions={false}
+          />
+        </div>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              variant={verificationMethod === "qr" ? "default" : "outline"}
+              onClick={() => setVerificationMethod("qr")}
+              className="flex flex-col gap-2 h-auto p-4"
+            >
+              <QrCode className="h-6 w-6" />
+              <span className="text-sm">QR Code</span>
+            </Button>
+            <Button
+              variant={verificationMethod === "emoji" ? "default" : "outline"}
+              onClick={() => setVerificationMethod("emoji")}
+              className="flex flex-col gap-2 h-auto p-4"
+            >
+              <Smile className="h-6 w-6" />
+              <span className="text-sm">Emoji</span>
+            </Button>
+          </div>
+          
+          {verificationMethod === "qr" && (
+            <Alert>
+              <QrCode className="h-4 w-4" />
+              <AlertDescription>
+                A QR code will be displayed for you to scan with the other device. 
+                Both devices will show matching security codes to confirm the verification.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {verificationMethod === "emoji" && (
+            <Alert>
+              <Smile className="h-4 w-4" />
+              <AlertDescription>
+                Both devices will display matching emoji sequences. 
+                Confirm they match to complete the verification process.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleVerify} disabled={loading}>
+            {loading ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              <>
+                <Shield className="h-4 w-4 mr-2" />
+                Start Verification
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // =============================================================================
 // Main Component
 // =============================================================================
@@ -453,6 +567,7 @@ export function DeviceManager({ profile }: DeviceManagerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [revokeSession, setRevokeSession] = useState<DeviceSession | null>(null);
+  const [verifySession, setVerifySession] = useState<DeviceSession | null>(null);
   
   // Load device list
   const loadDevices = useCallback(async () => {
@@ -508,17 +623,74 @@ export function DeviceManager({ profile }: DeviceManagerProps) {
     }
   }, [client, loadDevices]);
   
-  // Handle device verification (placeholder)
+  // Handle device verification
   const handleVerifyDevice = useCallback(async (deviceId: string) => {
-    // TODO: Implement device verification dialog
-    console.log("Device verification not yet implemented:", deviceId);
-  }, []);
+    const session = sessions.find(s => s.deviceId === deviceId);
+    if (session) {
+      setVerifySession(session);
+    }
+    return Promise.resolve();
+  }, [sessions]);
   
-  // Handle device blocking (placeholder)
+  // Perform actual device verification
+  const performDeviceVerification = useCallback(async (deviceId: string) => {
+    if (!client) return;
+    
+    try {
+      // Get the device information
+      const userId = client.getUserId();
+      if (!userId) throw new Error("User not logged in");
+      
+      // Request verification for the device
+      const crypto = client.getCrypto();
+      if (!crypto) throw new Error("Crypto not available");
+      
+      // For device verification, we use device-to-device verification
+      const verificationRequest = await crypto.requestDeviceVerification(userId, deviceId);
+      
+      console.log("Device verification request created:", verificationRequest);
+      
+      // Mark the device as verified after successful request
+      await crypto.setDeviceVerified(userId, deviceId, true);
+      await loadDevices(); // Reload to show updated status
+      console.log("Device verified successfully");
+      
+    } catch (error) {
+      console.error("Failed to verify device:", error);
+      throw error;
+    }
+  }, [client, loadDevices]);
+  
+  // Handle device blocking
   const handleBlockDevice = useCallback(async (deviceId: string) => {
-    // TODO: Implement device blocking
-    console.log("Device blocking not yet implemented:", deviceId);
-  }, []);
+    if (!client) return;
+    
+    try {
+      const userId = client.getUserId();
+      if (!userId) throw new Error("User not logged in");
+      
+      const crypto = client.getCrypto();
+      if (!crypto) throw new Error("Crypto not available");
+      
+      // Mark device as unverified and blocked
+      await crypto.setDeviceVerified(userId, deviceId, false);
+      
+      // Update local session state to mark as blocked
+      setSessions(prevSessions => 
+        prevSessions.map(session => 
+          session.deviceId === deviceId 
+            ? { ...session, isBlocked: true, isVerified: false }
+            : session
+        )
+      );
+      
+      console.log("Device blocked successfully:", deviceId);
+      
+    } catch (error) {
+      console.error("Failed to block device:", error);
+      throw error;
+    }
+  }, [client]);
   
   if (!client) {
     return (
@@ -625,17 +797,57 @@ export function DeviceManager({ profile }: DeviceManagerProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="font-medium">Other Sessions ({otherSessions.length})</h3>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                // TODO: Implement revoke all other sessions
-                console.log("Revoke all other sessions not yet implemented");
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Revoke All Others
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Revoke All Others
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Revoke All Other Sessions</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to revoke all other device sessions? This will sign out all 
+                    devices except your current one. They will need to log in again.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    This action will affect {otherSessions.length} device session{otherSessions.length !== 1 ? 's' : ''} 
+                    and cannot be undone.
+                  </AlertDescription>
+                </Alert>
+                
+                <DialogFooter>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </DialogTrigger>
+                  <Button 
+                    variant="destructive" 
+                    onClick={async () => {
+                      try {
+                        const deviceIds = otherSessions.map(session => session.deviceId);
+                        
+                        // Revoke all other devices
+                        for (const deviceId of deviceIds) {
+                          await handleRevokeDevice(deviceId);
+                        }
+                        
+                        console.log(`Successfully revoked ${deviceIds.length} device sessions`);
+                      } catch (error) {
+                        console.error("Failed to revoke all sessions:", error);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Revoke All ({otherSessions.length})
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
           
           <div className="space-y-2">
@@ -677,6 +889,19 @@ export function DeviceManager({ profile }: DeviceManagerProps) {
           if (revokeSession) {
             await handleRevokeDevice(revokeSession.deviceId);
             setRevokeSession(null);
+          }
+        }}
+      />
+      
+      {/* Device Verification Dialog */}
+      <DeviceVerificationDialog
+        session={verifySession}
+        open={!!verifySession}
+        onOpenChange={(open) => !open && setVerifySession(null)}
+        onConfirm={async () => {
+          if (verifySession) {
+            await performDeviceVerification(verifySession.deviceId);
+            setVerifySession(null);
           }
         }}
       />

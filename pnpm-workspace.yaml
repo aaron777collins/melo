@@ -1,0 +1,9 @@
+onlyBuiltDependencies:
+  - '@ffprobe-installer/linux-x64'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@sentry/cli'
+  - prisma
+  - protobufjs
+  - sharp
+  - unrs-resolver

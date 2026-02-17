@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import accessibility styles */
-@import "../src/styles/accessibility.css";
+/* Temporarily comment out import to debug CSS processing issue */
+/* @import "../src/styles/accessibility.css"; */
 
 html,
 body,

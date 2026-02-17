@@ -23,6 +23,7 @@ import { RevokeInviteModal } from "@/components/modals/revoke-invite-modal";
 import { GifPickerModal } from "@/components/modals/gif-picker-modal";
 import { PinnedMessages } from "@/components/pinned-messages";
 import { SecurityPromptModal } from "@/components/modals/security-prompt-modal";
+import { ServerDiscoveryModal } from "@/components/modals/server-discovery-modal";
 
 export function ModalProvider() {
   const [isMounted, setIsMounted] = useState(false);
@@ -57,6 +58,7 @@ export function ModalProvider() {
       <GifPickerModal />
       <PinnedMessages />
       <SecurityPromptModal />
+      <ServerDiscoveryModal />
       {/* TODO: Add more modals as they're created */}
     </>
   );

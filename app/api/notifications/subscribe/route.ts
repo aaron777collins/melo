@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPushService } from '@/lib/notifications/push-service';
 import { getClient } from '@/lib/matrix/client';
 
 export async function POST(request: NextRequest) {
@@ -21,11 +20,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pushService = getPushService();
+    // Check if push notifications are configured
+    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
     
-    if (!pushService.getConfig().enabled) {
+    if (!vapidPublicKey || !vapidPrivateKey) {
       return NextResponse.json(
-        { error: 'Push notifications are disabled' },
+        { error: 'Push notifications are not configured' },
         { status: 503 }
       );
     }
@@ -42,12 +43,33 @@ export async function POST(request: NextRequest) {
     };
 
     // Get Matrix client (this would typically come from auth middleware)
-    // For now, we'll simulate storage without Matrix client
     const client = getClient();
     
     if (client) {
       // Store in Matrix account data
-      await pushService.storePushSubscription(client, pushSubscription);
+      try {
+        const existingData = await (client as any).getAccountData('com.haos.push_subscriptions');
+        const existingSubscriptions = existingData?.getContent()?.subscriptions || [];
+
+        // Remove any existing subscription for this device
+        const filteredSubscriptions = existingSubscriptions.filter(
+          (sub: any) => sub.deviceId !== deviceId
+        );
+
+        // Add new subscription
+        filteredSubscriptions.push(pushSubscription);
+
+        // Store updated subscriptions
+        await (client as any).setAccountData('com.haos.push_subscriptions', {
+          subscriptions: filteredSubscriptions,
+          updated_at: new Date().toISOString()
+        });
+
+        console.log(`Push subscription stored for device: ${deviceId}`);
+      } catch (error) {
+        console.error('Failed to store push subscription:', error);
+        throw error;
+      }
     } else {
       // Fallback: store locally (for development/testing)
       console.log('Matrix client not available, would store subscription:', pushSubscription);
@@ -80,12 +102,30 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const pushService = getPushService();
     const client = getClient();
     
     if (client) {
       // Remove from Matrix account data
-      await pushService.removePushSubscription(client, deviceId);
+      try {
+        const existingData = await (client as any).getAccountData('com.haos.push_subscriptions');
+        const existingSubscriptions = existingData?.getContent()?.subscriptions || [];
+
+        // Remove subscription for this device
+        const filteredSubscriptions = existingSubscriptions.filter(
+          (sub: any) => sub.deviceId !== deviceId
+        );
+
+        // Store updated subscriptions
+        await (client as any).setAccountData('com.haos.push_subscriptions', {
+          subscriptions: filteredSubscriptions,
+          updated_at: new Date().toISOString()
+        });
+
+        console.log(`Push subscription removed for device: ${deviceId}`);
+      } catch (error) {
+        console.error('Failed to remove push subscription:', error);
+        throw error;
+      }
     } else {
       // Fallback: simulate removal
       console.log('Matrix client not available, would remove subscription for device:', deviceId);

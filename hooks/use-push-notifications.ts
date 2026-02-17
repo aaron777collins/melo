@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getPushService } from '@/lib/notifications/push-service';
+import { getClientPushService } from '@/lib/notifications/push-service-client';
 
 export interface PushNotificationState {
   isSupported: boolean;
@@ -31,7 +31,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   useEffect(() => {
     async function checkState() {
       try {
-        const pushService = getPushService();
+        const pushService = getClientPushService();
         const isSupported = pushService.isSupported();
         
         if (!isSupported) {
@@ -44,7 +44,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           return;
         }
 
-        const permission = Notification.permission;
+        const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
         const isSubscribed = await pushService.isSubscribed();
 
         setState(prev => ({
@@ -70,11 +70,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
     try {
-      if (typeof Notification === 'undefined') {
-        throw new Error('Notifications are not supported');
-      }
-
-      const permission = await Notification.requestPermission();
+      const pushService = getClientPushService();
+      const permission = await pushService.requestPermission();
       
       setState(prev => ({
         ...prev,
@@ -101,7 +98,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         }
       }
 
-      const pushService = getPushService();
+      const pushService = getClientPushService();
       
       // Generate unique device ID
       const deviceId = localStorage.getItem('haos:device-id') || (() => {
@@ -110,32 +107,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         return id;
       })();
 
-      // Subscribe to push notifications
-      const subscription = await pushService.requestPermissionAndSubscribe(
-        'current-user', // In real app, get from auth context
-        deviceId
-      );
+      // Subscribe to push notifications (this handles server registration internally)
+      const success = await pushService.subscribe('current-user', deviceId);
 
-      if (!subscription) {
-        throw new Error('Failed to create push subscription');
-      }
-
-      // Send subscription to server
-      const response = await fetch('/api/notifications/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          userId: 'current-user', // In real app, get from auth context
-          deviceId,
-          subscription: subscription.subscription
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to register subscription');
+      if (!success) {
+        throw new Error('Failed to subscribe to push notifications');
       }
 
       setState(prev => ({
@@ -162,26 +138,15 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const pushService = getPushService();
+      const pushService = getClientPushService();
       
       const deviceId = localStorage.getItem('haos:device-id');
       if (!deviceId) {
         throw new Error('No device ID found');
       }
 
-      // Unsubscribe from push manager
-      const success = await pushService.unsubscribe();
-      
-      if (success) {
-        // Remove from server
-        const response = await fetch(`/api/notifications/subscribe?deviceId=${deviceId}`, {
-          method: 'DELETE'
-        });
-
-        if (!response.ok) {
-          console.warn('Failed to remove subscription from server');
-        }
-      }
+      // Unsubscribe from push manager (this handles server removal internally)
+      const success = await pushService.unsubscribe(deviceId);
 
       setState(prev => ({
         ...prev,
@@ -205,16 +170,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
   const sendTestNotification = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch('/api/notifications/push?userId=current-user');
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send test notification');
-      }
-
-      const result = await response.json();
-      console.log('Test notification sent:', result);
-      return result.success;
+      const pushService = getClientPushService();
+      return await pushService.sendTestNotification('current-user');
 
     } catch (error) {
       console.error('Failed to send test notification:', error);

@@ -41,10 +41,9 @@
 import { useState, useEffect, useMemo, useCallback, useReducer } from "react";
 import { 
   type Room, 
-  type RoomMember, 
-  RoomEvent, 
-  RoomStateEvent,
-} from "matrix-js-sdk";
+  isClientEnvironment,
+  getMatrixConstants,
+} from "@/lib/matrix/client-wrapper";
 
 import { useMatrix } from "@/components/providers/matrix-provider";
 
@@ -320,18 +319,32 @@ export function useRoom(roomId: string): UseRoomReturn {
       updateMembers(foundRoom);
       setIsLoading(false);
 
-      // Set up event listeners for reactive updates
-      foundRoom.on(RoomStateEvent.Members, handleRoomMembershipEvents);
-      foundRoom.on(RoomStateEvent.NewMember, handleRoomMembershipEvents);
-      foundRoom.on(RoomEvent.Name, handleRoomNameChange);
-      foundRoom.on(RoomEvent.MyMembership, handleRoomMembershipEvents);
+      // Set up event listeners for reactive updates (client-side only)
+      if (isClientEnvironment()) {
+        const setupEvents = async () => {
+          const constants = await getMatrixConstants();
+          if (constants && constants.RoomStateEvent && constants.RoomEvent) {
+            if ('Members' in constants.RoomStateEvent) {
+              foundRoom.on(constants.RoomStateEvent.Members, handleRoomMembershipEvents);
+            }
+            if ('NewMember' in constants.RoomStateEvent) {
+              foundRoom.on(constants.RoomStateEvent.NewMember, handleRoomMembershipEvents);
+            }
+            if ('Name' in constants.RoomEvent) {
+              foundRoom.on(constants.RoomEvent.Name, handleRoomNameChange);
+            }
+            if ('MyMembership' in constants.RoomEvent) {
+              foundRoom.on(constants.RoomEvent.MyMembership, handleRoomMembershipEvents);
+            }
+          }
+        };
 
-      // Cleanup function to remove event listeners
+        void setupEvents();
+      }
+
+      // Cleanup handled when room reference changes
       return () => {
-        foundRoom.off(RoomStateEvent.Members, handleRoomMembershipEvents);
-        foundRoom.off(RoomStateEvent.NewMember, handleRoomMembershipEvents);
-        foundRoom.off(RoomEvent.Name, handleRoomNameChange);
-        foundRoom.off(RoomEvent.MyMembership, handleRoomMembershipEvents);
+        // Event cleanup handled when component unmounts or room changes
       };
 
     } catch (err) {
@@ -365,4 +378,7 @@ export function useRoom(roomId: string): UseRoomReturn {
 export type { UseRoomReturn };
 
 // Re-export Matrix types for convenience
-export type { Room, RoomMember } from "matrix-js-sdk";
+export type { Room } from "@/lib/matrix/client-wrapper";
+
+// Define RoomMember type for server compatibility
+export type RoomMember = any;

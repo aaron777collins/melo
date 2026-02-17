@@ -5,6 +5,7 @@ import { currentProfile } from "@/lib/current-profile";
 import { DMList } from "@/components/navigation/dm-list";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { ClientWrapper } from "@/components/client-wrapper";
 
 /**
  * Direct Messages page (/channels/@me)
@@ -48,7 +49,13 @@ export default async function DMPage() {
 
         {/* DM List */}
         <ScrollArea className="flex-1">
-          <DMList />
+          <ClientWrapper fallback={
+            <div className="p-4 text-sm text-zinc-500 dark:text-zinc-400">
+              Loading conversations...
+            </div>
+          }>
+            <DMList />
+          </ClientWrapper>
         </ScrollArea>
       </div>
 

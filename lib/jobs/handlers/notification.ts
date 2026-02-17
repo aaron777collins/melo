@@ -48,12 +48,29 @@ class NotificationHandler {
     console.log(`Sending push notification to user ${userId}: ${title}`);
     
     try {
-      // Use the actual push service
-      const { getPushService } = await import("@/lib/notifications/push-service");
-      const pushService = getPushService();
+      // Use the server-side push service
+      const response = await fetch('http://localhost:3000/api/notifications/push', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId,
+          title,
+          body,
+          ...options
+        })
+      });
 
-      if (!pushService.isSupported() || !pushService.getConfig().enabled) {
-        console.log('Push notifications not supported or disabled, logging instead');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send push notification via API');
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.log('Push notifications failed, logging instead');
         console.log(`📱 [PUSH NOTIFICATION] ${title}: ${body}`);
         
         return {
@@ -61,30 +78,6 @@ class NotificationHandler {
           messageId: `simulated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         };
       }
-
-      // Create a mock Matrix event for the push service
-      // In a real scenario, this would come from the actual Matrix event
-      const mockEvent = {
-        getId: () => `$${Date.now()}:example.com`,
-        getSender: () => `@system:example.com`,
-        getContent: () => ({ body }),
-        getTs: () => Date.now(),
-        getRoomId: () => `!general:example.com`
-      } as any;
-
-      const mockRoom = {
-        name: 'General',
-        roomId: '!general:example.com',
-        getMember: () => ({ name: 'System' }),
-        getJoinedMemberCount: () => 2
-      } as any;
-
-      // Send through push service (without Matrix client for now)
-      await pushService.sendPushNotification(
-        mockEvent,
-        mockRoom,
-        'dm' as any // NotificationType enum will be resolved by import
-      );
       
       const messageId = `push_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       

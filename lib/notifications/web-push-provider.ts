@@ -1,10 +1,58 @@
 /**
  * Web Push Provider Implementation
- * Implements actual Web Push API with VAPID keys using web-push library
+ * ⚠️ DEPRECATED: This file has been moved to push-service-server.ts
+ * This file is kept for compatibility but should not be imported in new code.
+ * All web-push functionality is now in the server-side service.
  */
 
 import webpush from 'web-push';
-import { PushProvider, PushSubscription, PushNotificationData, PushResult } from './push-service';
+
+// Local types (deprecated - use push-service-server.ts instead)
+export interface PushProvider {
+  name: string;
+  send(subscriptions: PushSubscription[], data: PushNotificationData): Promise<PushResult[]>;
+}
+
+export interface PushSubscription {
+  id: string;
+  userId: string;
+  deviceId: string;
+  subscription: {
+    endpoint: string;
+    keys: {
+      p256dh: string;
+      auth: string;
+    };
+  };
+  userAgent?: string;
+  createdAt: Date;
+  lastUsed: Date;
+}
+
+export interface PushNotificationData {
+  title: string;
+  body: string;
+  icon?: string;
+  badge?: string;
+  tag?: string;
+  data?: any;
+  actions?: Array<{
+    action: string;
+    title: string;
+    icon?: string;
+  }>;
+  requireInteraction?: boolean;
+  silent?: boolean;
+  timestamp?: number;
+  vibrate?: number[];
+}
+
+export interface PushResult {
+  subscriptionId: string;
+  success: boolean;
+  error?: string;
+  shouldUnsubscribe?: boolean;
+}
 
 export interface WebPushConfig {
   vapidPublicKey: string;

@@ -30,6 +30,7 @@ import {
   type ServerTemplate,
   type CreateServerFromTemplateOptions 
 } from "@/lib/matrix/server-templates";
+import { ClientWrapper } from "@/components/client-wrapper";
 
 // =============================================================================
 // Types
@@ -178,7 +179,17 @@ export default function ServerTemplatesPage() {
   }, [step, selectedTemplate, validateSettings]);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <ClientWrapper fallback={
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading server templates...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
@@ -417,6 +428,7 @@ export default function ServerTemplatesPage() {
           </Button>
         </div>
       )}
-    </div>
+      </div>
+    </ClientWrapper>
   );
 }

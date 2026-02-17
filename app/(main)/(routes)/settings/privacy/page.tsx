@@ -19,8 +19,29 @@ import { UserSearchBlock } from "@/components/privacy/user-search-block";
 import { usePrivacySettings } from "@/hooks/use-privacy-settings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ClientWrapper } from "@/components/client-wrapper";
 
 export default function PrivacySettingsPage() {
+  return (
+    <ClientWrapper fallback={
+      <div className="h-full p-6 overflow-y-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="space-y-3">
+            <div className="h-8 w-64 bg-gray-200 animate-pulse rounded"></div>
+            <div className="h-4 w-96 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+          <hr className="border-gray-200" />
+          <div className="h-48 w-full bg-gray-200 animate-pulse rounded"></div>
+          <div className="h-32 w-full bg-gray-200 animate-pulse rounded"></div>
+        </div>
+      </div>
+    }>
+      <PrivacySettingsContent />
+    </ClientWrapper>
+  );
+}
+
+function PrivacySettingsContent() {
   const { settings, isLoading, error, updateSetting } = usePrivacySettings();
 
   if (isLoading) {

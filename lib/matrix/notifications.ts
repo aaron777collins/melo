@@ -606,17 +606,58 @@ export class MatrixNotificationService {
     notificationType: NotificationType
   ): Promise<void> {
     try {
-      // Import push service dynamically to avoid SSR issues
-      const { getPushService } = await import('@/lib/notifications/push-service');
-      const pushService = getPushService();
+      // Only import server push service on server-side
+      if (typeof window !== 'undefined') {
+        console.log('Push notifications should be sent from server-side only');
+        return;
+      }
 
-      if (!pushService.getConfig().enabled) {
+      // Import server push service dynamically to avoid client-side issues
+      const { getServerPushService } = await import('@/lib/notifications/push-service-server');
+      const serverPushService = getServerPushService();
+
+      if (!serverPushService.isEnabled()) {
         console.log('Push notifications disabled, skipping');
         return;
       }
 
-      // Send push notification with Matrix client
-      await pushService.sendPushNotification(event, room, notificationType, this.client);
+      // Get user push subscriptions
+      if (!this.client) {
+        console.warn('Matrix client not available for push notifications');
+        return;
+      }
+
+      try {
+        const data = await (this.client as any).getAccountData('com.haos.push_subscriptions');
+        const content = data?.getContent();
+        const subscriptions = content?.subscriptions || [];
+        
+        if (subscriptions.length === 0) {
+          console.log('No push subscriptions found');
+          return;
+        }
+
+        // Send push notification with Matrix client
+        const results = await serverPushService.sendMatrixNotification(event, room, notificationType, subscriptions);
+        
+        // Handle results - remove expired subscriptions
+        const shouldUnsubscribe = results.filter(r => r.shouldUnsubscribe);
+        if (shouldUnsubscribe.length > 0) {
+          const validSubscriptions = subscriptions.filter((sub: any) => 
+            !shouldUnsubscribe.some(r => r.subscriptionId === sub.id)
+          );
+          
+          await (this.client as any).setAccountData('com.haos.push_subscriptions', {
+            subscriptions: validSubscriptions,
+            updated_at: new Date().toISOString()
+          });
+          
+          console.log(`Removed ${shouldUnsubscribe.length} expired subscriptions`);
+        }
+        
+      } catch (error) {
+        console.error('Failed to get push subscriptions:', error);
+      }
       
     } catch (error) {
       console.error('Failed to send push notification:', error);

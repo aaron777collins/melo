@@ -108,6 +108,13 @@ const nextConfig = {
       "web-push": "commonjs web-push"
     });
 
+    // Fix matrix-js-sdk multiple entrypoints during SSG
+    if (!dev && isServer) {
+      config.externals.push({
+        "matrix-js-sdk": "commonjs matrix-js-sdk"
+      });
+    }
+
     // Bundle optimization configurations
     if (!dev && !isServer) {
       config.optimization = {

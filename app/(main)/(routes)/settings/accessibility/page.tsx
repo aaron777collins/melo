@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Accessibility } from "lucide-react";
+import { ClientWrapper } from "@/components/client-wrapper";
 
 export default async function AccessibilitySettingsPage() {
   const profile = await currentProfile();
@@ -22,7 +23,19 @@ export default async function AccessibilitySettingsPage() {
   }
 
   return (
-    <div className="h-full p-6 overflow-y-auto">
+    <ClientWrapper fallback={
+      <div className="h-full p-6 overflow-y-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading accessibility settings...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <div className="h-full p-6 overflow-y-auto">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Page Header */}
         <div className="space-y-2">
@@ -240,6 +253,7 @@ export default async function AccessibilitySettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </ClientWrapper>
   );
 }

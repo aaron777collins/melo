@@ -5,7 +5,7 @@
  * Only one client can exist at a time - call destroyClient() before creating a new one.
  */
 
-import { createClient, MatrixClient } from "matrix-js-sdk";
+import { createClientSafe, type MatrixClient, isClientEnvironment, requireClientEnvironment } from "./client-wrapper";
 
 import type { MatrixSession } from "./types/auth";
 import {
@@ -38,7 +38,9 @@ let cryptoState: CryptoState = { status: "uninitialized" };
  * @returns The initialized MatrixClient
  * @throws Error if session is missing required fields
  */
-export function initializeClient(session: MatrixSession): MatrixClient {
+export async function initializeClient(session: MatrixSession): Promise<MatrixClient | null> {
+  requireClientEnvironment('initializeClient');
+
   // Validate session has required fields
   if (!session.homeserverUrl) {
     throw new Error("Session missing homeserverUrl");
@@ -55,19 +57,25 @@ export function initializeClient(session: MatrixSession): MatrixClient {
     destroyClient();
   }
 
-  // Create new client
+  // Create new client using safe wrapper
   // NOTE: deviceId is REQUIRED for E2EE to work properly
-  client = createClient({
+  const newClient = await createClientSafe({
     baseUrl: session.homeserverUrl,
     accessToken: session.accessToken,
     userId: session.userId,
     deviceId: session.deviceId,
   });
 
+  if (!newClient) {
+    throw new Error("Failed to create Matrix client");
+  }
+
+  client = newClient;
+
   // Reset crypto state for new client
   cryptoState = { status: "uninitialized" };
 
-  return client;
+  return newClient;
 }
 
 /**
@@ -180,9 +188,13 @@ export function startClientSync(): void {
 export async function initializeClientWithCrypto(
   session: MatrixSession,
   cryptoOptions?: CryptoStoreOptions
-): Promise<MatrixClient> {
+): Promise<MatrixClient | null> {
   // 1. Create the client
-  const newClient = initializeClient(session);
+  const newClient = await initializeClient(session);
+
+  if (!newClient) {
+    return null;
+  }
 
   // 2. Initialize crypto (must be before startClient)
   await initializeCrypto(cryptoOptions);

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Flag, AlertTriangle } from "lucide-react";
+import { Flag, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -38,22 +39,43 @@ export function ReportMessageModal() {
     
     setLoading(true);
     try {
-      // Send report via Matrix report endpoint
-      // Note: This is a placeholder - actual implementation would depend on server support
-      console.log("Reporting message:", {
-        eventId,
-        roomId,
-        senderId,
-        reason: reason.trim(),
+      // Submit report via API
+      const response = await fetch('/api/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId,
+          roomId,
+          senderId,
+          reason: reason.trim(),
+        }),
       });
       
-      // TODO: Implement actual reporting via Matrix API
-      // await client.reportEvent(roomId, eventId, reason.trim());
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit report');
+      }
+      
+      // Show success message to user
+      console.log('Report submitted successfully:', result.reportId);
+      
+      toast.success("Report submitted successfully", {
+        description: "Moderators have been notified and will review your report.",
+        icon: <CheckCircle2 className="h-4 w-4" />
+      });
       
       onClose();
       setReason("");
     } catch (error) {
       console.error("Failed to report message:", error);
+      
+      // Show error message to user
+      toast.error("Failed to submit report", {
+        description: error instanceof Error ? error.message : "Please try again later."
+      });
     } finally {
       setLoading(false);
     }

@@ -13,7 +13,7 @@ import {
   Hash,
   PinOff
 } from "lucide-react";
-import { MatrixEvent } from "matrix-js-sdk";
+import {  MatrixEvent  } from "@/lib/matrix/matrix-sdk-exports";
 
 import {
   DropdownMenu,

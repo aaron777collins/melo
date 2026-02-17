@@ -7,7 +7,7 @@
 
 // Import the web-push library - THIS FILE SHOULD NEVER BE IMPORTED IN CLIENT CODE
 import webpush from 'web-push';
-import { MatrixEvent, Room } from "matrix-js-sdk";
+import {  MatrixEvent, Room  } from "@/lib/matrix/matrix-sdk-exports";
 import { NotificationType } from "@/lib/matrix/notifications";
 
 // =============================================================================

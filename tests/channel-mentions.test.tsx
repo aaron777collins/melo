@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
 import { useMentions } from '@/hooks/use-mentions';
 import { ChannelAutocomplete } from '@/components/chat/channel-autocomplete';
-import { Room } from 'matrix-js-sdk';
+import {  Room  } from "@/lib/matrix/matrix-sdk-exports";
 
 // Mock Room creation function for testing
 function createMockRoom(name: string, type: string = 'm.room.create'): Room {

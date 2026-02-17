@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { loginWithPassword, validateSession as matrixValidateSession, MatrixAuthError } from "@/lib/matrix/auth";
 import { setSessionCookie, setTempSessionCookie } from "@/lib/matrix/cookies";
-import { createClient } from "matrix-js-sdk";
+import {  createClient  } from "@/lib/matrix/matrix-sdk-exports";
 
 /**
  * Matrix Authentication Login

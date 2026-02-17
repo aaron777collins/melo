@@ -5,7 +5,7 @@
  * Handles the account deactivation process with proper error handling and validation.
  */
 
-import { MatrixClient } from "matrix-js-sdk";
+import {  MatrixClient  } from "@/lib/matrix/matrix-sdk-exports";
 import { Method } from "matrix-js-sdk/lib/http-api";
 import { getClient } from "./client";
 

@@ -6,7 +6,7 @@
  * email fallback when users are not actively using the app.
  */
 
-import { MatrixEvent, Room } from "matrix-js-sdk";
+import {  MatrixEvent, Room  } from "@/lib/matrix/matrix-sdk-exports";
 import { NotificationType, type NotificationSettings } from "@/lib/matrix/notifications";
 
 // =============================================================================

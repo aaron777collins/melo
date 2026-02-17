@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Room, RoomEvent, RoomStateEvent } from "matrix-js-sdk";
+import {  Room, RoomEvent, RoomStateEvent  } from "@/lib/matrix/matrix-sdk-exports";
 import { useMatrix } from "@/components/providers/matrix-provider";
 import type { MatrixSpace, SpaceChannel, DirectMessage } from "@/lib/matrix/types/space";
 

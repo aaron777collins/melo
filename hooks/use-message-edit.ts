@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { MatrixEvent, MsgType, RelationType } from "matrix-js-sdk";
+import {  MatrixEvent, MsgType, RelationType  } from "@/lib/matrix/matrix-sdk-exports";
 
 import { useMatrixClient } from "./use-matrix-client";
 

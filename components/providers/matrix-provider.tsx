@@ -59,7 +59,7 @@ import {
   type MatrixClient,
   getMatrixConstants,
   isClientEnvironment,
-} from "@/lib/matrix/client-wrapper";
+} from "@/lib/matrix/matrix-sdk-exports";
 
 import {
   initializeClient,

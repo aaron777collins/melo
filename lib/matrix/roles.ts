@@ -5,7 +5,7 @@
  * Provides utilities for creating, updating, and managing roles within Matrix spaces.
  */
 
-import { MatrixClient } from "matrix-js-sdk";
+import {  MatrixClient  } from "@/lib/matrix/matrix-sdk-exports";
 import { getClient } from "./client";
 
 // =============================================================================

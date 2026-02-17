@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { Wifi, WifiOff, RotateCw, AlertCircle, CheckCircle2 } from "lucide-react";
-import { SyncState } from "matrix-js-sdk";
+import {  SyncState  } from "@/lib/matrix/matrix-sdk-exports";
 
 import { ActionTooltip } from "@/components/action-tooltip";
 import { useMatrix } from "@/components/providers/matrix-provider";

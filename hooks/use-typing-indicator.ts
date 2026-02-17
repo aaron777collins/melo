@@ -41,7 +41,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { RoomMemberEvent } from "matrix-js-sdk";
+import {  RoomMemberEvent  } from "@/lib/matrix/matrix-sdk-exports";
 
 import { useMatrix } from "@/components/providers/matrix-provider";
 

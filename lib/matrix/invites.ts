@@ -5,7 +5,7 @@
  * and shareable invite link creation.
  */
 
-import { MatrixClient, Room } from "matrix-js-sdk";
+import {  MatrixClient, Room  } from "@/lib/matrix/matrix-sdk-exports";
 import QRCode from "qrcode";
 
 export interface InviteLink {

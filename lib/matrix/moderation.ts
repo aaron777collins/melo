@@ -5,7 +5,7 @@
  * Integrates with Matrix room power levels for permission checking.
  */
 
-import { MatrixClient, Room, RoomMember } from "matrix-js-sdk";
+import {  MatrixClient, Room, RoomMember  } from "@/lib/matrix/matrix-sdk-exports";
 
 export interface ModerationResult {
   success: boolean;

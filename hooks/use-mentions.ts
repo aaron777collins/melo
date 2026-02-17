@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useMemo } from "react";
-import { RoomMember, Room } from "matrix-js-sdk";
+import {  RoomMember, Room  } from "@/lib/matrix/matrix-sdk-exports";
 import { useRoom } from "./use-room";
 import { useSpaces } from "./use-spaces";
 

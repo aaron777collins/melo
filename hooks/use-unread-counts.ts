@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { NotificationCountType } from 'matrix-js-sdk';
+import {  NotificationCountType  } from "@/lib/matrix/matrix-sdk-exports";
 import { useMatrixClient } from '@/hooks/use-matrix-client';
 import { UnreadCounts, NotificationCounts } from '@/types/notifications';
 

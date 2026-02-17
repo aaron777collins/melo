@@ -37,11 +37,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { 
+import {  
   type MatrixEvent, 
   RoomEvent,
   EventType,
-} from "matrix-js-sdk";
+ } from "@/lib/matrix/matrix-sdk-exports";
 
 import { useRoom } from "./use-room";
 import { useMatrix } from "@/components/providers/matrix-provider";

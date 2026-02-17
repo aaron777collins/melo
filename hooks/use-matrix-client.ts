@@ -36,7 +36,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { MatrixClient } from "@/lib/matrix/client-wrapper";
+import type { MatrixClient } from "@/lib/matrix/matrix-sdk-exports";
 
 import { useMatrix } from "@/components/providers/matrix-provider";
 
@@ -222,4 +222,4 @@ export function useMatrixClient(): UseMatrixClientReturn {
 export type { UseMatrixClientReturn };
 
 // Re-export MatrixClient type for convenience
-export type { MatrixClient } from "@/lib/matrix/client-wrapper";
+export type { MatrixClient } from "@/lib/matrix/matrix-sdk-exports";

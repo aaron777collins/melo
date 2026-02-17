@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState, useCallback, ElementRef } from "rea
 import { Send, Loader2, X, ArrowDown, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 
-import { MsgType } from "matrix-js-sdk";
+import {  MsgType  } from "@/lib/matrix/matrix-sdk-exports";
 
 import { useRoomMessages, type MatrixEvent } from "@/hooks/use-room-messages";
 import { useMatrixClient } from "@/hooks/use-matrix-client";

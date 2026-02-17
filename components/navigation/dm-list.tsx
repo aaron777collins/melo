@@ -2,7 +2,7 @@
 
 import React, { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Room } from "matrix-js-sdk";
+import {  Room  } from "@/lib/matrix/matrix-sdk-exports";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useMatrix } from "@/components/providers/matrix-provider";

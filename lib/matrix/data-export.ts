@@ -5,7 +5,7 @@
  * and profile data from Matrix in JSON or CSV formats with progress tracking.
  */
 
-import { MatrixClient, Room, MatrixEvent } from "matrix-js-sdk";
+import {  MatrixClient, Room, MatrixEvent  } from "@/lib/matrix/matrix-sdk-exports";
 import { getClient } from "./client";
 
 // =============================================================================

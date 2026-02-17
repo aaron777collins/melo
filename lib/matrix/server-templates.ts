@@ -5,7 +5,7 @@
  * Creates Matrix spaces with organized channel categories and room configurations.
  */
 
-import { MatrixClient, Room, ICreateRoomOpts, Visibility } from "matrix-js-sdk";
+import {  MatrixClient, Room, ICreateRoomOpts, Visibility  } from "@/lib/matrix/matrix-sdk-exports";
 
 // =============================================================================
 // Template Types

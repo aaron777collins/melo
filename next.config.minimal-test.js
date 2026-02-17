@@ -23,21 +23,16 @@ const nextConfig = {
       };
     }
 
-    // Matrix SDK single entrypoint fix to prevent multiple entrypoints
+    // Externalize problematic dependencies
     if (!dev) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'matrix-js-sdk': require.resolve('./lib/matrix/matrix-sdk-exports.ts'),
-      };
+      config.externals.push(/^matrix-js-sdk($|\/.*)/);
+      config.externals.push({
+        "utf-8-validate": "commonjs utf-8-validate",
+        bufferutil: "commonjs bufferutil",
+        "web-push": "commonjs web-push",
+        "livekit-server-sdk": "commonjs livekit-server-sdk",
+      });
     }
-
-    // Externalize other problematic dependencies
-    config.externals.push({
-      "utf-8-validate": "commonjs utf-8-validate",
-      bufferutil: "commonjs bufferutil",
-      "web-push": "commonjs web-push",
-      "livekit-server-sdk": "commonjs livekit-server-sdk",
-    });
 
     return config;
   },

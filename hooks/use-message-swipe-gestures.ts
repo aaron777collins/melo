@@ -9,7 +9,7 @@
  */
 
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { MatrixEvent } from 'matrix-js-sdk';
+import {  MatrixEvent  } from "@/lib/matrix/matrix-sdk-exports";
 
 interface MessageSwipeOptions {
   /** Minimum distance (px) to register a swipe. Default: 60 */

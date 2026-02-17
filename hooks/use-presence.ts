@@ -36,7 +36,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { ClientEvent, User, UserEvent } from "matrix-js-sdk";
+import {  ClientEvent, User, UserEvent  } from "@/lib/matrix/matrix-sdk-exports";
 
 import { useMatrix } from "@/components/providers/matrix-provider";
 

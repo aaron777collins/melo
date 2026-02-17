@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionCookie } from "@/lib/matrix/cookies";
-import { createClient } from "matrix-js-sdk";
+import {  createClient  } from "@/lib/matrix/matrix-sdk-exports";
 
 /**
  * POST /api/reports

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { rateLimit, getRateLimitConfig, addRateLimitHeaders, createRateLimitResponse } from "./lib/rate-limiting";
-import { loggingMiddleware } from "./middleware/logging-middleware";
-import { generateCorrelationId } from "./lib/logging/logger";
+
+// Edge-compatible correlation ID generator (no Node.js dependencies)
+function generateCorrelationId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+}
 
 /**
  * Middleware for authentication and security headers
@@ -113,8 +116,8 @@ export async function middleware(request: NextRequest) {
   });
   
   try {
-    // Apply logging middleware first for all requests
-    await loggingMiddleware(request);
+    // Note: File-based logging disabled in edge runtime (uses Node.js APIs)
+    // Structured logging occurs at the application level instead
     
     // Apply rate limiting to API routes
     if (pathname.startsWith('/api/')) {

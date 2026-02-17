@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MatrixEvent } from "matrix-js-sdk";
+import {  MatrixEvent  } from "@/lib/matrix/matrix-sdk-exports";
 
 import {
   Dialog,

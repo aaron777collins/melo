@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { MatrixEvent, EventType, MsgType, RelationType } from "matrix-js-sdk";
+import {  MatrixEvent, EventType, MsgType, RelationType  } from "@/lib/matrix/matrix-sdk-exports";
 import { format } from "date-fns";
 import { MessageSquare, Send, X, ArrowLeft } from "lucide-react";
 

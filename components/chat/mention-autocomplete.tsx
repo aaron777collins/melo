@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { RoomMember } from "matrix-js-sdk";
+import {  RoomMember  } from "@/lib/matrix/matrix-sdk-exports";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 

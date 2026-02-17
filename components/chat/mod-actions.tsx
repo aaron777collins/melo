@@ -13,7 +13,7 @@ import {
   Calendar,
   User
 } from "lucide-react";
-import { MatrixEvent } from "matrix-js-sdk";
+import {  MatrixEvent  } from "@/lib/matrix/matrix-sdk-exports";
 import { format } from "date-fns";
 
 import {

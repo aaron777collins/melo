@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { validateSession as matrixValidateSession, MatrixAuthError } from "@/lib/matrix/auth";
 import { setSessionCookie, getTempSessionCookie, clearTempSessionCookie } from "@/lib/matrix/cookies";
 import { verify as otpVerify, verifySync } from "otplib";
-import { createClient } from "matrix-js-sdk";
+import {  createClient  } from "@/lib/matrix/matrix-sdk-exports";
 
 interface TwoFactorData {
   enabled: boolean;

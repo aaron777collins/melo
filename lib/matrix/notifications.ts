@@ -9,7 +9,7 @@
  * - Integration with Matrix client events
  */
 
-import { MatrixClient, MatrixEvent, Room, RoomMember, RoomEvent, RoomMemberEvent } from "matrix-js-sdk";
+import {  MatrixClient, MatrixEvent, Room, RoomMember, RoomEvent, RoomMemberEvent  } from "@/lib/matrix/matrix-sdk-exports";
 import { getClient } from "./client";
 
 // =============================================================================

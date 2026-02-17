@@ -5,7 +5,7 @@
  * Provides utilities for managing role-based permissions in Matrix spaces.
  */
 
-import { MatrixClient } from "matrix-js-sdk";
+import {  MatrixClient  } from "@/lib/matrix/matrix-sdk-exports";
 import { getClient } from "./client";
 
 // =============================================================================

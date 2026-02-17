@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Edit, FileIcon, ImageIcon, VideoIcon, MusicIcon, Download, Plus, MessageSquare, Check, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { MatrixEvent } from "matrix-js-sdk";
+import {  MatrixEvent  } from "@/lib/matrix/matrix-sdk-exports";
 import { CodeBlock } from "./code-block";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

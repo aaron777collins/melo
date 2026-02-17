@@ -5,7 +5,7 @@
  * This should be called when someone successfully joins via an invite link.
  */
 
-import { MatrixClient } from "matrix-js-sdk";
+import {  MatrixClient  } from "@/lib/matrix/matrix-sdk-exports";
 import { createInviteService } from "./invites";
 
 export interface InviteUsageEvent {

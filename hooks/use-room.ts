@@ -43,7 +43,7 @@ import {
   type Room, 
   isClientEnvironment,
   getMatrixConstants,
-} from "@/lib/matrix/client-wrapper";
+} from "@/lib/matrix/matrix-sdk-exports";
 
 import { useMatrix } from "@/components/providers/matrix-provider";
 
@@ -378,7 +378,7 @@ export function useRoom(roomId: string): UseRoomReturn {
 export type { UseRoomReturn };
 
 // Re-export Matrix types for convenience
-export type { Room } from "@/lib/matrix/client-wrapper";
+export type { Room } from "@/lib/matrix/matrix-sdk-exports";
 
 // Define RoomMember type for server compatibility
 export type RoomMember = any;

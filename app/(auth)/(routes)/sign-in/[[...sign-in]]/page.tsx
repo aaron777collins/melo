@@ -24,12 +24,51 @@ export default function SignInPage() {
 
   const [showTwoFactorPrompt, setShowTwoFactorPrompt] = useState(false);
 
+  const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+
+  const validateField = (field: string, value: string) => {
+    let error = '';
+    
+    switch (field) {
+      case 'username':
+        if (!value.trim()) {
+          error = 'Username is required';
+        }
+        break;
+      case 'password':
+        if (!value.trim()) {
+          error = 'Password is required';
+        }
+        break;
+      case 'homeserver':
+        if (!value.trim()) {
+          error = 'Homeserver is required';
+        } else {
+          try {
+            new URL(value);
+          } catch {
+            error = 'Please enter a valid homeserver URL';
+          }
+        }
+        break;
+    }
+    
+    setFieldErrors(prev => ({ ...prev, [field]: error }));
+    return !error;
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearError(); // Clear previous errors
+    setFieldErrors({});
     
-    if (!formData.username || !formData.password) {
-      return;
+    // Validate all fields
+    const isUsernameValid = validateField('username', formData.username);
+    const isPasswordValid = validateField('password', formData.password);
+    const isHomeserverValid = validateField('homeserver', formData.homeserver);
+    
+    if (!isUsernameValid || !isPasswordValid || !isHomeserverValid) {
+      return; // Form validation failed
     }
 
     const result = await login(
@@ -58,10 +97,16 @@ export default function SignInPage() {
   };
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setFormData(prev => ({
       ...prev,
-      [field]: e.target.value
+      [field]: value
     }));
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   // Show 2FA prompt if required
@@ -106,9 +151,13 @@ export default function SignInPage() {
               value={formData.homeserver}
               onChange={handleInputChange("homeserver")}
               disabled={isLoading}
-              className="w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border border-zinc-600 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
-              required
+              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+                fieldErrors.homeserver ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
+              }`}
             />
+            {fieldErrors.homeserver && (
+              <p className="text-red-400 text-sm mt-1">{fieldErrors.homeserver}</p>
+            )}
           </div>
 
           {/* Username Input */}
@@ -122,9 +171,13 @@ export default function SignInPage() {
               value={formData.username}
               onChange={handleInputChange("username")}
               disabled={isLoading}
-              className="w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border border-zinc-600 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
-              required
+              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+                fieldErrors.username ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
+              }`}
             />
+            {fieldErrors.username && (
+              <p className="text-red-400 text-sm mt-1">{fieldErrors.username}</p>
+            )}
           </div>
 
           {/* Password Input */}
@@ -138,15 +191,19 @@ export default function SignInPage() {
               value={formData.password}
               onChange={handleInputChange("password")}
               disabled={isLoading}
-              className="w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border border-zinc-600 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
-              required
+              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+                fieldErrors.password ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
+              }`}
             />
+            {fieldErrors.password && (
+              <p className="text-red-400 text-sm mt-1">{fieldErrors.password}</p>
+            )}
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading || !formData.username || !formData.password}
+            disabled={isLoading}
             className="w-full p-3 rounded bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Signing In..." : "Sign In"}

@@ -8,6 +8,90 @@ import { Page, expect } from '@playwright/test';
 import { TEST_CONFIG } from './test-data';
 
 /**
+ * Login with test user
+ */
+export async function loginWithTestUser(page: Page): Promise<void> {
+  await page.goto('/sign-in');
+  
+  // Fill in test user credentials
+  const usernameInput = page.locator('input[name="username"], input[type="text"]').first();
+  const passwordInput = page.locator('input[name="password"], input[type="password"]').first();
+  
+  await usernameInput.fill(TEST_CONFIG.testUser.username);
+  await passwordInput.fill(TEST_CONFIG.testUser.password);
+  
+  // Submit form
+  const submitButton = page.locator('button[type="submit"], button:has-text("Sign in"), button:has-text("Login")').first();
+  await submitButton.click();
+  
+  // Wait for navigation
+  await page.waitForURL(/^(?!.*sign-in)/, { timeout: 10000 });
+  await waitForMatrixSync(page);
+}
+
+/**
+ * Create a test space
+ */
+export async function createTestSpace(page: Page, spaceName: string, options?: { topic?: string }): Promise<string> {
+  // Open server creation
+  await page.click('[data-testid="add-server-button"]');
+  
+  // Fill space details
+  const nameInput = page.locator('input[name="name"], input[placeholder*="name" i]').first();
+  await nameInput.fill(spaceName);
+  
+  if (options?.topic) {
+    const topicInput = page.locator('input[name="topic"], input[placeholder*="topic" i], textarea[name="topic"]').first();
+    await topicInput.fill(options.topic);
+  }
+  
+  // Submit creation
+  const createButton = page.locator('button:has-text("Create"), button[type="submit"]').first();
+  await createButton.click();
+  
+  // Wait for space to be created and navigate to it
+  await page.waitForURL(/\/servers\//, { timeout: 15000 });
+  
+  // Extract space ID from URL
+  const url = page.url();
+  const spaceId = url.match(/\/servers\/([^\/]+)/)?.[1];
+  if (!spaceId) {
+    throw new Error('Could not determine space ID from URL: ' + url);
+  }
+  
+  return decodeURIComponent(spaceId);
+}
+
+/**
+ * Cleanup/delete a test space
+ */
+export async function cleanupTestSpace(page: Page, spaceId: string): Promise<void> {
+  try {
+    // Navigate to the space
+    await page.goto(`/servers/${encodeURIComponent(spaceId)}`);
+    
+    // Open space settings
+    const settingsButton = page.locator('[data-testid="space-settings"], button[aria-label*="settings" i]').first();
+    await settingsButton.click();
+    
+    // Look for delete/leave option
+    const deleteButton = page.locator('button:has-text("Delete"), button:has-text("Leave")').first();
+    if (await deleteButton.isVisible({ timeout: 5000 })) {
+      await deleteButton.click();
+      
+      // Confirm deletion
+      const confirmButton = page.locator('button:has-text("Confirm"), button:has-text("Delete"), button:has-text("Yes")').first();
+      if (await confirmButton.isVisible({ timeout: 3000 })) {
+        await confirmButton.click();
+      }
+    }
+  } catch (error) {
+    console.warn(`Failed to cleanup test space ${spaceId}:`, error);
+    // Don't throw - cleanup failure shouldn't fail tests
+  }
+}
+
+/**
  * Wait for app to be fully loaded (hydrated)
  */
 export async function waitForAppReady(page: Page): Promise<void> {
@@ -136,11 +220,16 @@ export async function waitForMessage(page: Page, messageText: string, timeout: n
  * Clear local storage and cookies (for clean test state)
  */
 export async function clearBrowserState(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-    indexedDB.deleteDatabase('matrix-js-sdk');
-  });
+  try {
+    await page.evaluate(() => {
+      if (typeof localStorage !== 'undefined') localStorage.clear();
+      if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
+      if (typeof indexedDB !== 'undefined') indexedDB.deleteDatabase('matrix-js-sdk');
+    });
+  } catch (error) {
+    console.warn('Could not clear browser state:', error);
+    // Continue without clearing - this is not critical
+  }
 }
 
 /**

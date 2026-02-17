@@ -14,6 +14,7 @@ import { ReportMessageModal } from "@/components/modals/report-message-modal";
 import { UserSettingsModal } from "@/components/modals/user-settings-modal";
 import { CreateRoleModal } from "@/components/modals/create-role-modal";
 import { EditRoleModal } from "@/components/modals/edit-role-modal";
+import { DeleteRoleModal } from "@/components/modals/delete-role-modal";
 import { KickUserModal } from "@/components/modals/kick-user-modal";
 import { BanUserModal } from "@/components/modals/ban-user-modal";
 import { MuteUserModal } from "@/components/modals/mute-user-modal";
@@ -53,6 +54,7 @@ export function ModalProvider() {
       <UserSettingsModal />
       <CreateRoleModal />
       <EditRoleModal />
+      <DeleteRoleModal />
       <KickUserModal />
       <BanUserModal />
       <MuteUserModal />

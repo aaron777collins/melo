@@ -58,24 +58,15 @@ export function RolesPageClient({
     });
   };
 
-  const handleRoleDelete = async (roleId: string) => {
-    if (!confirm("Are you sure you want to delete this role? This action cannot be undone. All users with this role will be demoted to regular members.")) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const { deleteCustomRole } = await import("@/lib/matrix/roles");
-      await deleteCustomRole(serverId, roleId);
-      
-      // Refresh the page to show updated roles
-      router.refresh();
-    } catch (error) {
-      console.error("Failed to delete role:", error);
-      alert("Failed to delete role. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRoleDelete = async (role: MatrixRole) => {
+    onOpen("deleteRole", {
+      serverId,
+      role,
+      onSuccess: () => {
+        // Refresh the page to show updated roles
+        router.refresh();
+      }
+    });
   };
 
   const handleRoleReorder = async (reorderedRoles: MatrixRole[]) => {

@@ -23,10 +23,10 @@ export default async function ServerIdLayout({
 
   return (
     <div className="h-full">
-      <div className="hidden md:flex h-full w-60 z-20 flex-col fixed inset-y-0">
+      <div className="hidden md:flex h-full w-60 z-10 flex-col fixed inset-y-0 left-[312px]">
         <ServerSidebar serverId={spaceId} />
       </div>
-      <main className="h-full md:pl-60">{children}</main>
+      <main className="h-full md:pl-[552px]">{children}</main>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export class AuthPage {
     this.confirmPasswordInput = page.locator('input[placeholder*="confirm" i], input[type="password"]').last();
     this.submitButton = page.locator('button[type="submit"]');
     this.signUpLink = page.locator('a:has-text("Sign up"), a:has-text("Register"), a:has-text("Create account")');
-    this.errorMessage = page.locator('.text-red-400, .text-red-500, .bg-red-100, [role="alert"]');
+    this.errorMessage = page.locator('.text-red-400, .text-red-500, .bg-red-100').first();
   }
 
   async goto(type: 'sign-in' | 'sign-up' = 'sign-in') {

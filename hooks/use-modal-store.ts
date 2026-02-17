@@ -53,6 +53,7 @@ export type ModalType =
   // Role Management
   | "createRole"
   | "editRole"
+  | "deleteRole"
   | "memberRoleEditor"
   // Security Prompts
   | "securityPrompt"

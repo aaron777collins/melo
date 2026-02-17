@@ -1,35 +1,4 @@
 {
-  "cookies": [
-    {
-      "name": "matrix_session",
-      "value": "eyJ1c2VySWQiOiJAc29waGlldGVzdDpkZXYyLmFhcm9uY29sbGlucy5pbmZvIiwiYWNjZXNzVG9rZW4iOiJzeXRfYzI5d2FHbGxkR1Z6ZEFfaEpFWmtsUHRuSWhqd2ptZ2J6VUlfNDRTVzlLIiwiZGV2aWNlSWQiOiJDQVdOVVJSWVZRIiwiaG9tZXNlcnZlclVybCI6Imh0dHBzOi8vZGV2Mi5hYXJvbmNvbGxpbnMuaW5mby8iLCJjcmVhdGVkQXQiOiIyMDI2LTAyLTE1VDAxOjQ0OjU5LjU4NFoiLCJzZXNzaW9uSWQiOiJDQVdOVVJSWVZRLTE3NzExMTk4OTk1ODQiLCJleHBpcmVzQXQiOiIyMDI2LTAyLTE1VDAxOjQ5OjU5LjU1N1oifQ%3D%3D",
-      "domain": "dev2.aaroncollins.info",
-      "path": "/",
-      "expires": 1771120198.684078,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Strict"
-    },
-    {
-      "name": "matrix_refresh_token",
-      "value": "syr_c29waGlldGVzdA_LmWiFoLmpXBJmRYjkord_3zwKl5",
-      "domain": "dev2.aaroncollins.info",
-      "path": "/",
-      "expires": 1771120497.684231,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Strict"
-    }
-  ],
-  "origins": [
-    {
-      "origin": "https://dev2.aaroncollins.info",
-      "localStorage": [
-        {
-          "name": "mxjssdk_memory_filter_FILTER_SYNC_@sophietest:dev2.aaroncollins.info",
-          "value": "0"
-        }
-      ]
-    }
-  ]
+  "cookies": [],
+  "origins": []
 }

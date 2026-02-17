@@ -103,7 +103,7 @@ interface RoleManagerProps {
   /** Called when role is edited */
   onRoleEdit?: (role: MatrixRole) => void;
   /** Called when role is deleted */
-  onRoleDelete?: (roleId: string) => void;
+  onRoleDelete?: (role: MatrixRole) => void;
   /** Called when new role is created */
   onRoleCreate?: () => void;
 }
@@ -414,9 +414,9 @@ export function RoleManager({
     onRoleEdit?.(role);
   }, [onRoleEdit]);
 
-  const handleRoleDelete = useCallback((roleId: string) => {
-    setRoles(prev => prev.filter(r => r.id !== roleId));
-    onRoleDelete?.(roleId);
+  const handleRoleDelete = useCallback((role: MatrixRole) => {
+    setRoles(prev => prev.filter(r => r.id !== role.id));
+    onRoleDelete?.(role);
   }, [onRoleDelete]);
 
   const handleRoleDuplicate = useCallback((role: MatrixRole) => {
@@ -486,7 +486,7 @@ export function RoleManager({
                   onDragStart={handleDragStart}
                   onDragEnd={handleDragEnd}
                   onEdit={() => handleRoleEdit(role)}
-                  onDelete={() => handleRoleDelete(role.id)}
+                  onDelete={() => handleRoleDelete(role)}
                   onDuplicate={() => handleRoleDuplicate(role)}
                 />
               </div>

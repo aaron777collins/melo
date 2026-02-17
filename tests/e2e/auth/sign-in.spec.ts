@@ -88,7 +88,7 @@ test.describe('Sign In', () => {
     const authPage = new AuthPage(page);
     
     // Should have a sign-up link
-    const signUpLink = page.locator('a:has-text("Sign up"), a:has-text("Create account"), a:has-text("Register")');
+    const signUpLink = page.locator('a:has-text("Create one here")');
     await expect(signUpLink).toBeVisible();
   });
 

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Hash, Mic, Video, ShieldAlert, ShieldCheck, Loader2 } from "lucide-react";
 
-import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
-import { getClient } from "@/lib/matrix/client";
+import { useSpaces } from "@/hooks/use-spaces";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { ServerHeader } from "@/components/server/server-header";
@@ -16,86 +15,18 @@ interface ServerSidebarProps {
   serverId: string;
 }
 
-interface ChannelInfo {
-  id: string;
-  name: string;
-  type: "TEXT" | "AUDIO" | "VIDEO";
-}
-
-interface SpaceInfo {
-  id: string;
-  name: string;
-  topic?: string;
-  avatarUrl?: string;
-}
-
 export function ServerSidebar({ serverId }: ServerSidebarProps) {
   const router = useRouter();
-  const { session } = useMatrixAuth();
-  const [loading, setLoading] = useState(true);
-  const [space, setSpace] = useState<SpaceInfo | null>(null);
-  const [channels, setChannels] = useState<ChannelInfo[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { spaces, isLoading, error } = useSpaces();
 
-  useEffect(() => {
-    async function loadSpaceData() {
-      if (!session?.accessToken || !session?.homeserverUrl) {
-        setLoading(false);
-        return;
-      }
+  // Find the specific space for this server ID
+  const currentSpace = useMemo(() => {
+    return spaces.find(space => space.id === serverId);
+  }, [spaces, serverId]);
 
-      try {
-        const baseUrl = session.homeserverUrl.replace(/\/+$/, '');
-        
-        // Fetch space hierarchy
-        const hierarchyUrl = `${baseUrl}/_matrix/client/v1/rooms/${encodeURIComponent(serverId)}/hierarchy?limit=50`;
-        const response = await fetch(hierarchyUrl, {
-          headers: { 'Authorization': `Bearer ${session.accessToken}` },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch space: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const rooms = data.rooms || [];
-
-        // First room is the space itself
-        const spaceRoom = rooms.find((r: any) => r.room_id === serverId);
-        if (spaceRoom) {
-          setSpace({
-            id: spaceRoom.room_id,
-            name: spaceRoom.name || "Unknown Server",
-            topic: spaceRoom.topic,
-            avatarUrl: spaceRoom.avatar_url,
-          });
-        }
-
-        // Other rooms are channels
-        const channelRooms = rooms.filter((r: any) => 
-          r.room_id !== serverId && r.room_type !== "m.space"
-        );
-
-        setChannels(channelRooms.map((r: any) => ({
-          id: r.room_id,
-          name: r.name || "unnamed",
-          type: "TEXT" as const, // Matrix doesn't have channel types like Discord
-        })));
-
-      } catch (err) {
-        console.error("[ServerSidebar] Error:", err);
-        setError(err instanceof Error ? err.message : "Failed to load");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadSpaceData();
-  }, [serverId, session]);
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex flex-col h-full w-full bg-[#2B2D31] dark:bg-[#2B2D31]">
+      <div className="flex flex-col h-full w-full bg-[#2B2D31] dark:bg-[#2B2D31]" data-testid="space-loading">
         <div className="flex items-center justify-center h-full">
           <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
         </div>
@@ -103,63 +34,124 @@ export function ServerSidebar({ serverId }: ServerSidebarProps) {
     );
   }
 
-  if (error || !space) {
+  if (error || !currentSpace) {
     return (
-      <div className="flex flex-col h-full w-full bg-[#2B2D31] dark:bg-[#2B2D31]">
+      <div className="flex flex-col h-full w-full bg-[#2B2D31] dark:bg-[#2B2D31]" data-testid="space-error">
         <div className="flex items-center justify-center h-full p-4 text-center text-zinc-500">
-          {error || "Space not found"}
+          {error?.message || "Space not found"}
         </div>
       </div>
     );
   }
 
-  // For Matrix, everyone starts as a guest - admin would be the space creator
+  // For Matrix, everyone starts as a guest - admin would be determined by power levels
   const role = "guest";
 
+  // Group channels by type
+  const textChannels = currentSpace.channels.filter(ch => ch.type === "text");
+  const audioChannels = currentSpace.channels.filter(ch => ch.type === "voice" || ch.type === "audio");
+  const videoChannels = currentSpace.channels.filter(ch => ch.type === "video");
+
   return (
-    <div className="flex flex-col h-full text-primary w-full dark:bg-[#2B2D31] bg-[#F2F3F5]">
-      <ServerHeader 
-        server={{
-          id: space.id,
-          name: space.name,
-          imageUrl: space.avatarUrl || "",
-          inviteCode: "",
-        }} 
-        role={role} 
-      />
+    <div className="flex flex-col h-full text-primary w-full dark:bg-[#2B2D31] bg-[#F2F3F5]" data-testid="channels-sidebar">
+      <div data-testid="space-header">
+        <ServerHeader 
+          server={{
+            id: currentSpace.id,
+            name: currentSpace.name,
+            imageUrl: currentSpace.avatarUrl || "",
+            inviteCode: "",
+          }} 
+          role={role} 
+        />
+      </div>
       <ScrollArea className="flex-1 px-3">
         <div className="mt-2">
-          {channels.length > 0 && (
+          {/* Text Channels */}
+          {textChannels.length > 0 && (
             <ServerSection
               sectionType="channels"
               channelType={"TEXT" as any}
               role={role as any}
               label="Text Channels"
+              serverId={currentSpace.id}
             >
-              {channels.map((channel) => (
+              {textChannels.map((channel) => (
                 <ServerChannel
                   key={channel.id}
-                  channel={{
-                    id: channel.id,
-                    name: channel.name,
-                    type: "text",
-                    topic: null,
-                    categoryId: null,
-                    order: 0,
-                    hasUnread: false,
-                    mentionCount: 0,
-                  }}
+                  channel={channel}
                   server={{
-                    id: space.id,
-                    name: space.name,
+                    id: currentSpace.id,
+                    name: currentSpace.name,
                   }}
                   role={role}
                 />
               ))}
             </ServerSection>
           )}
+          
+          {/* Voice Channels */}
+          {audioChannels.length > 0 && (
+            <ServerSection
+              sectionType="channels"
+              channelType={"AUDIO" as any}
+              role={role as any}
+              label="Voice Channels"
+              serverId={currentSpace.id}
+            >
+              {audioChannels.map((channel) => (
+                <ServerChannel
+                  key={channel.id}
+                  channel={channel}
+                  server={{
+                    id: currentSpace.id,
+                    name: currentSpace.name,
+                  }}
+                  role={role}
+                />
+              ))}
+            </ServerSection>
+          )}
+          
+          {/* Video Channels */}
+          {videoChannels.length > 0 && (
+            <ServerSection
+              sectionType="channels"
+              channelType={"VIDEO" as any}
+              role={role as any}
+              label="Video Channels"
+              serverId={currentSpace.id}
+            >
+              {videoChannels.map((channel) => (
+                <ServerChannel
+                  key={channel.id}
+                  channel={channel}
+                  server={{
+                    id: currentSpace.id,
+                    name: currentSpace.name,
+                  }}
+                  role={role}
+                />
+              ))}
+            </ServerSection>
+          )}
+
+          {/* Show member count */}
+          <div className="mt-4 px-2 text-xs text-zinc-500 dark:text-zinc-400" data-testid="space-member-count">
+            {currentSpace.memberCount} {currentSpace.memberCount === 1 ? 'member' : 'members'}
+          </div>
+          
+          {/* Show space topic if it exists */}
+          {currentSpace.topic && (
+            <div className="mt-2 px-2 text-xs text-zinc-500 dark:text-zinc-400" data-testid="space-topic">
+              {currentSpace.topic}
+            </div>
+          )}
         </div>
       </ScrollArea>
+      
+      {/* Hidden element with space name for easier testing */}
+      <div className="sr-only" data-testid="space-name">{currentSpace.name}</div>
     </div>
   );
 }

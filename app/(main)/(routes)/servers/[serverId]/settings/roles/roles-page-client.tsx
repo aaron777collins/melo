@@ -50,30 +50,29 @@ export function RolesPageClient({
   };
 
   const handleRoleEdit = async (role: MatrixRole) => {
-    // TODO: Implement role editing
-    // This would open an edit modal similar to create role modal
-    console.log("Edit role:", role);
+    onOpen("editRole", {
+      serverId,
+      userPowerLevel,
+      space,
+      role,
+    });
   };
 
   const handleRoleDelete = async (roleId: string) => {
-    if (!confirm("Are you sure you want to delete this role? This action cannot be undone.")) {
+    if (!confirm("Are you sure you want to delete this role? This action cannot be undone. All users with this role will be demoted to regular members.")) {
       return;
     }
 
     setIsLoading(true);
     try {
-      // TODO: Implement role deletion via Matrix API
-      // This would:
-      // 1. Remove the custom role from space account data
-      // 2. Update affected members' power levels
-      // 3. Refresh the roles list
-      console.log("Delete role:", roleId);
+      const { deleteCustomRole } = await import("@/lib/matrix/roles");
+      await deleteCustomRole(serverId, roleId);
       
-      // For now, just refresh the page
+      // Refresh the page to show updated roles
       router.refresh();
     } catch (error) {
       console.error("Failed to delete role:", error);
-      // TODO: Show error toast
+      alert("Failed to delete role. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -82,17 +81,21 @@ export function RolesPageClient({
   const handleRoleReorder = async (reorderedRoles: MatrixRole[]) => {
     setIsLoading(true);
     try {
-      // TODO: Implement role reordering
-      // This would update the role hierarchy in Matrix space account data
-      console.log("Reorder roles:", reorderedRoles);
+      const { reorderCustomRoles } = await import("@/lib/matrix/roles");
       
-      // For now, just log the new order
-      reorderedRoles.forEach((role, index) => {
-        console.log(`${role.name}: position ${role.position}`);
-      });
+      // Create position mapping from the reordered roles
+      const rolePositions = reorderedRoles.map(role => ({
+        id: role.id,
+        position: role.position
+      }));
+      
+      await reorderCustomRoles(serverId, rolePositions);
+      
+      // Refresh the page to show updated order
+      router.refresh();
     } catch (error) {
       console.error("Failed to reorder roles:", error);
-      // TODO: Show error toast
+      alert("Failed to reorder roles. Please try again.");
     } finally {
       setIsLoading(false);
     }

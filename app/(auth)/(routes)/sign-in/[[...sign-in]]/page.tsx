@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Shield, Lock } from "lucide-react";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 import TwoFactorPrompt from "@/components/auth/two-factor-prompt";
 
@@ -11,20 +12,45 @@ import TwoFactorPrompt from "@/components/auth/two-factor-prompt";
  * 
  * Provides username/password login with homeserver selection.
  * Integrates with Matrix authentication context and Two-Factor Authentication.
+ * Supports private mode to restrict logins to a specific homeserver.
  */
+
+// Client-side access control config from environment
+function getClientConfig() {
+  const privateMode = process.env.NEXT_PUBLIC_MELO_PRIVATE_MODE !== 'false';
+  const allowedHomeserver = process.env.NEXT_PUBLIC_MELO_ALLOWED_HOMESERVER || 
+                            process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 
+                            'https://matrix.org';
+  return { privateMode, allowedHomeserver };
+}
+
 export default function SignInPage() {
   const router = useRouter();
   const { login, isLoading, error, clearError, complete2FALogin } = useMatrixAuth();
   
+  // Get private mode config
+  const config = getClientConfig();
+  
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    homeserver: "https://matrix.org"
+    // In private mode, use the configured homeserver
+    homeserver: config.privateMode ? config.allowedHomeserver : "https://matrix.org"
   });
 
   const [showTwoFactorPrompt, setShowTwoFactorPrompt] = useState(false);
-
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  const [accessDeniedError, setAccessDeniedError] = useState<string | null>(null);
+
+  // Reset homeserver if config changes
+  useEffect(() => {
+    if (config.privateMode) {
+      setFormData(prev => ({
+        ...prev,
+        homeserver: config.allowedHomeserver
+      }));
+    }
+  }, [config.privateMode, config.allowedHomeserver]);
 
   const validateField = (field: string, value: string) => {
     let error = '';
@@ -41,6 +67,9 @@ export default function SignInPage() {
         }
         break;
       case 'homeserver':
+        // Skip validation in private mode (homeserver is fixed)
+        if (config.privateMode) break;
+        
         if (!value.trim()) {
           error = 'Homeserver is required';
         } else {
@@ -59,22 +88,26 @@ export default function SignInPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    clearError(); // Clear previous errors
+    clearError();
     setFieldErrors({});
+    setAccessDeniedError(null);
     
     // Validate all fields
     const isUsernameValid = validateField('username', formData.username);
     const isPasswordValid = validateField('password', formData.password);
-    const isHomeserverValid = validateField('homeserver', formData.homeserver);
+    const isHomeserverValid = config.privateMode || validateField('homeserver', formData.homeserver);
     
     if (!isUsernameValid || !isPasswordValid || !isHomeserverValid) {
-      return; // Form validation failed
+      return;
     }
+
+    // Use configured homeserver in private mode
+    const homeserver = config.privateMode ? config.allowedHomeserver : formData.homeserver;
 
     const result = await login(
       formData.username,
       formData.password,
-      formData.homeserver
+      homeserver
     );
 
     if (result === true) {
@@ -103,9 +136,13 @@ export default function SignInPage() {
       [field]: value
     }));
     
-    // Clear field error when user starts typing
     if (fieldErrors[field]) {
       setFieldErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    
+    // Clear access denied error when user makes changes
+    if (accessDeniedError) {
+      setAccessDeniedError(null);
     }
   };
 
@@ -122,43 +159,82 @@ export default function SignInPage() {
     );
   }
 
+  // Extract homeserver display name
+  const getHomeserverName = (url: string) => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return url;
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#313338]">
       <div className="bg-[#1e1f22] p-8 rounded-lg shadow-lg max-w-md w-full">
         <h1 className="text-2xl font-bold text-white mb-6 text-center">
           Welcome to Melo
         </h1>
+        
+        {/* Private Server Badge */}
+        {config.privateMode && (
+          <div 
+            className="flex items-center justify-center gap-2 mb-4 p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-lg"
+            data-testid="private-mode-badge"
+          >
+            <Shield className="h-4 w-4 text-indigo-400" />
+            <span className="text-indigo-300 text-sm font-medium">
+              Private Server
+            </span>
+          </div>
+        )}
+        
         <p className="text-zinc-400 text-center mb-6">
-          Sign in to your Matrix account
+          {config.privateMode 
+            ? `Sign in to ${getHomeserverName(config.allowedHomeserver)}`
+            : "Sign in to your Matrix account"
+          }
         </p>
         
         {/* Error Display */}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
-            <p className="text-red-400 text-sm">{error}</p>
+        {(error || accessDeniedError) && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4" data-testid="error-message">
+            <p className="text-red-400 text-sm">{error || accessDeniedError}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Homeserver Input */}
-          <div>
-            <label className="block text-zinc-300 text-sm font-medium mb-2">
-              Homeserver
-            </label>
-            <input
-              type="url"
-              placeholder="https://matrix.org"
-              value={formData.homeserver}
-              onChange={handleInputChange("homeserver")}
-              disabled={isLoading}
-              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                fieldErrors.homeserver ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
-              }`}
-            />
-            {fieldErrors.homeserver && (
-              <p className="text-red-400 text-sm mt-1">{fieldErrors.homeserver}</p>
-            )}
-          </div>
+          {/* Homeserver Input - Hidden in Private Mode */}
+          {!config.privateMode && (
+            <div>
+              <label className="block text-zinc-300 text-sm font-medium mb-2">
+                Homeserver
+              </label>
+              <input
+                type="url"
+                placeholder="https://matrix.org"
+                value={formData.homeserver}
+                onChange={handleInputChange("homeserver")}
+                disabled={isLoading}
+                data-testid="homeserver-input"
+                className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+                  fieldErrors.homeserver ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
+                }`}
+              />
+              {fieldErrors.homeserver && (
+                <p className="text-red-400 text-sm mt-1">{fieldErrors.homeserver}</p>
+              )}
+            </div>
+          )}
+
+          {/* Private Mode Homeserver Display */}
+          {config.privateMode && (
+            <div className="flex items-center gap-2 p-3 bg-zinc-700/30 rounded border border-zinc-600/50">
+              <Lock className="h-4 w-4 text-zinc-500" />
+              <span className="text-zinc-400 text-sm">
+                {getHomeserverName(config.allowedHomeserver)}
+              </span>
+            </div>
+          )}
 
           {/* Username Input */}
           <div>
@@ -167,10 +243,14 @@ export default function SignInPage() {
             </label>
             <input
               type="text"
-              placeholder="@user:matrix.org or just username"
+              placeholder={config.privateMode 
+                ? "username" 
+                : "@user:matrix.org or just username"
+              }
               value={formData.username}
               onChange={handleInputChange("username")}
               disabled={isLoading}
+              data-testid="username-input"
               className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 fieldErrors.username ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
               }`}
@@ -191,6 +271,7 @@ export default function SignInPage() {
               value={formData.password}
               onChange={handleInputChange("password")}
               disabled={isLoading}
+              data-testid="password-input"
               className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 fieldErrors.password ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
               }`}
@@ -204,6 +285,7 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={isLoading}
+            data-testid="login-button"
             className="w-full p-3 rounded bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? "Signing In..." : "Sign In"}
@@ -223,11 +305,13 @@ export default function SignInPage() {
           </p>
         </div>
 
-        {/* Matrix Info */}
+        {/* Info Box */}
         <div className="mt-6 p-3 bg-zinc-700/20 rounded border border-zinc-600/30">
           <p className="text-zinc-400 text-xs text-center">
-            Melo uses the Matrix protocol for secure, decentralized communication.
-            Use your existing Matrix account or register on any Matrix homeserver.
+            {config.privateMode 
+              ? "This is a private Melo instance. Only accounts from the configured homeserver can sign in."
+              : "Melo uses the Matrix protocol for secure, decentralized communication. Use your existing Matrix account or register on any Matrix homeserver."
+            }
           </p>
         </div>
       </div>

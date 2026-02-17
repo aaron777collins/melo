@@ -2,6 +2,7 @@
  * Notification Job Handlers
  * 
  * Handles push notification jobs for real-time user notifications.
+ * Enhanced with Web Push API integration and cross-browser compatibility.
  */
 
 export interface PushNotificationPayload {
@@ -20,6 +21,21 @@ export interface PushNotificationPayload {
   tag?: string;
   requireInteraction?: boolean;
   silent?: boolean;
+  vibrate?: number[];
+  timestamp?: number;
+  
+  // Matrix-specific fields
+  roomId?: string;
+  eventId?: string;
+  senderId?: string;
+  notificationType?: string;
+  
+  // Cross-browser compatibility
+  browserSpecific?: {
+    chrome?: Record<string, any>;
+    firefox?: Record<string, any>;
+    safari?: Record<string, any>;
+  };
 }
 
 export interface BatchNotificationPayload {
@@ -36,6 +52,99 @@ export interface DigestNotificationPayload {
 }
 
 class NotificationHandler {
+  /**
+   * Detect user's browser for compatibility optimization
+   */
+  private detectBrowser(userAgent?: string): string {
+    const ua = userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : '');
+    
+    if (ua.includes('Chrome') && !ua.includes('Edg')) return 'chrome';
+    if (ua.includes('Firefox')) return 'firefox';
+    if (ua.includes('Safari') && !ua.includes('Chrome')) return 'safari';
+    if (ua.includes('Edg')) return 'edge';
+    
+    return 'unknown';
+  }
+  
+  /**
+   * Optimize notification payload for specific browsers
+   */
+  private optimizeForBrowser(payload: PushNotificationPayload, browser: string): PushNotificationPayload {
+    const optimized = { ...payload };
+    
+    switch (browser) {
+      case 'chrome':
+        // Chrome supports most features
+        optimized.vibrate = payload.vibrate || [200, 100, 200];
+        optimized.requireInteraction = payload.requireInteraction || false;
+        break;
+        
+      case 'firefox':
+        // Firefox has some limitations
+        optimized.actions = payload.actions?.slice(0, 2); // Firefox supports max 2 actions
+        if (payload.image && payload.image.length > 1024) {
+          delete optimized.image; // Firefox has strict image size limits
+        }
+        break;
+        
+      case 'safari':
+        // Safari push is more limited
+        optimized.actions = undefined; // Safari doesn't support action buttons well
+        optimized.vibrate = undefined; // No vibration support on macOS
+        optimized.requireInteraction = false; // Not well supported
+        break;
+        
+      case 'edge':
+        // Edge generally follows Chrome behavior
+        optimized.vibrate = payload.vibrate || [200, 100, 200];
+        break;
+        
+      default:
+        // Conservative fallback for unknown browsers
+        optimized.actions = undefined;
+        optimized.vibrate = undefined;
+        optimized.requireInteraction = false;
+        break;
+    }
+    
+    // Apply browser-specific overrides if provided
+    if (payload.browserSpecific?.[browser]) {
+      Object.assign(optimized, payload.browserSpecific[browser]);
+    }
+    
+    return optimized;
+  }
+  
+  /**
+   * Send Web Push notification with cross-browser optimization
+   */
+  async sendWebPushNotification(payload: PushNotificationPayload, userAgent?: string): Promise<{
+    success: boolean;
+    messageId?: string;
+    browser?: string;
+    optimized?: boolean;
+  }> {
+    const browser = this.detectBrowser(userAgent);
+    const optimizedPayload = this.optimizeForBrowser(payload, browser);
+    
+    console.log(`Sending optimized push notification for ${browser}:`, {
+      userId: payload.userId,
+      title: payload.title,
+      browser,
+      hasActions: !!optimizedPayload.actions?.length,
+      hasVibration: !!optimizedPayload.vibrate,
+      requiresInteraction: optimizedPayload.requireInteraction
+    });
+    
+    const result = await this.sendPushNotification(optimizedPayload);
+    
+    return {
+      ...result,
+      browser,
+      optimized: true
+    };
+  }
+  
   /**
    * Send push notification to a user
    */

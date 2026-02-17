@@ -10,9 +10,10 @@ import { redirect } from "next/navigation";
 
 import { currentProfile } from "@/lib/current-profile";
 import { NotificationForm } from "@/components/settings/notification-form";
+import { PushSettings } from "@/components/notifications/push-settings";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Bell, Settings, ArrowRight } from "lucide-react";
+import { Bell, Settings, ArrowRight, Smartphone } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
@@ -52,6 +53,32 @@ export default async function NotificationsPage() {
         </div>
 
         <Separator />
+
+        {/* Push Notification Settings */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Smartphone className="h-5 w-5" />
+            <h2 className="text-lg font-semibold">Push Notifications</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Receive notifications even when Melo is closed or in the background.
+          </p>
+        </div>
+        
+        <PushSettings />
+        
+        <Separator />
+
+        {/* In-App Notification Settings */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            <h2 className="text-lg font-semibold">In-App Notifications</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Configure which events trigger notifications and how they appear.
+          </p>
+        </div>
 
         {/* Notification Form */}
         <NotificationForm profile={profile} />

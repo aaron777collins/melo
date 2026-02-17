@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { loginWithPassword, validateSession as matrixValidateSession, MatrixAuthError } from "@/lib/matrix/auth";
 import { setSessionCookie, setTempSessionCookie } from "@/lib/matrix/cookies";
-import {  createClient  } from "@/lib/matrix/matrix-sdk-exports";
+import { createClient } from "@/lib/matrix/matrix-sdk-exports";
+import { isLoginAllowed, getAccessControlConfig } from "@/lib/matrix/access-control";
 
 /**
  * Matrix Authentication Login
@@ -105,8 +106,31 @@ export async function POST(req: Request) {
       );
     }
 
+    // Get the target homeserver URL
+    const targetHomeserver = homeserverUrl || process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL;
+
+    // Access Control Check - BEFORE Matrix authentication
+    // This prevents unauthorized homeservers from even attempting login
+    const accessCheck = isLoginAllowed(targetHomeserver);
+    if (!accessCheck.allowed) {
+      console.log("[AUTH_LOGIN] Access denied - homeserver not allowed:", targetHomeserver);
+      const config = getAccessControlConfig();
+      return NextResponse.json(
+        { 
+          success: false,
+          error: { 
+            code: accessCheck.code || "M_FORBIDDEN", 
+            message: accessCheck.reason || "Access denied",
+            privateMode: config.privateMode,
+            allowedHomeserver: config.allowedHomeserver,
+          } 
+        },
+        { status: 403 }
+      );
+    }
+
     // Perform Matrix login
-    console.log("[AUTH_LOGIN] Attempting login for:", username, "to", homeserverUrl);
+    console.log("[AUTH_LOGIN] Attempting login for:", username, "to", targetHomeserver);
     
     const session = await loginWithPassword(username, password, {
       homeserverUrl: homeserverUrl || process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL,

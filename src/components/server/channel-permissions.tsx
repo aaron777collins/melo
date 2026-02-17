@@ -50,6 +50,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useChannelPermissions } from '@/hooks/use-channel-permissions';
+import { useRoom } from '@/hooks/use-room';
 import { PERMISSION_CATEGORIES, type MeloPermissions } from '@/lib/matrix/permissions';
 import rolesService from '@/lib/matrix/roles';
 import type { 
@@ -77,6 +78,9 @@ export function ChannelPermissions({ channelId, currentUserId }: ChannelPermissi
     refreshPermissions
   } = useChannelPermissions({ channelId, userId: currentUserId });
 
+  // Get room members from Matrix room state
+  const { members: roomMembers, isLoading: roomLoading } = useRoom(channelId);
+
   const [activeTab, setActiveTab] = useState<'roles' | 'users' | 'bulk'>('roles');
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<string>('');
@@ -87,11 +91,10 @@ export function ChannelPermissions({ channelId, currentUserId }: ChannelPermissi
 
   // Get available roles for the channel
   const [availableRoles, setAvailableRoles] = useState<Array<{ id: string; name: string; powerLevel: number }>>([]);
-  const [availableUsers, setAvailableUsers] = useState<Array<{ id: string; displayName: string }>>([]);
 
-  // Load available roles and users
+  // Load available roles
   React.useEffect(() => {
-    const loadAvailableTargets = async () => {
+    const loadAvailableRoles = async () => {
       try {
         const customRoles = await rolesService.getCustomRoles(channelId);
         setAvailableRoles(customRoles.map(role => ({
@@ -99,20 +102,27 @@ export function ChannelPermissions({ channelId, currentUserId }: ChannelPermissi
           name: role.name,
           powerLevel: role.powerLevel
         })));
-        
-        // TODO: Load actual users from the room/server
-        // For now, using placeholder data
-        setAvailableUsers([
-          { id: '@user1:matrix.org', displayName: 'User 1' },
-          { id: '@user2:matrix.org', displayName: 'User 2' }
-        ]);
       } catch (error) {
-        console.error('Failed to load available targets:', error);
+        console.error('Failed to load available roles:', error);
       }
     };
 
-    loadAvailableTargets();
+    loadAvailableRoles();
   }, [channelId]);
+
+  // Process room members to get available users
+  const availableUsers = useMemo(() => {
+    if (!roomMembers) return [];
+
+    // Filter for joined members and format for the UI
+    return roomMembers
+      .filter(member => member.membership === 'join')
+      .map(member => ({
+        id: member.userId,
+        displayName: member.name || member.rawDisplayName || member.userId
+      }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }, [roomMembers]);
 
   const getPermissionIcon = (category: string) => {
     const iconMap = {
@@ -196,12 +206,12 @@ export function ChannelPermissions({ channelId, currentUserId }: ChannelPermissi
     }
   };
 
-  if (isLoading) {
+  if (isLoading || roomLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Loading permissions...</p>
+          <p className="text-sm text-muted-foreground">Loading permissions and users...</p>
         </div>
       </div>
     );

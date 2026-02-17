@@ -16,10 +16,11 @@ import TwoFactorPrompt from "@/components/auth/two-factor-prompt";
  */
 
 // Client-side access control config from environment
+// Private mode is DEFAULT - only MELO_PUBLIC_MODE=true disables it
 function getClientConfig() {
-  const privateMode = process.env.NEXT_PUBLIC_MELO_PRIVATE_MODE !== 'false';
-  const allowedHomeserver = process.env.NEXT_PUBLIC_MELO_ALLOWED_HOMESERVER || 
-                            process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 
+  const publicMode = process.env.NEXT_PUBLIC_MELO_PUBLIC_MODE === 'true';
+  const privateMode = !publicMode; // Private is default
+  const allowedHomeserver = process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 
                             'https://matrix.org';
   return { privateMode, allowedHomeserver };
 }

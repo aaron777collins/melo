@@ -77,6 +77,14 @@ async function findOrCreateDMRoom(
         creation_content: {
           type: 'm.room',
         },
+        // E2EE is MANDATORY - all rooms must be encrypted
+        initial_state: [
+          {
+            type: 'm.room.encryption',
+            state_key: '',
+            content: { algorithm: 'm.megolm.v1.aes-sha2' }
+          }
+        ],
       }),
       cache: 'no-store',
     });

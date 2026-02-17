@@ -150,7 +150,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
       server: {
         visibility: Visibility.Private,
         joinRule: "invite",
-        encrypted: false,
+        encrypted: true,
         powerLevels: DEFAULT_POWER_LEVELS,
       },
       categories: [
@@ -244,7 +244,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
       server: {
         visibility: Visibility.Private,
         joinRule: "invite",
-        encrypted: false,
+        encrypted: true,
         powerLevels: DEFAULT_POWER_LEVELS,
       },
       categories: [
@@ -337,7 +337,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
       server: {
         visibility: Visibility.Private,
         joinRule: "invite",
-        encrypted: false,
+        encrypted: true,
         powerLevels: DEFAULT_POWER_LEVELS,
       },
       categories: [
@@ -384,7 +384,7 @@ export const SERVER_TEMPLATES: ServerTemplate[] = [
       server: {
         visibility: Visibility.Private,
         joinRule: "invite",
-        encrypted: false,
+        encrypted: true,
         powerLevels: DEFAULT_POWER_LEVELS,
       },
       categories: [

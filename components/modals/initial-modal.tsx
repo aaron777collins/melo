@@ -66,6 +66,12 @@ export function InitialModal() {
 
       // Build initial state events
       const initialState: any[] = [
+        // E2EE is MANDATORY - all rooms must be encrypted
+        {
+          type: "m.room.encryption",
+          state_key: "",
+          content: { algorithm: "m.megolm.v1.aes-sha2" }
+        },
         // Enable guest access (optional)
         {
           type: "m.room.guest_access",
@@ -122,6 +128,12 @@ export function InitialModal() {
         visibility: "private" as any,
         preset: "private_chat" as any,
         initial_state: [
+          // E2EE is MANDATORY - all rooms must be encrypted
+          {
+            type: "m.room.encryption",
+            state_key: "",
+            content: { algorithm: "m.megolm.v1.aes-sha2" }
+          },
           // Link to parent space
           {
             type: "m.space.parent",

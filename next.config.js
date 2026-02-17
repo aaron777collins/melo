@@ -6,41 +6,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  webpack: (config, { dev, isServer }) => {
-    // Basic Node.js fallbacks
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        "net": false,
-        "tls": false,
-        "crypto": false,
-        "stream": false,
-        "os": false,
-        "path": false,
-        "fs": false,
-        "buffer": false,
-        "util": false,
-      };
-    }
-
-    // Matrix SDK single entrypoint fix to prevent multiple entrypoints
-    if (!dev) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'matrix-js-sdk': require.resolve('./lib/matrix/matrix-sdk-exports.ts'),
-      };
-    }
-
-    // Externalize other problematic dependencies
-    config.externals.push({
-      "utf-8-validate": "commonjs utf-8-validate",
-      bufferutil: "commonjs bufferutil",
-      "web-push": "commonjs web-push",
-      "livekit-server-sdk": "commonjs livekit-server-sdk",
-    });
-
-    return config;
-  },
   images: {
     domains: ["uploadthing.com"]
   },

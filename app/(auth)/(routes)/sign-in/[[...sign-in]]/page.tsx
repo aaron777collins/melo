@@ -4,22 +4,25 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
+import TwoFactorPrompt from "@/components/auth/two-factor-prompt";
 
 /**
  * Matrix Sign In Page
  * 
  * Provides username/password login with homeserver selection.
- * Integrates with Matrix authentication context.
+ * Integrates with Matrix authentication context and Two-Factor Authentication.
  */
 export default function SignInPage() {
   const router = useRouter();
-  const { login, isLoading, error, clearError } = useMatrixAuth();
+  const { login, isLoading, error, clearError, complete2FALogin } = useMatrixAuth();
   
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     homeserver: "https://matrix.org"
   });
+
+  const [showTwoFactorPrompt, setShowTwoFactorPrompt] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,15 +32,29 @@ export default function SignInPage() {
       return;
     }
 
-    const success = await login(
+    const result = await login(
       formData.username,
       formData.password,
       formData.homeserver
     );
 
-    if (success) {
+    if (result === true) {
       router.push("/");
+    } else if (result === "2fa_required") {
+      setShowTwoFactorPrompt(true);
     }
+    // If result is false, error is handled by the auth provider
+  };
+
+  const handleTwoFactorSuccess = (session: any, user: any) => {
+    complete2FALogin(session, user);
+    setShowTwoFactorPrompt(false);
+    router.push("/");
+  };
+
+  const handleTwoFactorCancel = () => {
+    setShowTwoFactorPrompt(false);
+    clearError();
   };
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,6 +63,19 @@ export default function SignInPage() {
       [field]: e.target.value
     }));
   };
+
+  // Show 2FA prompt if required
+  if (showTwoFactorPrompt) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#313338]">
+        <TwoFactorPrompt 
+          onVerificationSuccess={handleTwoFactorSuccess}
+          onCancel={handleTwoFactorCancel}
+          loading={isLoading}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#313338]">

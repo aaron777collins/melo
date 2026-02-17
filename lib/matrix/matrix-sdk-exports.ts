@@ -55,6 +55,47 @@ export const RoomStateEvent = typeof window !== 'undefined' ? require('matrix-js
 export const RoomMemberEvent = typeof window !== 'undefined' ? require('matrix-js-sdk').RoomMemberEvent : {};
 export const UserEvent = typeof window !== 'undefined' ? require('matrix-js-sdk').UserEvent : {};
 
+// Visibility enum - needs to work during SSG/SSR for server template definitions
+export const Visibility = {
+  Public: 'public',
+  Private: 'private'
+} as const;
+export type Visibility = typeof Visibility[keyof typeof Visibility];
+
+// MatrixEvent as value (for instanceof checks, etc.)
+export const MatrixEvent = typeof window !== 'undefined' ? require('matrix-js-sdk').MatrixEvent : class MockMatrixEvent {};
+
+// Constants helper
+export const getMatrixConstants = () => {
+  if (typeof window === 'undefined') {
+    return {
+      LOCAL_NOTIFICATION_SETTINGS_PREFIX: 'im.vector.setting.push_rules',
+      UNSTABLE_MSC2545_URLS: [],
+    };
+  }
+  const sdk = require('matrix-js-sdk');
+  return {
+    LOCAL_NOTIFICATION_SETTINGS_PREFIX: sdk.LOCAL_NOTIFICATION_SETTINGS_PREFIX || 'im.vector.setting.push_rules',
+    UNSTABLE_MSC2545_URLS: sdk.UNSTABLE_MSC2545_URLS || [],
+    Visibility: sdk.Visibility,
+    Preset: sdk.Preset,
+    JoinRule: sdk.JoinRule,
+    GuestAccess: sdk.GuestAccess,
+  };
+};
+
+// Room creation helpers
+export const Preset = typeof window !== 'undefined' ? require('matrix-js-sdk').Preset : { PrivateChat: 'private_chat', PublicChat: 'public_chat', TrustedPrivateChat: 'trusted_private_chat' };
+export const JoinRule = typeof window !== 'undefined' ? require('matrix-js-sdk').JoinRule : { Public: 'public', Knock: 'knock', Invite: 'invite', Private: 'private', Restricted: 'restricted' };
+export const GuestAccess = typeof window !== 'undefined' ? require('matrix-js-sdk').GuestAccess : { CanJoin: 'can_join', Forbidden: 'forbidden' };
+
+// Device and crypto types - defined directly to avoid deep import issues
+export enum DeviceVerification {
+  Blocked = -1,
+  Unverified = 0,
+  Verified = 1
+}
+
 // Utility function to check if we're in a client environment
 export function isClientEnvironment(): boolean {
   return typeof window !== 'undefined';

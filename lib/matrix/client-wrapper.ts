@@ -105,6 +105,9 @@ export async function createClient(config: any) {
   return sdk.createClient(config);
 }
 
+// Alias for backward compatibility
+export const createClientSafe = createClient;
+
 // ============================================================================
 // SYNCHRONOUS EXPORTS (for immediate use after dynamic loading)
 // ============================================================================

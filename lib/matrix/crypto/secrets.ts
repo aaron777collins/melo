@@ -9,7 +9,7 @@
  */
 
 import { getClient } from "../client";
-import { DeviceVerification } from "matrix-js-sdk/lib/models/device";
+import { DeviceVerification } from "@/lib/matrix/matrix-sdk-exports";
 import {
   generateRecoveryKey,
   deriveRecoveryKeyFromPassphrase,

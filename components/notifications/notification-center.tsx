@@ -40,7 +40,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { NotificationType, type NotificationData } from "@/lib/matrix/notifications";
+import { NotificationType, type NotificationData } from "@/lib/matrix/notifications.types";
 
 // =============================================================================
 // Types

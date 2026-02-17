@@ -50,7 +50,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { NotificationType, type NotificationTemplate } from "@/lib/matrix/notifications";
+import { NotificationType, type NotificationTemplate } from "@/lib/matrix/notifications.types";
 
 // =============================================================================
 // Types

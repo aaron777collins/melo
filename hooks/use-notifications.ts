@@ -10,7 +10,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { 
-  getNotificationService,
   type NotificationSettings,
   type NotificationData,
   DEFAULT_NOTIFICATION_SETTINGS,
@@ -18,7 +17,8 @@ import {
   getNotificationPermission,
   areNotificationsPermitted,
   requestNotificationPermission
-} from "@/lib/matrix/notifications";
+} from "@/lib/matrix/notifications.types";
+import { getNotificationService } from "@/lib/matrix/notifications";
 
 // =============================================================================
 // Types

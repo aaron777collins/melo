@@ -7,159 +7,39 @@
  * - Push notifications (framework setup)
  * - Notification templates and customization
  * - Integration with Matrix client events
+ * 
+ * NOTE: For client-side components, import types from './notifications.types'
+ * to avoid bundling server-only dependencies (web-push).
  */
 
 import {  MatrixClient, MatrixEvent, Room, RoomMember, RoomEvent, RoomMemberEvent  } from "@/lib/matrix/matrix-sdk-exports";
 import { getClient } from "./client";
 
-// =============================================================================
-// Types
-// =============================================================================
+// Re-export types from types file for backwards compatibility
+export {
+  NotificationType,
+  type NotificationSettings,
+  type NotificationTemplate,
+  type NotificationAction,
+  type NotificationData,
+  DEFAULT_NOTIFICATION_SETTINGS,
+  DEFAULT_TEMPLATES,
+  isNotificationSupported,
+  getNotificationPermission,
+  areNotificationsPermitted,
+  requestNotificationPermission,
+} from "./notifications.types";
 
-export enum NotificationType {
-  DirectMessage = "dm",
-  Mention = "mention", 
-  RoomMessage = "room_message",
-  RoomInvite = "room_invite",
-  ThreadReply = "thread_reply",
-  KeywordHighlight = "keyword_highlight",
-  Reaction = "reaction",
-}
-
-export interface NotificationSettings {
-  enabled: boolean;
-  directMessages: boolean;
-  mentions: boolean;
-  replies: boolean;
-  reactions: boolean;
-  threadReplies: boolean;
-  roomInvites: boolean;
-  allRoomMessages: boolean;
-  keywords: string[];
-  sound: boolean;
-  desktop: boolean;
-  duration: number;
-  quietHours: {
-    enabled: boolean;
-    start: string; // "22:00"
-    end: string;   // "08:00"
-  };
-}
-
-export interface NotificationTemplate {
-  id: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  actions?: NotificationAction[];
-  customization?: {
-    sound?: string;
-    icon?: string;
-    badge?: string;
-    vibrate?: number[];
-  };
-}
-
-export interface NotificationAction {
-  id: string;
-  title: string;
-  icon?: string;
-}
-
-export interface NotificationData {
-  id: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  timestamp: Date;
-  read: boolean;
-  roomId?: string;
-  eventId?: string;
-  senderId?: string;
-  avatar?: string;
-  actions?: NotificationAction[];
-}
-
-// =============================================================================
-// Default Configuration
-// =============================================================================
-
-export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
-  enabled: true,
-  directMessages: true,
-  mentions: true,
-  replies: true,
-  reactions: false,
-  threadReplies: true,
-  roomInvites: true,
-  allRoomMessages: false,
-  keywords: [],
-  sound: true,
-  desktop: true,
-  duration: 5000,
-  quietHours: {
-    enabled: false,
-    start: "22:00",
-    end: "08:00"
-  }
-};
-
-const DEFAULT_TEMPLATES: NotificationTemplate[] = [
-  {
-    id: "dm_default",
-    type: NotificationType.DirectMessage,
-    title: "{sender}",
-    body: "{message}",
-    actions: [
-      { id: "reply", title: "Reply", icon: "💬" },
-      { id: "dismiss", title: "Dismiss" }
-    ]
-  },
-  {
-    id: "mention_default", 
-    type: NotificationType.Mention,
-    title: "{sender} in {room}",
-    body: "{message}",
-    actions: [
-      { id: "view", title: "View", icon: "👀" },
-      { id: "dismiss", title: "Dismiss" }
-    ]
-  },
-  {
-    id: "invite_default",
-    type: NotificationType.RoomInvite,
-    title: "Room invitation from {sender}",
-    body: "You've been invited to {room}",
-    actions: [
-      { id: "accept", title: "Accept", icon: "✅" },
-      { id: "decline", title: "Decline", icon: "❌" }
-    ]
-  }
-];
-
-// =============================================================================
-// Utility Functions  
-// =============================================================================
-
-export function isNotificationSupported(): boolean {
-  return typeof window !== "undefined" && "Notification" in window;
-}
-
-export function getNotificationPermission(): NotificationPermission {
-  if (!isNotificationSupported()) return "denied";
-  return Notification.permission;
-}
-
-export function areNotificationsPermitted(): boolean {
-  return getNotificationPermission() === "granted";
-}
-
-export async function requestNotificationPermission(): Promise<boolean> {
-  if (!isNotificationSupported()) return false;
-  
-  const permission = await Notification.requestPermission();
-  return permission === "granted";
-}
+// Import types for local use
+import {
+  NotificationType,
+  type NotificationSettings,
+  type NotificationTemplate,
+  type NotificationData,
+  DEFAULT_NOTIFICATION_SETTINGS,
+  DEFAULT_TEMPLATES,
+  areNotificationsPermitted,
+} from "./notifications.types";
 
 function isInQuietHours(settings: NotificationSettings): boolean {
   if (!settings.quietHours.enabled) return false;
@@ -599,6 +479,9 @@ export class MatrixNotificationService {
 
   /**
    * Send push notification for Matrix event
+   * 
+   * Note: Push notifications are sent via API endpoint to avoid bundling
+   * server-only dependencies (web-push) into the client bundle.
    */
   private async sendPushNotification(
     event: MatrixEvent,
@@ -606,59 +489,23 @@ export class MatrixNotificationService {
     notificationType: NotificationType
   ): Promise<void> {
     try {
-      // Only import server push service on server-side
-      if (typeof window !== 'undefined') {
-        console.log('Push notifications should be sent from server-side only');
-        return;
+      // Send push notification via API endpoint (server-side handling)
+      // This avoids bundling web-push and other server-only dependencies
+      const response = await fetch('/api/notifications/push/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId: event.getId(),
+          roomId: room.roomId,
+          notificationType: notificationType,
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to send push notification via API');
       }
-
-      // Import server push service dynamically to avoid client-side issues
-      const { getServerPushService } = await import('@/lib/notifications/push-service-server');
-      const serverPushService = getServerPushService();
-
-      if (!serverPushService.isEnabled()) {
-        console.log('Push notifications disabled, skipping');
-        return;
-      }
-
-      // Get user push subscriptions
-      if (!this.client) {
-        console.warn('Matrix client not available for push notifications');
-        return;
-      }
-
-      try {
-        const data = await (this.client as any).getAccountData('com.melo.push_subscriptions');
-        const content = data?.getContent();
-        const subscriptions = content?.subscriptions || [];
-        
-        if (subscriptions.length === 0) {
-          console.log('No push subscriptions found');
-          return;
-        }
-
-        // Send push notification with Matrix client
-        const results = await serverPushService.sendMatrixNotification(event, room, notificationType, subscriptions);
-        
-        // Handle results - remove expired subscriptions
-        const shouldUnsubscribe = results.filter(r => r.shouldUnsubscribe);
-        if (shouldUnsubscribe.length > 0) {
-          const validSubscriptions = subscriptions.filter((sub: any) => 
-            !shouldUnsubscribe.some(r => r.subscriptionId === sub.id)
-          );
-          
-          await (this.client as any).setAccountData('com.melo.push_subscriptions', {
-            subscriptions: validSubscriptions,
-            updated_at: new Date().toISOString()
-          });
-          
-          console.log(`Removed ${shouldUnsubscribe.length} expired subscriptions`);
-        }
-        
-      } catch (error) {
-        console.error('Failed to get push subscriptions:', error);
-      }
-      
     } catch (error) {
       console.error('Failed to send push notification:', error);
     }

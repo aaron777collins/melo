@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 
 import {
   Dialog,
@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
+import { useMatrix } from "@/components/providers/matrix-provider";
 import { getClient } from "@/lib/matrix/client";
 import { MatrixFileUpload } from "@/components/matrix-file-upload";
 
@@ -41,6 +42,7 @@ export function InitialModal() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { session } = useMatrixAuth();
+  const { isReady, syncState, cryptoState } = useMatrix();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -190,6 +192,30 @@ export function InitialModal() {
   }, []);
 
   if (!isMounted) return null;
+
+  // Show loading state while Matrix client initializes
+  // This prevents "breaks after login" by ensuring the client is ready
+  if (!isReady) {
+    return (
+      <Dialog open={isOpen} onOpenChange={() => {}}>
+        <DialogContent className="bg-white text-black p-0 overflow-hidden">
+          <div className="flex flex-col items-center justify-center py-12 px-6">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Connecting to Matrix...
+            </h2>
+            <p className="text-sm text-gray-500 text-center">
+              {cryptoState.status === "initializing" 
+                ? "Setting up end-to-end encryption..."
+                : syncState 
+                  ? `Syncing: ${syncState}`
+                  : "Initializing secure connection..."}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

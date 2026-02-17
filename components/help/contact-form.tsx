@@ -11,7 +11,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const SUPPORT_CATEGORIES = [
   { value: 'technical', label: 'Technical Support' },
@@ -21,7 +21,6 @@ const SUPPORT_CATEGORIES = [
 ];
 
 export const ContactForm: React.FC = () => {
-  const { toast } = useToast();
   const [formData, setFormData] = useState({
     email: '',
     category: '',
@@ -35,11 +34,7 @@ export const ContactForm: React.FC = () => {
     
     // Basic validation
     if (!formData.email || !formData.category || !formData.message) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill out all fields.",
-        variant: "destructive"
-      });
+      toast.error("Please fill out all fields.");
       return;
     }
 
@@ -65,22 +60,14 @@ export const ContactForm: React.FC = () => {
       }
 
       // Success! Show confirmation with ticket ID
-      toast({
-        title: "Support Ticket Submitted",
-        description: `${result.message} (Ticket ID: ${result.ticketId})`,
-        variant: "default"
-      });
+      toast.success(`${result.message} (Ticket ID: ${result.ticketId})`);
 
       // Reset form
       setFormData({ email: '', category: '', message: '' });
 
     } catch (error) {
       console.error('Error submitting support ticket:', error);
-      toast({
-        title: "Submission Failed",
-        description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
-        variant: "destructive"
-      });
+      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

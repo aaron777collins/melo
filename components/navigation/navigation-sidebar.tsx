@@ -70,7 +70,7 @@ export const NavigationSidebar = () => {
     <div className="fixed left-[72px] top-0 w-[240px] h-full bg-gray-800 p-4 border-r border-gray-700 flex flex-col">
       <nav className="space-y-2">
         {navigationItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = pathname?.startsWith(item.href) ?? false;
           const notificationCount = getNotificationCount(item);
 
           return (

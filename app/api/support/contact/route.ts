@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     });
 
     let matrixSuccess = false;
-    let errorDetails = null;
+    let errorDetails: unknown = null;
 
     // Try to send to Matrix support room
     if (SUPPORT_CONFIG.useMatrix) {
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         category,
         supportEmail: SUPPORT_CONFIG.supportEmail,
         message: message.substring(0, 100) + '...',
-        error: errorDetails?.message
+        error: errorDetails instanceof Error ? errorDetails.message : String(errorDetails ?? '')
       });
       
       // In a production environment, you could:

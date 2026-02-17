@@ -52,7 +52,7 @@ function createEmailTransporter(): Transporter | null {
   const config = getSMTPConfig();
   if (!config) return null;
 
-  return nodemailer.createTransporter(config);
+  return nodemailer.createTransport(config);
 }
 
 // =============================================================================
@@ -67,7 +67,8 @@ async function getUserEmail(matrixClient: MatrixClient, userId: string): Promise
   try {
     // Method 1: Try account data first (preferred location for email)
     try {
-      const accountData = await matrixClient.getAccountDataFromServer('m.email');
+      // Use type assertion for custom account data key
+      const accountData: any = await matrixClient.getAccountDataFromServer('m.email' as any);
       if (accountData && accountData.email) {
         console.log(`Found email in account data for ${userId}: ${accountData.email}`);
         return accountData.email;

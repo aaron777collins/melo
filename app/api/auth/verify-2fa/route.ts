@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { validateSession as matrixValidateSession, MatrixAuthError } from "@/lib/matrix/auth";
 import { setSessionCookie, getTempSessionCookie, clearTempSessionCookie } from "@/lib/matrix/cookies";
-import * as OTPAuth from "otplib";
+import { verify as otpVerify, verifySync } from "otplib";
 import { createClient } from "matrix-js-sdk";
 
 interface TwoFactorData {
@@ -80,7 +80,8 @@ export async function POST(req: Request) {
       await client.startClient({ initialSyncLimit: 0 });
       // Wait briefly for initial sync
       await new Promise(resolve => setTimeout(resolve, 100));
-      accountData = client.getAccountData('im.haos.two_factor');
+      // Use type assertion for custom account data key
+      accountData = client.getAccountData('im.haos.two_factor' as any);
     } catch (error) {
       console.error("[2FA_VERIFY] Failed to get account data:", error);
       return NextResponse.json(
@@ -105,10 +106,11 @@ export async function POST(req: Request) {
 
     // Try TOTP verification first
     try {
-      isValid = OTPAuth.authenticator.verify({
+      const result = await otpVerify({
         token: cleanCode,
         secret: twoFactorData.secret
       });
+      isValid = result.valid;
     } catch (error) {
       console.warn("[2FA_VERIFY] TOTP verification failed:", error);
     }
@@ -133,7 +135,8 @@ export async function POST(req: Request) {
             backupCodes: updatedCodes
           };
           
-          await client.setAccountData('im.haos.two_factor', updatedData);
+          // Use type assertion for custom account data key and value
+          await client.setAccountData('im.haos.two_factor' as any, updatedData as any);
         } catch (error) {
           console.error("[2FA_VERIFY] Failed to update backup codes:", error);
           // Don't fail the login for this, just log it

@@ -30,7 +30,8 @@ export const DMList = () => {
     if (!client || !isReady) return [];
 
     // Get the m.direct account data to identify DM rooms
-    const directRooms = client.getAccountData("m.direct")?.getContent() || {};
+    // Use type assertion for Matrix SDK account data key
+    const directRooms = client.getAccountData("m.direct" as any)?.getContent() || {};
     const directRoomIds = new Set<string>();
     
     // Collect all room IDs from the m.direct mapping

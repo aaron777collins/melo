@@ -93,7 +93,7 @@ async function findOrCreateDMRoom(
     const updateDirectUrl = `${baseUrl}/_matrix/client/v3/user/${encodeURIComponent(currentUserId)}/account_data/m.direct`;
     
     // Get current direct data first
-    let currentDirectData = {};
+    let currentDirectData: Record<string, string[]> = {};
     if (directResponse.ok) {
       currentDirectData = await directResponse.json();
     }

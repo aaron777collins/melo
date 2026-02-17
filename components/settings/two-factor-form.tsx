@@ -9,7 +9,7 @@ import { Shield, Copy, RefreshCw, AlertTriangle, CheckCircle, X } from "lucide-r
 import Image from "next/image";
 import { toast } from "sonner";
 import QRCode from "qrcode";
-import * as OTPAuth from "otplib";
+import { generateSecret as otpGenerateSecret, generateURI, verifySync } from "otplib";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 
 interface TwoFactorFormProps {
@@ -56,7 +56,8 @@ export function TwoFactorForm({ profile }: TwoFactorFormProps) {
     if (!client || !isReady) return;
     
     try {
-      const accountData = client.getAccountData('im.haos.two_factor');
+      // Use type assertion for custom account data key
+      const accountData = client.getAccountData('im.haos.two_factor' as any);
       const data = accountData?.getContent() as TwoFactorData;
       setTwoFactorData(data || { enabled: false });
     } catch (error) {
@@ -74,7 +75,8 @@ export function TwoFactorForm({ profile }: TwoFactorFormProps) {
     if (!client || !isReady) return;
     
     try {
-      await client.setAccountData('im.haos.two_factor', data);
+      // Use type assertion for custom account data key and value
+      await client.setAccountData('im.haos.two_factor' as any, data as any);
       setTwoFactorData(data);
       toast.success('2FA settings updated');
     } catch (error) {
@@ -88,11 +90,15 @@ export function TwoFactorForm({ profile }: TwoFactorFormProps) {
   const generateSecret = async () => {
     setLoading(true);
     try {
-      const newSecret = OTPAuth.authenticator.generateSecret();
+      const newSecret = otpGenerateSecret();
       const user = client?.getUserId() || 'user';
       const service = 'HAOS';
       
-      const otpUrl = OTPAuth.authenticator.keyuri(user, service, newSecret);
+      const otpUrl = generateURI({
+        label: user,
+        issuer: service,
+        secret: newSecret,
+      });
       const qrUrl = await QRCode.toDataURL(otpUrl);
       
       setSecret(newSecret);
@@ -114,10 +120,11 @@ export function TwoFactorForm({ profile }: TwoFactorFormProps) {
     
     setLoading(true);
     try {
-      const isValid = OTPAuth.authenticator.verify({
+      const result = verifySync({
         token: verificationCode.replace(/\s/g, ''),
         secret: secret
       });
+      const isValid = result.valid;
 
       if (isValid) {
         // Generate backup codes
@@ -176,10 +183,11 @@ export function TwoFactorForm({ profile }: TwoFactorFormProps) {
     setLoading(true);
     try {
       // Verify current TOTP code or check if it's a backup code
-      const isValidTOTP = OTPAuth.authenticator.verify({
+      const totpResult = verifySync({
         token: disableCode.replace(/\s/g, ''),
         secret: twoFactorData.secret
       });
+      const isValidTOTP = totpResult.valid;
       
       const isValidBackup = twoFactorData.backupCodes?.includes(disableCode.toUpperCase());
       

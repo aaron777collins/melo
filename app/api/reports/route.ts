@@ -58,11 +58,11 @@ export async function POST(req: Request) {
     await new Promise((resolve) => {
       const onSync = (state: string) => {
         if (state === 'PREPARED') {
-          client.removeListener('sync', onSync);
+          client.removeListener('sync' as any, onSync);
           resolve(void 0);
         }
       };
-      client.on('sync', onSync);
+      client.on('sync' as any, onSync);
     });
     
     try {
@@ -165,7 +165,7 @@ export async function POST(req: Request) {
                            `<strong>Event ID:</strong> <code>${eventId}</code></p>`
           };
           
-          await client.sendMessage(moderationRoom.roomId, notificationContent);
+          await client.sendMessage(moderationRoom.roomId, notificationContent as any);
           console.log(`[API/reports] Sent notification to moderation room: ${moderationRoom.roomId}`);
         }
       } catch (notificationError) {

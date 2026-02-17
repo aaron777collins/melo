@@ -165,7 +165,7 @@ export default function InviteCodePage({ params }: InviteCodePageProps) {
         topic,
         avatarUrl: avatarUrl ? client!.mxcUrlToHttp(avatarUrl) ?? undefined : undefined,
         memberCount,
-        alias,
+        alias: alias ?? undefined,
         isPublic: room.getJoinRule() === 'public'
       };
     }

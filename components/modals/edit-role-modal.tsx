@@ -313,7 +313,7 @@ export function EditRoleModal() {
         powerLevel: role.powerLevel,
         template: "member",
       });
-      setPermissions(role.permissions || getClosestPermissionTemplate(role.powerLevel));
+      setPermissions((role.permissions || getClosestPermissionTemplate(role.powerLevel)) as unknown as HaosPermissions);
     }
   }, [role, form]);
 

@@ -129,7 +129,7 @@ function hasUnreadMessages(room: Room): boolean {
  */
 function getRoomMentionCount(room: Room): number {
   try {
-    return room.getUnreadNotificationCount("highlight") || 0;
+    return room.getUnreadNotificationCount("highlight" as any) || 0;
   } catch {
     return 0;
   }
@@ -167,7 +167,7 @@ function roomToSpace(room: Room, allRooms: Room[]): Space {
   return {
     id: room.roomId,
     name: room.name || "Unnamed Space",
-    avatarUrl: room.getAvatarUrl() || null,
+    avatarUrl: room.getAvatarUrl(undefined as any, 96, 96, "crop", true) || null,
     hasUnread,
     mentionCount,
     channels,
@@ -193,7 +193,7 @@ function roomToDirectMessage(room: Room): DirectMessage | null {
       id: room.roomId,
       otherUserId: otherMember.userId,
       otherUserName: otherMember.name,
-      otherUserAvatarUrl: otherMember.getAvatarUrl() || null,
+      otherUserAvatarUrl: otherMember.getAvatarUrl(undefined as any, 96, 96, "crop", true, true) || null,
       hasUnread: hasUnreadMessages(room),
       lastMessage: lastEvent?.getContent()?.body || null,
       lastActiveAt: lastEvent ? new Date(lastEvent.getTs()).toISOString() : null

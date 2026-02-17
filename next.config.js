@@ -103,7 +103,9 @@ const nextConfig = {
       "utf-8-validate": "commonjs utf-8-validate",
       bufferutil: "commonjs bufferutil",
       // LiveKit server SDK should be server-only external
-      "livekit-server-sdk": "commonjs livekit-server-sdk"
+      "livekit-server-sdk": "commonjs livekit-server-sdk",
+      // web-push is Node.js only (uses net, tls modules)
+      "web-push": "commonjs web-push"
     });
 
     // Bundle optimization configurations

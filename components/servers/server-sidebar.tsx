@@ -22,7 +22,7 @@ export const ServerSidebar = ({ servers }: { servers: ServerItemProps[] }) => {
   return (
     <div className="fixed left-0 top-0 h-full w-[72px] bg-gray-900 flex flex-col items-center py-3 space-y-2 overflow-y-auto">
       {servers.map((server) => {
-        const isActive = pathname.includes(server.href);
+        const isActive = pathname?.includes(server.href) ?? false;
         const serverUnreads = unreadCounts.servers[server.id] || { totalUnread: 0, mentionsUnread: 0 };
         
         return (

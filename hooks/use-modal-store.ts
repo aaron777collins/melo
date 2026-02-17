@@ -59,7 +59,11 @@ export type ModalType =
   // Invite Management
   | "revokeInvite"
   // Recovery Key
-  | "recoveryKey";
+  | "recoveryKey"
+  // Feature Coming Soon
+  | "featureComingSoon"
+  // DM Options
+  | "dmOptions";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -103,6 +107,18 @@ interface ModalData {
   // GIF picker callback
   /** Callback when GIF is selected */
   onGifSelect?: (gifUrl: string) => void;
+  // Feature Coming Soon modal
+  /** Feature name being announced */
+  feature?: string;
+  /** Feature description */
+  description?: string;
+  // User profile additional data
+  /** Display name for user profile */
+  displayName?: string;
+  /** Avatar URL for user profile */
+  avatarUrl?: string;
+  /** Presence status */
+  presence?: string;
   // Role creation
   /** Current user's power level (for role creation validation) */
   userPowerLevel?: number;

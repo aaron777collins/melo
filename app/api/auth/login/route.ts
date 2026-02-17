@@ -130,7 +130,8 @@ export async function POST(req: Request) {
       // Wait briefly for initial sync to get account data
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const accountData = client.getAccountData('im.haos.two_factor');
+      // Use type assertion for custom account data key
+      const accountData = client.getAccountData('im.haos.two_factor' as any);
       const twoFactorData = accountData?.getContent();
       twoFactorEnabled = twoFactorData?.enabled === true && twoFactorData?.secret;
       

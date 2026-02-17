@@ -29,6 +29,11 @@ const SESSION_COOKIE_NAME = 'matrix_session';
 const REFRESH_TOKEN_COOKIE_NAME = 'matrix_refresh_token';
 
 /**
+ * Cookie name for temporary session during 2FA verification
+ */
+const TEMP_SESSION_COOKIE_NAME = 'matrix_temp_session';
+
+/**
  * Default session cookie max age (30 days in seconds)
  */
 const DEFAULT_MAX_AGE = 30 * 24 * 60 * 60;
@@ -360,4 +365,97 @@ export function getSessionCookieConfig(): {
     maxAge: DEFAULT_MAX_AGE,
     isSecure: isProduction,
   };
+}
+
+// =============================================================================
+// Temporary Session Functions (for 2FA)
+// =============================================================================
+
+/**
+ * Set a temporary session cookie for 2FA verification
+ * 
+ * Used during 2FA flow to store session temporarily until verification succeeds.
+ * Temporary sessions have shorter expiry (10 minutes).
+ *
+ * @param session - The Matrix session to store temporarily
+ */
+export async function setTempSessionCookie(session: MatrixSession): Promise<void> {
+  const cookieStore = await cookies();
+
+  const sessionData: StoredSessionData = {
+    userId: session.userId,
+    accessToken: session.accessToken,
+    deviceId: session.deviceId,
+    homeserverUrl: session.homeserverUrl,
+    createdAt: session.createdAt,
+    sessionId: session.sessionId,
+    expiresAt: session.expiresAt,
+  };
+
+  const encodedSession = Buffer.from(JSON.stringify(sessionData)).toString('base64');
+
+  cookieStore.set(TEMP_SESSION_COOKIE_NAME, encodedSession, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 10 * 60, // 10 minutes for 2FA verification
+  });
+}
+
+/**
+ * Get the temporary session from cookie
+ *
+ * Retrieves the temporary session during 2FA verification flow.
+ *
+ * @returns The stored temporary MatrixSession or null if not found/invalid
+ */
+export async function getTempSessionCookie(): Promise<MatrixSession | null> {
+  const cookieStore = await cookies();
+  const tempCookie = cookieStore.get(TEMP_SESSION_COOKIE_NAME);
+
+  if (!tempCookie?.value) {
+    return null;
+  }
+
+  try {
+    const jsonString = Buffer.from(tempCookie.value, 'base64').toString('utf-8');
+    const sessionData: StoredSessionData = JSON.parse(jsonString);
+
+    if (
+      !sessionData.userId ||
+      !sessionData.accessToken ||
+      !sessionData.deviceId ||
+      !sessionData.homeserverUrl
+    ) {
+      return null;
+    }
+
+    const session: MatrixSession = {
+      sessionId: sessionData.sessionId,
+      userId: sessionData.userId,
+      accessToken: sessionData.accessToken,
+      deviceId: sessionData.deviceId,
+      homeserverUrl: sessionData.homeserverUrl,
+      createdAt: sessionData.createdAt,
+      lastActiveAt: new Date().toISOString(),
+      isValid: true,
+      expiresAt: sessionData.expiresAt,
+    };
+
+    return session;
+  } catch (error) {
+    console.error('Failed to parse temp session cookie:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear the temporary session cookie
+ *
+ * Removes the temporary session cookie used during 2FA verification.
+ */
+export async function clearTempSessionCookie(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(TEMP_SESSION_COOKIE_NAME);
 }

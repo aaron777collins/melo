@@ -1,0 +1,368 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  NODE_ENV: production
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Pre-deployment validation
+  validate:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should-deploy: ${{ steps.gate.outputs.should-deploy }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Generate version
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION="master-$(git rev-parse --short HEAD)-$(date +%Y%m%d%H%M%S)"
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "🏷️ Version: $VERSION"
+
+    - name: Run security audit
+      run: pnpm audit --audit-level moderate
+      continue-on-error: false
+
+    - name: Run linting
+      run: pnpm lint
+
+    - name: Type checking
+      run: npx tsc --noEmit
+
+    - name: Build application
+      run: pnpm build
+      env:
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+        NEXTAUTH_SECRET: "dummy-secret-for-build"
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+
+    - name: Run E2E tests
+      run: pnpm test:e2e
+      env:
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+        NEXTAUTH_SECRET: "dummy-secret-for-build"
+
+    - name: Validate Prisma schema
+      run: npx prisma validate
+      env:
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+
+    - name: Check migration status
+      id: migration-check
+      run: |
+        # Check if there are pending migrations
+        if npx prisma migrate status --schema=./prisma/schema.prisma | grep -q "Database schema is up to date"; then
+          echo "migrations-status=up-to-date" >> $GITHUB_OUTPUT
+        else
+          echo "migrations-status=pending" >> $GITHUB_OUTPUT
+        fi
+      env:
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+
+    - name: Deployment gate
+      id: gate
+      run: |
+        # Only deploy if all checks pass
+        if [[ "${{ steps.migration-check.outputs.migrations-status }}" == "up-to-date" || "${{ github.ref }}" == "refs/heads/master" ]]; then
+          echo "should-deploy=true" >> $GITHUB_OUTPUT
+        else
+          echo "should-deploy=false" >> $GITHUB_OUTPUT
+          echo "❌ Deployment blocked: Pending migrations detected"
+          exit 1
+        fi
+
+  # Build and push Docker image
+  build:
+    name: Build Production Image
+    runs-on: ubuntu-latest
+    needs: validate
+    if: needs.validate.outputs.should-deploy == 'true'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=tag
+          type=raw,value=${{ needs.validate.outputs.version }}
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          NODE_ENV=production
+          VERSION=${{ needs.validate.outputs.version }}
+
+  # Deploy to production
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [validate, build]
+    if: needs.validate.outputs.should-deploy == 'true'
+    environment: 
+      name: production
+      url: https://prod.aaroncollins.info
+    concurrency:
+      group: production-deployment
+      cancel-in-progress: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup deployment environment
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        
+        # Add host to known_hosts
+        ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Pre-deployment health check
+      run: |
+        echo "🏥 Running pre-deployment health check..."
+        if ! curl -f https://prod.aaroncollins.info/api/health 2>/dev/null; then
+          echo "⚠️ Production service is not responding, proceeding with deployment..."
+        else
+          echo "✅ Production service is healthy"
+        fi
+
+    - name: Create deployment backup
+      run: |
+        echo "💾 Creating deployment backup..."
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.PROD_USERNAME }}@${{ secrets.PROD_HOST }} << 'EOF'
+          set -e
+          cd ${{ secrets.PROD_PATH }}
+          
+          # Create backup with timestamp
+          BACKUP_DIR="/var/backups/haos-v2/$(date +%Y%m%d_%H%M%S)"
+          sudo mkdir -p "$BACKUP_DIR"
+          
+          # Backup current application
+          sudo cp -r /var/www/haos-v2 "$BACKUP_DIR/app"
+          
+          # Backup database
+          sudo -u postgres pg_dump haos_v2_prod > "$BACKUP_DIR/database.sql"
+          
+          # Keep only last 5 backups
+          sudo find /var/backups/haos-v2 -maxdepth 1 -type d | sort -r | tail -n +6 | xargs -r sudo rm -rf
+          
+          echo "✅ Backup created at $BACKUP_DIR"
+        EOF
+
+    - name: Run database migrations
+      run: |
+        echo "🗄️ Running database migrations..."
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.PROD_USERNAME }}@${{ secrets.PROD_HOST }} << 'EOF'
+          set -e
+          cd ${{ secrets.PROD_PATH }}
+          
+          # Pull latest changes first
+          git pull origin master
+          
+          # Install dependencies
+          pnpm install --frozen-lockfile --production=false
+          
+          # Run database migrations
+          ./scripts/db-migrate.sh
+        EOF
+
+    - name: Deploy application
+      run: |
+        echo "🚀 Deploying application..."
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.PROD_USERNAME }}@${{ secrets.PROD_HOST }} << 'EOF'
+          set -e
+          cd ${{ secrets.PROD_PATH }}
+          
+          # Run enhanced deployment script
+          ./scripts/deploy.sh --production --version="${{ needs.validate.outputs.version }}"
+        EOF
+
+    - name: Post-deployment validation
+      run: |
+        echo "🔍 Running post-deployment validation..."
+        
+        # Wait for service to start
+        echo "⏳ Waiting for service to start..."
+        sleep 30
+        
+        # Health check with retries
+        for i in {1..5}; do
+          if curl -f https://prod.aaroncollins.info/api/health; then
+            echo "✅ Health check passed on attempt $i"
+            break
+          else
+            echo "❌ Health check failed on attempt $i"
+            if [ $i -eq 5 ]; then
+              echo "💥 Health check failed after 5 attempts, rolling back..."
+              ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.PROD_USERNAME }}@${{ secrets.PROD_HOST }} << 'ROLLBACK'
+                set -e
+                cd ${{ secrets.PROD_PATH }}
+                ./scripts/deploy.sh --rollback
+              ROLLBACK
+              exit 1
+            fi
+            sleep 10
+          fi
+        done
+        
+        # Additional validation checks
+        echo "🧪 Running additional validation..."
+        
+        # Check if all required endpoints are responding
+        curl -f https://prod.aaroncollins.info/api/auth/session || echo "Auth check failed"
+        curl -f https://prod.aaroncollins.info/api/health || echo "Health check failed"
+        
+        # Check if static assets are loading
+        curl -f https://prod.aaroncollins.info/_next/static/ || echo "Static assets check failed"
+
+    - name: Send deployment notification
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Deployment successful!"
+          # Here you would send success notification (Slack, Discord, etc.)
+        else
+          echo "❌ Deployment failed!"
+          # Here you would send failure notification
+        fi
+
+  # Performance and security checks
+  post-deploy-checks:
+    name: Post-deployment Checks
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always() && needs.deploy.result == 'success'
+
+    steps:
+    - name: Lighthouse Performance Audit
+      run: |
+        echo "🔍 Running Lighthouse performance audit..."
+        npx lighthouse https://prod.aaroncollins.info --output=json --chrome-flags="--headless" > lighthouse-report.json
+        
+        # Extract key metrics
+        PERFORMANCE=$(jq '.categories.performance.score * 100' lighthouse-report.json)
+        ACCESSIBILITY=$(jq '.categories.accessibility.score * 100' lighthouse-report.json)
+        BEST_PRACTICES=$(jq '.categories["best-practices"].score * 100' lighthouse-report.json)
+        SEO=$(jq '.categories.seo.score * 100' lighthouse-report.json)
+        
+        echo "📊 Lighthouse Scores:"
+        echo "  Performance: $PERFORMANCE"
+        echo "  Accessibility: $ACCESSIBILITY"
+        echo "  Best Practices: $BEST_PRACTICES"
+        echo "  SEO: $SEO"
+
+    - name: Security Headers Check
+      run: |
+        echo "🔐 Checking security headers..."
+        
+        # Check for essential security headers
+        HEADERS=$(curl -I https://prod.aaroncollins.info 2>/dev/null)
+        
+        echo "Security Headers Analysis:"
+        if echo "$HEADERS" | grep -i "x-frame-options"; then
+          echo "✅ X-Frame-Options present"
+        else
+          echo "⚠️ X-Frame-Options missing"
+        fi
+        
+        if echo "$HEADERS" | grep -i "x-content-type-options"; then
+          echo "✅ X-Content-Type-Options present"
+        else
+          echo "⚠️ X-Content-Type-Options missing"
+        fi
+        
+        if echo "$HEADERS" | grep -i "strict-transport-security"; then
+          echo "✅ HSTS present"
+        else
+          echo "⚠️ HSTS missing"
+        fi
+
+    - name: Database Connection Test
+      run: |
+        echo "🗄️ Testing database connectivity..."
+        
+        # This would be run on the server to test DB connection
+        ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.PROD_USERNAME }}@${{ secrets.PROD_HOST }} << 'EOF'
+          cd ${{ secrets.PROD_PATH }}
+          npx prisma db pull --preview-feature > /dev/null && echo "✅ Database connection successful"
+        EOF

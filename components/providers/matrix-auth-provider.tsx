@@ -85,13 +85,13 @@ interface MatrixAuthActions {
    * @param username - Matrix user ID or localpart
    * @param password - User's password
    * @param homeserverUrl - Optional homeserver URL (defaults to env config)
-   * @returns Promise resolving to true on success, false on failure
+   * @returns Promise resolving to true on success, "2fa_required" for 2FA, false on failure
    */
   login: (
     username: string,
     password: string,
     homeserverUrl?: string
-  ) => Promise<boolean>;
+  ) => Promise<boolean | "2fa_required">;
 
   /**
    * Log out the current user
@@ -125,6 +125,13 @@ interface MatrixAuthActions {
    * @returns Promise resolving when refresh completes
    */
   refreshSession: () => Promise<void>;
+
+  /**
+   * Complete 2FA verification and login
+   * @param session - The session data from 2FA verification
+   * @param user - The user data from 2FA verification
+   */
+  complete2FALogin: (session: any, user: any) => void;
 }
 
 /**
@@ -292,7 +299,7 @@ export function MatrixAuthProvider({
       username: string,
       password: string,
       homeserverUrl?: string
-    ): Promise<boolean> => {
+    ): Promise<boolean | "2fa_required"> => {
       setIsLoading(true);
       setError(null);
 
@@ -307,6 +314,12 @@ export function MatrixAuthProvider({
         const result = await response.json();
 
         if (result.success) {
+          // Check if 2FA is required
+          if (result.requiresTwoFactor) {
+            return "2fa_required";
+          }
+          
+          // Regular successful login
           setUser(result.data.user);
           setSession(result.data.session);
           onAuthChange?.(result.data.user);
@@ -442,6 +455,19 @@ export function MatrixAuthProvider({
     }
   }, [onAuthChange]);
 
+  /**
+   * Complete 2FA login action
+   */
+  const complete2FALogin = useCallback(
+    (session: any, user: any) => {
+      setUser(user);
+      setSession(session);
+      setIsLoading(false);
+      onAuthChange?.(user);
+    },
+    [onAuthChange]
+  );
+
   // =============================================================================
   // Context Value
   // =============================================================================
@@ -459,8 +485,9 @@ export function MatrixAuthProvider({
       register,
       clearError,
       refreshSession,
+      complete2FALogin,
     }),
-    [user, session, isLoading, error, login, logout, register, clearError, refreshSession]
+    [user, session, isLoading, error, login, logout, register, clearError, refreshSession, complete2FALogin]
   );
 
   return (

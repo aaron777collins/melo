@@ -1,0 +1,285 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+env:
+  NODE_ENV: test
+
+jobs:
+  # Quality gates and testing
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    outputs:
+      can-deploy: ${{ steps.gate.outputs.can-deploy }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+        
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+        
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+          
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Dependency vulnerability audit
+      run: |
+        echo "🔍 Running dependency vulnerability audit..."
+        pnpm audit --audit-level moderate
+      continue-on-error: false
+      
+    - name: Run linting
+      run: |
+        echo "🔍 Running linting checks..."
+        pnpm lint
+      
+    - name: Type checking
+      run: |
+        echo "🔍 Running TypeScript type checking..."
+        npx tsc --noEmit
+
+    - name: Code quality checks
+      run: |
+        echo "🔍 Running code quality checks..."
+        # Check for TODO/FIXME comments in production code
+        if grep -r "TODO\|FIXME\|XXX\|HACK" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=.next ./; then
+          echo "⚠️ Found TODO/FIXME comments in code"
+        fi
+        
+        # Check for console.log statements (should use proper logging)
+        if grep -r "console\.log\|console\.warn\|console\.error" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=.next ./; then
+          echo "⚠️ Found console statements in code - consider using proper logging"
+        fi
+
+    - name: Build application
+      run: |
+        echo "🏗️ Building application..."
+        pnpm build
+      env:
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+        NEXTAUTH_SECRET: "dummy-secret-for-build"
+        
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+      
+    - name: Run E2E tests
+      run: |
+        echo "🧪 Running E2E tests..."
+        pnpm test:e2e
+      env:
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+        NEXTAUTH_SECRET: "dummy-secret-for-build"
+
+    - name: Validate Prisma schema
+      run: |
+        echo "🗄️ Validating database schema..."
+        npx prisma validate
+      env:
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+
+    - name: Check for migration conflicts
+      run: |
+        echo "🔍 Checking for migration conflicts..."
+        # This would check if migrations are in sync
+        npx prisma migrate status --schema=./prisma/schema.prisma || echo "⚠️ Migration status check skipped (no DB connection)"
+      env:
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/dummy"
+      continue-on-error: true
+
+    - name: Security scan
+      run: |
+        echo "🔐 Running security scan..."
+        # Check for common security issues
+        if grep -r "eval\|innerHTML\|dangerouslySetInnerHTML" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude-dir=.next ./; then
+          echo "⚠️ Found potentially unsafe code patterns"
+        fi
+
+    - name: Bundle analysis
+      run: |
+        echo "📦 Analyzing bundle size..."
+        # Generate bundle analysis
+        ANALYZE=true pnpm build > bundle-analysis.txt 2>&1 || true
+        if [ -f bundle-analysis.txt ]; then
+          echo "Bundle analysis completed"
+        fi
+
+    - name: Quality gate decision
+      id: gate
+      run: |
+        echo "🚪 Evaluating quality gates..."
+        
+        # For now, allow deployment if all previous steps passed
+        # In the future, you can add more sophisticated gating logic
+        if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          echo "can-deploy=true" >> $GITHUB_OUTPUT
+          echo "✅ Quality gates passed - deployment authorized for master branch"
+        else
+          echo "can-deploy=false" >> $GITHUB_OUTPUT
+          echo "ℹ️ Quality gates passed - but not deploying (not master branch)"
+        fi
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts-${{ github.sha }}
+        path: |
+          .next/
+          package.json
+          pnpm-lock.yaml
+          next.config.js
+          ecosystem.config.js
+        retention-days: 5
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ github.sha }}
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 10
+
+  # Development deployment (only for master branch)
+  deploy-development:
+    name: Deploy to Development
+    needs: quality-gates
+    runs-on: ubuntu-latest
+    environment: development
+    if: needs.quality-gates.outputs.can-deploy == 'true' && github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts-${{ github.sha }}
+        path: ./
+        
+    - name: Deploy to dev2.aaroncollins.info
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.DEV2_HOST }}
+        username: ${{ secrets.DEV2_USERNAME }}
+        key: ${{ secrets.DEV2_SSH_KEY }}
+        script: |
+          set -e
+          cd /var/www/haos-v2
+          
+          echo "📥 Pulling latest changes..."
+          git pull origin master
+          
+          echo "📦 Installing dependencies..."
+          pnpm install --frozen-lockfile
+          
+          echo "🗄️ Running database migrations..."
+          ./scripts/db-migrate.sh --environment development
+          
+          echo "🏗️ Building application..."
+          pnpm build
+          
+          echo "🔄 Restarting application..."
+          pm2 reload haos-v2 || pm2 start ecosystem.config.js --only haos-v2
+          
+          echo "✅ Development deployment complete!"
+          
+    - name: Post-deployment health check
+      run: |
+        echo "🏥 Running post-deployment health check..."
+        sleep 30
+        
+        for i in {1..5}; do
+          if curl -f https://dev2.aaroncollins.info/api/health; then
+            echo "✅ Health check passed on attempt $i"
+            break
+          else
+            echo "❌ Health check failed on attempt $i"
+            if [ $i -eq 5 ]; then
+              echo "💥 Health check failed after 5 attempts"
+              exit 1
+            fi
+            sleep 10
+          fi
+        done
+
+    - name: Run post-deployment validation
+      run: |
+        echo "🔍 Running post-deployment validation..."
+        
+        # Test critical endpoints
+        curl -f https://dev2.aaroncollins.info/ || echo "Homepage check failed"
+        curl -f https://dev2.aaroncollins.info/api/auth/session || echo "Auth endpoint check failed"
+        
+        # Check if static assets are loading
+        curl -f https://dev2.aaroncollins.info/_next/static/ || echo "Static assets check failed"
+        
+        echo "✅ Development deployment validation complete!"
+
+  # Deployment readiness check (for production)
+  deployment-readiness:
+    name: Check Production Deployment Readiness
+    needs: quality-gates
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check deployment readiness
+      run: |
+        echo "🔍 Checking production deployment readiness..."
+        
+        # Check if this commit should trigger production deployment
+        # This could be based on tags, commit messages, or other criteria
+        
+        if git tag --points-at HEAD | grep -q "^v"; then
+          echo "✅ Tagged release detected - production deployment ready"
+        else
+          echo "ℹ️ No tagged release - production deployment not triggered"
+        fi
+
+    - name: Security pre-check for production
+      run: |
+        echo "🔐 Running production security pre-check..."
+        
+        # Check for production-specific security requirements
+        if [ -f ".env.production" ]; then
+          echo "✅ Production environment file exists"
+        else
+          echo "⚠️ No production environment file found"
+        fi
+        
+        # Check for any hardcoded secrets (basic check)
+        if grep -r "password\|secret\|key" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules --exclude=".env*" ./ | grep -v "// " | grep -v "/* "; then
+          echo "⚠️ Potential hardcoded secrets found - manual review required"
+        fi

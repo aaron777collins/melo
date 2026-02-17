@@ -47,6 +47,7 @@ export type ModalType =
   | "muteUser"
   // Role Management
   | "createRole"
+  | "editRole"
   | "memberRoleEditor"
   // Security Prompts
   | "securityPrompt"
@@ -98,6 +99,9 @@ interface ModalData {
   // Role creation
   /** Current user's power level (for role creation validation) */
   userPowerLevel?: number;
+  // Role editing
+  /** Role to edit */
+  role?: import("@/components/server/role-manager").MatrixRole;
   // User moderation
   /** User to kick from server/room */
   targetUser?: {

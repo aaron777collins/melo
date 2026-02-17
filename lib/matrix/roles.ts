@@ -268,6 +268,189 @@ export async function setUserPowerLevel(
 }
 
 /**
+ * Update an existing custom role
+ */
+export async function updateCustomRole(
+  roomId: string,
+  roleId: string,
+  updateData: Partial<CreateRoleData>
+): Promise<void> {
+  const client = getClient();
+  if (!client) {
+    throw new Error("Matrix client not initialized");
+  }
+
+  // Validate role name if provided
+  if (updateData.name) {
+    const nameValidation = validateRoleName(updateData.name);
+    if (!nameValidation.isValid) {
+      throw new Error(nameValidation.error);
+    }
+  }
+
+  try {
+    // Get existing custom roles
+    const existingRoles = await getCustomRoles(roomId);
+    const roleIndex = existingRoles.findIndex(role => role.id === roleId);
+    
+    if (roleIndex === -1) {
+      throw new Error("Role not found");
+    }
+
+    const existingRole = existingRoles[roleIndex];
+
+    // Check for duplicate names (excluding current role)
+    if (updateData.name) {
+      const duplicateName = existingRoles.find(
+        role => role.id !== roleId && role.name.toLowerCase() === updateData.name!.toLowerCase()
+      );
+      if (duplicateName) {
+        throw new Error("A role with this name already exists");
+      }
+    }
+
+    // Update role metadata
+    const updatedRole = {
+      ...existingRole,
+      ...updateData,
+      id: roleId, // Ensure ID doesn't change
+      isDefault: existingRole.isDefault, // Preserve default status
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Update roles array
+    const updatedRoles = [...existingRoles];
+    updatedRoles[roleIndex] = updatedRole;
+
+    // Store updated roles in room account data
+    await client.setRoomAccountData(roomId, "dev.haos.custom_roles", {
+      version: "1.0.0",
+      roles: updatedRoles,
+    });
+
+    // If power level changed, update all users with this role
+    if (updateData.powerLevel !== undefined && updateData.powerLevel !== existingRole.powerLevel) {
+      const powerLevels = await getRoomPowerLevels(roomId);
+      if (powerLevels?.users) {
+        // Find users with the old power level and update them
+        const usersToUpdate = Object.entries(powerLevels.users).filter(
+          ([userId, userPowerLevel]) => userPowerLevel === existingRole.powerLevel
+        );
+
+        for (const [userId] of usersToUpdate) {
+          await setUserPowerLevel(roomId, userId, updateData.powerLevel);
+        }
+      }
+    }
+
+    console.log(`Updated role "${updateData.name || existingRole.name}" (${roleId}) in room ${roomId}`);
+  } catch (error) {
+    console.error("Failed to update custom role:", error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a custom role and handle users who had that role
+ */
+export async function deleteCustomRole(
+  roomId: string,
+  roleId: string
+): Promise<void> {
+  const client = getClient();
+  if (!client) {
+    throw new Error("Matrix client not initialized");
+  }
+
+  try {
+    // Get existing custom roles
+    const existingRoles = await getCustomRoles(roomId);
+    const roleToDelete = existingRoles.find(role => role.id === roleId);
+    
+    if (!roleToDelete) {
+      throw new Error("Role not found");
+    }
+
+    if (roleToDelete.isDefault) {
+      throw new Error("Cannot delete default role");
+    }
+
+    // Get current power levels to find users with this role
+    const powerLevels = await getRoomPowerLevels(roomId);
+    if (powerLevels?.users) {
+      // Find users with this role's power level and demote them to default (0)
+      const usersToUpdate = Object.entries(powerLevels.users).filter(
+        ([userId, userPowerLevel]) => userPowerLevel === roleToDelete.powerLevel
+      );
+
+      for (const [userId] of usersToUpdate) {
+        await setUserPowerLevel(roomId, userId, 0); // Demote to default member level
+      }
+    }
+
+    // Remove role from the roles array
+    const updatedRoles = existingRoles.filter(role => role.id !== roleId);
+    
+    // Update position numbers to fill gaps
+    const reorderedRoles = updatedRoles
+      .sort((a, b) => b.position - a.position)
+      .map((role, index) => ({
+        ...role,
+        position: updatedRoles.length - index,
+      }));
+
+    // Store updated roles in room account data
+    await client.setRoomAccountData(roomId, "dev.haos.custom_roles", {
+      version: "1.0.0",
+      roles: reorderedRoles,
+    });
+
+    console.log(`Deleted role "${roleToDelete.name}" (${roleId}) from room ${roomId}`);
+  } catch (error) {
+    console.error("Failed to delete custom role:", error);
+    throw error;
+  }
+}
+
+/**
+ * Reorder custom roles and update their positions
+ */
+export async function reorderCustomRoles(
+  roomId: string,
+  reorderedRoles: { id: string; position: number }[]
+): Promise<void> {
+  const client = getClient();
+  if (!client) {
+    throw new Error("Matrix client not initialized");
+  }
+
+  try {
+    // Get existing custom roles
+    const existingRoles = await getCustomRoles(roomId);
+    
+    // Update positions for each role
+    const updatedRoles = existingRoles.map(role => {
+      const newOrder = reorderedRoles.find(r => r.id === role.id);
+      if (newOrder) {
+        return { ...role, position: newOrder.position };
+      }
+      return role;
+    });
+
+    // Store updated roles in room account data
+    await client.setRoomAccountData(roomId, "dev.haos.custom_roles", {
+      version: "1.0.0",
+      roles: updatedRoles,
+    });
+
+    console.log(`Reordered ${reorderedRoles.length} roles in room ${roomId}`);
+  } catch (error) {
+    console.error("Failed to reorder custom roles:", error);
+    throw error;
+  }
+}
+
+/**
  * Create a custom role by storing metadata in room account data
  * 
  * Since Matrix doesn't have built-in "roles" like Discord, we store
@@ -422,6 +605,9 @@ export async function canManageRoles(roomId: string, userId: string): Promise<bo
 
 const rolesService = {
   createCustomRole,
+  updateCustomRole,
+  deleteCustomRole,
+  reorderCustomRoles,
   getCustomRoles,
   assignRoleToUser,
   setUserPowerLevel,

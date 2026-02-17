@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { loginWithPassword, validateSession as matrixValidateSession, MatrixAuthError } from "@/lib/matrix/auth";
-import { setSessionCookie } from "@/lib/matrix/cookies";
+import { setSessionCookie, setTempSessionCookie } from "@/lib/matrix/cookies";
+import { createClient } from "matrix-js-sdk";
 
 /**
  * Matrix Authentication Login
@@ -116,7 +117,43 @@ export async function POST(req: Request) {
     console.log("[AUTH_LOGIN] Login successful, userId:", session.userId, "deviceId:", session.deviceId);
     console.log("[AUTH_LOGIN] Access token prefix:", session.accessToken?.substring(0, 20) + "...");
 
-    // Store session in cookie
+    // Check if user has 2FA enabled
+    let twoFactorEnabled = false;
+    try {
+      const client = createClient({
+        baseUrl: session.homeserverUrl,
+        accessToken: session.accessToken,
+        userId: session.userId,
+      });
+
+      await client.startClient({ initialSyncLimit: 0 });
+      // Wait briefly for initial sync to get account data
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const accountData = client.getAccountData('im.haos.two_factor');
+      const twoFactorData = accountData?.getContent();
+      twoFactorEnabled = twoFactorData?.enabled === true && twoFactorData?.secret;
+      
+      client.stopClient();
+      
+      console.log("[AUTH_LOGIN] 2FA status:", twoFactorEnabled ? "enabled" : "disabled");
+    } catch (error) {
+      console.warn("[AUTH_LOGIN] Failed to check 2FA status:", error);
+      // Continue with regular login flow if we can't check 2FA
+    }
+
+    // If 2FA is enabled, store temporary session and require verification
+    if (twoFactorEnabled) {
+      await setTempSessionCookie(session);
+      
+      return NextResponse.json({
+        success: true,
+        requiresTwoFactor: true,
+        message: "Two-factor authentication required"
+      });
+    }
+
+    // Regular login flow - store session in cookie
     await setSessionCookie(session);
 
     // Get user profile

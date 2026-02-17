@@ -17,6 +17,10 @@ import { EditRoleModal } from "@/components/modals/edit-role-modal";
 import { KickUserModal } from "@/components/modals/kick-user-modal";
 import { BanUserModal } from "@/components/modals/ban-user-modal";
 import { MuteUserModal } from "@/components/modals/mute-user-modal";
+import { BulkKickModal } from "@/components/modals/bulk-kick-modal";
+import { BulkBanModal } from "@/components/modals/bulk-ban-modal";
+import { BulkKickUsersModal } from "@/components/modals/bulk-kick-users-modal";
+import { BulkBanUsersModal } from "@/components/modals/bulk-ban-users-modal";
 import { ConfirmDeleteModal } from "@/components/modals/confirm-delete-modal";
 import { MemberRoleEditorModal } from "@/components/modals/member-role-editor-modal";
 import { InviteModal } from "@/components/modals/invite-modal";
@@ -53,6 +57,10 @@ export function ModalProvider() {
       <KickUserModal />
       <BanUserModal />
       <MuteUserModal />
+      <BulkKickModal />
+      <BulkBanModal />
+      <BulkKickUsersModal />
+      <BulkBanUsersModal />
       <ConfirmDeleteModal />
       <MemberRoleEditorModal />
       <InviteModal />

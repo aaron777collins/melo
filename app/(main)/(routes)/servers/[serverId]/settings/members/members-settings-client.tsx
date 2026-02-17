@@ -608,6 +608,79 @@ export function MembersSettingsClient({ serverId, currentUserId }: MembersSettin
     }
   }, [selectedMembers, availableRoles, client, serverId, loadData]);
 
+  const handleBulkKick = useCallback(() => {
+    if (selectedMembers.length === 0) return;
+
+    const targetUsers = selectedMembers.map(member => ({
+      id: member.id,
+      name: member.profile.name,
+      avatarUrl: member.profile.imageUrl
+    }));
+
+    onOpen("bulkKick", {
+      targetUsers,
+      serverId,
+      onBulkComplete: () => {
+        setSelectedMemberIds(new Set());
+        loadData();
+      }
+    });
+  }, [selectedMembers, serverId, onOpen, loadData]);
+
+  const handleBulkBan = useCallback(() => {
+    if (selectedMembers.length === 0) return;
+
+    const targetUsers = selectedMembers.map(member => ({
+      id: member.id,
+      name: member.profile.name,
+      avatarUrl: member.profile.imageUrl
+    }));
+
+    onOpen("bulkBan", {
+      targetUsers,
+      serverId,
+      onBulkComplete: () => {
+        setSelectedMemberIds(new Set());
+        loadData();
+      }
+    });
+  }, [selectedMembers, serverId, onOpen, loadData]);
+
+  // Bulk moderation handlers
+  const handleBulkKick = useCallback(() => {
+    if (selectedMembers.length === 0) return;
+    
+    onOpen("bulkKickUsers", {
+      targetUsers: selectedMembers.map(member => ({
+        id: member.id,
+        name: member.profile.name,
+        avatarUrl: member.profile.imageUrl,
+      })),
+      serverId,
+      onSuccess: () => {
+        setSelectedMemberIds(new Set());
+        loadData();
+      },
+    });
+  }, [selectedMembers, serverId, onOpen, loadData]);
+
+  const handleBulkBan = useCallback(() => {
+    if (selectedMembers.length === 0) return;
+    
+    onOpen("bulkBanUsers", {
+      targetUsers: selectedMembers.map(member => ({
+        id: member.id,
+        name: member.profile.name,
+        avatarUrl: member.profile.imageUrl,
+      })),
+      serverId,
+      onSuccess: () => {
+        setSelectedMemberIds(new Set());
+        loadData();
+      },
+    });
+  }, [selectedMembers, serverId, onOpen, loadData]);
+
   // Individual handlers
   const handleRoleEdit = (member: MemberWithRoles) => {
     onOpen("memberRoleEditor", {
@@ -770,8 +843,8 @@ export function MembersSettingsClient({ serverId, currentUserId }: MembersSettin
             selectedMembers={selectedMembers}
             availableRoles={availableRoles}
             onBulkRoleAssign={handleBulkRoleAssign}
-            onBulkKick={() => {/* TODO: Implement bulk kick */}}
-            onBulkBan={() => {/* TODO: Implement bulk ban */}}
+            onBulkKick={handleBulkKick}
+            onBulkBan={handleBulkBan}
             onClearSelection={handleClearSelection}
             isLoading={bulkLoading}
           />

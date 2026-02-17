@@ -45,6 +45,11 @@ export type ModalType =
   | "kickUser"
   | "banUser"
   | "muteUser"
+  | "bulkKick"
+  | "bulkBan"
+  // Bulk user moderation
+  | "bulkKickUsers"
+  | "bulkBanUsers"
   // Role Management
   | "createRole"
   | "editRole"
@@ -109,6 +114,12 @@ interface ModalData {
     name: string;
     avatarUrl?: string;
   };
+  /** Users to bulk kick/ban from server/room */
+  targetUsers?: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  }[];
   /** Server/space context for moderation action */
   serverId?: string;
   // Message deletion

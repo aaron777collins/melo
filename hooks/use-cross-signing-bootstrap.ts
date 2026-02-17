@@ -15,6 +15,7 @@ import {
   type CrossSigningBootstrapResult,
 } from "@/lib/matrix/crypto/cross-signing";
 import type { CryptoState } from "@/lib/matrix/crypto/store";
+import { useModal } from "@/hooks/use-modal-store";
 
 // =============================================================================
 // Types
@@ -259,6 +260,8 @@ export function useAutoCrossSigningBootstrap(
   cryptoState: CryptoState, 
   enabled: boolean = true
 ) {
+  const { onOpen } = useModal();
+  
   return useCrossSigningBootstrap(cryptoState, {
     enabled,
     setupSecretStorage: true,
@@ -266,8 +269,14 @@ export function useAutoCrossSigningBootstrap(
       if (result.success && !result.alreadySetup) {
         console.log("[CrossSigning] Cross-signing bootstrap completed automatically");
         if (result.recoveryKey) {
-          console.log("[CrossSigning] Recovery key generated - user should save it");
-          // TODO: Show notification to user about saving recovery key
+          console.log("[CrossSigning] Recovery key generated - showing notification to user");
+          // Show recovery key modal to user
+          onOpen("recoveryKey", {
+            recoveryKey: result.recoveryKey,
+            onRecoveryKeySaved: () => {
+              console.log("[CrossSigning] User confirmed recovery key saved");
+            }
+          });
         }
       }
     },

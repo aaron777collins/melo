@@ -617,10 +617,10 @@ export function MembersSettingsClient({ serverId, currentUserId }: MembersSettin
       avatarUrl: member.profile.imageUrl
     }));
 
-    onOpen("bulkKick", {
+    onOpen("bulkKickUsers", {
       targetUsers,
       serverId,
-      onBulkComplete: () => {
+      onSuccess: () => {
         setSelectedMemberIds(new Set());
         loadData();
       }
@@ -636,50 +636,17 @@ export function MembersSettingsClient({ serverId, currentUserId }: MembersSettin
       avatarUrl: member.profile.imageUrl
     }));
 
-    onOpen("bulkBan", {
+    onOpen("bulkBanUsers", {
       targetUsers,
       serverId,
-      onBulkComplete: () => {
+      onSuccess: () => {
         setSelectedMemberIds(new Set());
         loadData();
       }
     });
   }, [selectedMembers, serverId, onOpen, loadData]);
 
-  // Bulk moderation handlers
-  const handleBulkKick = useCallback(() => {
-    if (selectedMembers.length === 0) return;
-    
-    onOpen("bulkKickUsers", {
-      targetUsers: selectedMembers.map(member => ({
-        id: member.id,
-        name: member.profile.name,
-        avatarUrl: member.profile.imageUrl,
-      })),
-      serverId,
-      onSuccess: () => {
-        setSelectedMemberIds(new Set());
-        loadData();
-      },
-    });
-  }, [selectedMembers, serverId, onOpen, loadData]);
-
-  const handleBulkBan = useCallback(() => {
-    if (selectedMembers.length === 0) return;
-    
-    onOpen("bulkBanUsers", {
-      targetUsers: selectedMembers.map(member => ({
-        id: member.id,
-        name: member.profile.name,
-        avatarUrl: member.profile.imageUrl,
-      })),
-      serverId,
-      onSuccess: () => {
-        setSelectedMemberIds(new Set());
-        loadData();
-      },
-    });
-  }, [selectedMembers, serverId, onOpen, loadData]);
+  // Duplicate handlers removed - using the ones defined above
 
   // Individual handlers
   const handleRoleEdit = (member: MemberWithRoles) => {

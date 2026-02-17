@@ -17,8 +17,6 @@ import { EditRoleModal } from "@/components/modals/edit-role-modal";
 import { KickUserModal } from "@/components/modals/kick-user-modal";
 import { BanUserModal } from "@/components/modals/ban-user-modal";
 import { MuteUserModal } from "@/components/modals/mute-user-modal";
-import { BulkKickModal } from "@/components/modals/bulk-kick-modal";
-import { BulkBanModal } from "@/components/modals/bulk-ban-modal";
 import { BulkKickUsersModal } from "@/components/modals/bulk-kick-users-modal";
 import { BulkBanUsersModal } from "@/components/modals/bulk-ban-users-modal";
 import { ConfirmDeleteModal } from "@/components/modals/confirm-delete-modal";
@@ -29,6 +27,7 @@ import { GifPickerModal } from "@/components/modals/gif-picker-modal";
 import { PinnedMessages } from "@/components/pinned-messages";
 import { SecurityPromptModal } from "@/components/modals/security-prompt-modal";
 import { ServerDiscoveryModal } from "@/components/modals/server-discovery-modal";
+import { RecoveryKeyModal } from "@/components/modals/recovery-key-modal";
 
 export function ModalProvider() {
   const [isMounted, setIsMounted] = useState(false);
@@ -57,8 +56,6 @@ export function ModalProvider() {
       <KickUserModal />
       <BanUserModal />
       <MuteUserModal />
-      <BulkKickModal />
-      <BulkBanModal />
       <BulkKickUsersModal />
       <BulkBanUsersModal />
       <ConfirmDeleteModal />
@@ -69,6 +66,7 @@ export function ModalProvider() {
       <PinnedMessages />
       <SecurityPromptModal />
       <ServerDiscoveryModal />
+      <RecoveryKeyModal />
       {/* TODO: Add more modals as they're created */}
     </>
   );

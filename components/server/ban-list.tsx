@@ -28,9 +28,11 @@ interface BannedUser {
   displayName: string;
   avatarUrl?: string;
   reason?: string;
-  bannedAt?: Date;
+  bannedAt?: string;
   bannedBy?: string;
-  expiresAt?: Date;
+  expiresAt?: string;
+  duration?: number;
+  isExpired?: boolean;
 }
 
 interface BanListProps {
@@ -56,40 +58,11 @@ export function BanList({ serverId, userRole }: BanListProps) {
 
     try {
       setIsLoading(true);
-      const room = client.getRoom(serverId);
+      const moderationService = createModerationService(client);
       
-      if (!room) {
-        toast.error("Room not found");
-        return;
-      }
-
-      // Get all members and filter for banned ones
-      const allMembers = room.getMembers();
-      const bannedUsersList: BannedUser[] = [];
-
-      for (const member of allMembers) {
-        // Only include members with "ban" membership status
-        if (member.membership !== "ban") continue;
-        // Extract ban reason from member events if available
-        const banEvent = room.getLiveTimeline().getEvents().find(
-          event => event.getType() === "m.room.member" && 
-          event.getStateKey() === member.userId &&
-          event.getContent().membership === "ban"
-        );
-
-        bannedUsersList.push({
-          userId: member.userId,
-          displayName: member.name || member.userId,
-          avatarUrl: member.getAvatarUrl(client.baseUrl, 64, 64, "crop", false, true) || undefined,
-          reason: banEvent?.getContent().reason || undefined,
-          bannedAt: banEvent ? new Date(banEvent.getTs()) : undefined,
-          bannedBy: banEvent?.getSender() || undefined,
-          // Note: Matrix doesn't natively support timed bans, so expiresAt will be undefined
-          // This would need to be tracked separately for timed bans
-          expiresAt: undefined
-        });
-      }
-
+      // Use the new getBannedUsers method that supports timed bans
+      const bannedUsersList = await moderationService.getBannedUsers(serverId);
+      
       setBannedUsers(bannedUsersList);
     } catch (error) {
       console.error("Error loading banned users:", error);
@@ -99,9 +72,39 @@ export function BanList({ serverId, userRole }: BanListProps) {
     }
   }, [client, serverId]);
 
+  // Check for expired bans on component load
+  const checkExpiredBans = useCallback(async () => {
+    if (!client || !serverId) return;
+
+    try {
+      const moderationService = createModerationService(client);
+      const result = await moderationService.checkExpiredBans(serverId);
+      
+      if (result.unbannedCount > 0) {
+        toast.success(`Automatically unbanned ${result.unbannedCount} expired ban(s)`);
+        // Reload the ban list to reflect changes
+        await loadBannedUsers();
+      }
+      
+      if (result.errors.length > 0) {
+        console.error("Errors while checking expired bans:", result.errors);
+        toast.error(`Failed to unban ${result.errors.length} expired ban(s)`);
+      }
+    } catch (error) {
+      console.error("Error checking expired bans:", error);
+      // Don't show error toast as this is a background operation
+    }
+  }, [client, serverId, loadBannedUsers]);
+
   useEffect(() => {
-    loadBannedUsers();
-  }, [loadBannedUsers]);
+    const loadData = async () => {
+      await loadBannedUsers();
+      // Check for expired bans after loading the list
+      await checkExpiredBans();
+    };
+    
+    loadData();
+  }, [loadBannedUsers, checkExpiredBans]);
 
   useEffect(() => {
     // Filter banned users based on search term
@@ -141,24 +144,30 @@ export function BanList({ serverId, userRole }: BanListProps) {
     }
   };
 
-  const formatDate = (date?: Date) => {
-    if (!date) return "Unknown";
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Unknown";
+    const date = new Date(dateString);
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
-  const formatDuration = (expiresAt?: Date) => {
+  const formatDuration = (expiresAt?: string, isExpired?: boolean) => {
     if (!expiresAt) return "Permanent";
     
+    if (isExpired) return "Expired";
+    
     const now = new Date();
-    const timeLeft = expiresAt.getTime() - now.getTime();
+    const expiryDate = new Date(expiresAt);
+    const timeLeft = expiryDate.getTime() - now.getTime();
     
     if (timeLeft <= 0) return "Expired";
     
     const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
     
     if (days > 0) return `${days}d ${hours}h remaining`;
-    return `${hours}h remaining`;
+    if (hours > 0) return `${hours}h ${minutes}m remaining`;
+    return `${minutes}m remaining`;
   };
 
   if (isLoading) {
@@ -182,7 +191,10 @@ export function BanList({ serverId, userRole }: BanListProps) {
           </span>
         </div>
         <Button
-          onClick={loadBannedUsers}
+          onClick={async () => {
+            await loadBannedUsers();
+            await checkExpiredBans();
+          }}
           variant="outline"
           size="sm"
           disabled={isLoading}
@@ -244,9 +256,9 @@ export function BanList({ serverId, userRole }: BanListProps) {
                           <div className="flex items-center gap-4">
                             <span>Banned: {formatDate(user.bannedAt)}</span>
                             {user.expiresAt && (
-                              <span className="flex items-center gap-1">
+                              <span className={`flex items-center gap-1 ${user.isExpired ? 'text-orange-600 dark:text-orange-400' : ''}`}>
                                 <Clock className="h-3 w-3" />
-                                {formatDuration(user.expiresAt)}
+                                {formatDuration(user.expiresAt, user.isExpired)}
                               </span>
                             )}
                           </div>

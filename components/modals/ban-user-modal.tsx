@@ -122,11 +122,6 @@ export function BanUserModal() {
             toast.success(`${targetUser.name} has been banned ${durationText}`);
             form.reset();
             onClose();
-            
-            // TODO: Schedule unban if duration > 0
-            if (durationMs > 0) {
-              console.log(`Scheduled unban for ${targetUser.name} in ${durationMs}ms`);
-            }
             return true;
           } else {
             toast.error(result.error || "Failed to ban user");

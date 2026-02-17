@@ -219,9 +219,11 @@ export class MatrixModerationService {
       // Log the moderation action
       console.log(`User ${userId} banned ${targetUserId} from ${roomId}. Reason: ${options.reason || 'No reason provided'}`);
 
-      // TODO: Handle timed bans if duration is specified
+      // Handle timed bans if duration is specified
       if (options.duration && options.duration > 0) {
-        console.log(`Ban duration: ${options.duration}ms (timed bans not yet implemented)`);
+        await this.storeBanExpiry(roomId, targetUserId, userId, options.duration, options.reason);
+        this.scheduleUnban(roomId, targetUserId, options.duration);
+        console.log(`Scheduled unban for ${targetUserId} in ${options.duration}ms`);
       }
 
       return { success: true };
@@ -600,6 +602,313 @@ export class MatrixModerationService {
     } catch (error) {
       console.error("Error getting muted users:", error);
       return [];
+    }
+  }
+
+  /**
+   * Store ban expiry information in room state
+   * @param roomId The room where user is banned
+   * @param targetUserId The banned user
+   * @param bannedBy The user who issued the ban
+   * @param duration Duration in milliseconds
+   * @param reason Ban reason
+   */
+  private async storeBanExpiry(
+    roomId: string, 
+    targetUserId: string, 
+    bannedBy: string,
+    duration: number,
+    reason?: string
+  ): Promise<void> {
+    try {
+      const banData = {
+        bannedBy,
+        bannedAt: new Date().toISOString(),
+        reason: reason || "Banned by moderator",
+        duration,
+        expiresAt: new Date(Date.now() + duration).toISOString()
+      };
+
+      await this.client.sendStateEvent(
+        roomId,
+        'org.haos.moderation.ban' as any,
+        banData,
+        targetUserId
+      );
+
+      console.log(`Stored ban expiry for ${targetUserId} in ${roomId}, expires at ${banData.expiresAt}`);
+    } catch (error) {
+      console.error("Failed to store ban expiry:", error);
+      // Don't fail the ban operation if we can't store the expiry
+    }
+  }
+
+  /**
+   * Schedule automatic unban for a user (simple timer-based implementation)
+   * @param roomId The room where user is banned
+   * @param targetUserId The banned user
+   * @param duration Duration in milliseconds
+   */
+  private scheduleUnban(roomId: string, targetUserId: string, duration: number): void {
+    // In a production system, this should use a persistent job queue
+    // For now, we'll use a simple setTimeout (won't survive page reloads)
+    setTimeout(async () => {
+      try {
+        // Check if user is still banned before unbanning
+        const room = this.client.getRoom(roomId);
+        if (!room) {
+          console.error(`Room ${roomId} not found for scheduled unban`);
+          return;
+        }
+
+        const member = room.getMember(targetUserId);
+        if (member?.membership === 'ban') {
+          // Use a system user ID for automatic unbans
+          const systemUserId = this.client.getUserId() || '@system:haos';
+          const result = await this.unbanUser(roomId, systemUserId, targetUserId);
+          
+          if (result.success) {
+            // Remove ban state after successful unban
+            await this.client.sendStateEvent(
+              roomId,
+              'org.haos.moderation.ban' as any,
+              {},
+              targetUserId
+            );
+            console.log(`Automatically unbanned ${targetUserId} in ${roomId} after ${duration}ms`);
+          } else {
+            console.error(`Failed to auto-unban ${targetUserId}:`, result.error);
+          }
+        } else {
+          console.log(`User ${targetUserId} is no longer banned in ${roomId}, skipping auto-unban`);
+        }
+      } catch (error) {
+        console.error(`Failed to auto-unban ${targetUserId} in ${roomId}:`, error);
+      }
+    }, duration);
+  }
+
+  /**
+   * Get ban information for a specific user
+   * @param roomId The room to check
+   * @param targetUserId The user to check ban status for
+   */
+  async getBanInfo(roomId: string, targetUserId: string): Promise<{
+    isBanned: boolean;
+    banInfo?: {
+      bannedBy: string;
+      bannedAt: string;
+      reason: string;
+      duration: number;
+      expiresAt?: string;
+      isExpired?: boolean;
+    };
+  }> {
+    try {
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        return { isBanned: false };
+      }
+
+      // Check current membership status
+      const member = room.getMember(targetUserId);
+      const isBanned = member?.membership === 'ban';
+      
+      if (!isBanned) {
+        return { isBanned: false };
+      }
+
+      // Get ban information from state
+      const banState = room.currentState.getStateEvents('org.haos.moderation.ban' as any, targetUserId);
+      
+      if (banState) {
+        const banData = banState.getContent();
+        const isExpired = banData.expiresAt ? new Date(banData.expiresAt) <= new Date() : false;
+        
+        return {
+          isBanned: true,
+          banInfo: {
+            bannedBy: banData.bannedBy,
+            bannedAt: banData.bannedAt,
+            reason: banData.reason,
+            duration: banData.duration,
+            expiresAt: banData.expiresAt,
+            isExpired
+          }
+        };
+      }
+
+      // User is banned but no state info (permanent ban or legacy)
+      return { isBanned: true };
+    } catch (error) {
+      console.error("Error checking ban status:", error);
+      return { isBanned: false };
+    }
+  }
+
+  /**
+   * Get all banned users in a room with their ban information
+   * @param roomId The room to get banned users from
+   */
+  async getBannedUsers(roomId: string): Promise<Array<{
+    userId: string;
+    displayName: string;
+    avatarUrl?: string;
+    bannedBy?: string;
+    bannedAt?: string;
+    reason?: string;
+    duration?: number;
+    expiresAt?: string;
+    isExpired?: boolean;
+  }>> {
+    try {
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        return [];
+      }
+
+      const bannedUsers: Array<{
+        userId: string;
+        displayName: string;
+        avatarUrl?: string;
+        bannedBy?: string;
+        bannedAt?: string;
+        reason?: string;
+        duration?: number;
+        expiresAt?: string;
+        isExpired?: boolean;
+      }> = [];
+
+      // Get all members and filter for banned ones
+      const allMembers = room.getMembers();
+      
+      for (const member of allMembers) {
+        if (member.membership !== 'ban') continue;
+
+        // Get ban information from state
+        const banState = room.currentState.getStateEvents('org.haos.moderation.ban' as any, member.userId);
+        
+        let banInfo = {};
+        if (banState) {
+          const banData = banState.getContent();
+          const isExpired = banData.expiresAt ? new Date(banData.expiresAt) <= new Date() : false;
+          
+          banInfo = {
+            bannedBy: banData.bannedBy,
+            bannedAt: banData.bannedAt,
+            reason: banData.reason,
+            duration: banData.duration,
+            expiresAt: banData.expiresAt,
+            isExpired
+          };
+        } else {
+          // Try to get ban reason from member events (fallback)
+          const banEvent = room.getLiveTimeline().getEvents().find(
+            event => event.getType() === "m.room.member" && 
+            event.getStateKey() === member.userId &&
+            event.getContent().membership === "ban"
+          );
+
+          if (banEvent) {
+            banInfo = {
+              bannedAt: new Date(banEvent.getTs()).toISOString(),
+              bannedBy: banEvent.getSender(),
+              reason: banEvent.getContent().reason
+            };
+          }
+        }
+
+        bannedUsers.push({
+          userId: member.userId,
+          displayName: member.name || member.userId,
+          avatarUrl: member.getAvatarUrl(this.client.baseUrl, 64, 64, "crop", false, true) || undefined,
+          ...banInfo
+        });
+      }
+
+      return bannedUsers.sort((a, b) => {
+        const dateA = a.bannedAt ? new Date(a.bannedAt).getTime() : 0;
+        const dateB = b.bannedAt ? new Date(b.bannedAt).getTime() : 0;
+        return dateB - dateA; // Newest first
+      });
+    } catch (error) {
+      console.error("Error getting banned users:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Check for expired bans and automatically unban them
+   * This should be called periodically (e.g., on app load or timer)
+   * @param roomId The room to check for expired bans
+   */
+  async checkExpiredBans(roomId: string): Promise<{
+    checkedCount: number;
+    unbannedCount: number;
+    errors: Array<{ userId: string; error: string }>;
+  }> {
+    const result = {
+      checkedCount: 0,
+      unbannedCount: 0,
+      errors: [] as Array<{ userId: string; error: string }>
+    };
+
+    try {
+      const room = this.client.getRoom(roomId);
+      if (!room) {
+        throw new Error(`Room ${roomId} not found`);
+      }
+
+      // Get all ban state events
+      const banStates = room.currentState.events.get('org.haos.moderation.ban' as any);
+      if (!banStates) {
+        return result;
+      }
+
+      const systemUserId = this.client.getUserId() || '@system:haos';
+      const now = new Date();
+
+      // Check each ban for expiry
+      for (const [userId, banState] of banStates.entries()) {
+        result.checkedCount++;
+        
+        const banData = banState.getContent();
+        if (!banData.expiresAt) {
+          continue; // Permanent ban
+        }
+
+        const expiresAt = new Date(banData.expiresAt);
+        if (expiresAt <= now) {
+          // Ban has expired, unban the user
+          try {
+            const unbanResult = await this.unbanUser(roomId, systemUserId, userId);
+            if (unbanResult.success) {
+              // Remove ban state
+              await this.client.sendStateEvent(
+                roomId,
+                'org.haos.moderation.ban' as any,
+                {},
+                userId
+              );
+              result.unbannedCount++;
+              console.log(`Auto-unbanned expired ban: ${userId} in ${roomId}`);
+            } else {
+              result.errors.push({ userId, error: unbanResult.error || 'Unknown error' });
+            }
+          } catch (error: any) {
+            result.errors.push({ userId, error: error.message || 'Failed to unban' });
+          }
+        }
+      }
+
+      if (result.unbannedCount > 0) {
+        console.log(`Processed expired bans in ${roomId}: ${result.unbannedCount}/${result.checkedCount} unbanned`);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error checking expired bans:", error);
+      throw error;
     }
   }
 

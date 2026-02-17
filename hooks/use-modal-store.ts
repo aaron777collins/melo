@@ -45,8 +45,8 @@ export type ModalType =
   | "kickUser"
   | "banUser"
   | "muteUser"
-  | "bulkKick"
-  | "bulkBan"
+  | "bulkKickUsers"
+  | "bulkBanUsers"
   // Bulk user moderation
   | "bulkKickUsers"
   | "bulkBanUsers"
@@ -57,7 +57,9 @@ export type ModalType =
   // Security Prompts
   | "securityPrompt"
   // Invite Management
-  | "revokeInvite";
+  | "revokeInvite"
+  // Recovery Key
+  | "recoveryKey";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -145,6 +147,11 @@ interface ModalData {
   inviteToRevoke?: import("@/lib/matrix/invites").InviteLink;
   /** Callback after successful revocation */
   onInviteRevoked?: () => void;
+  // Recovery key
+  /** Recovery key to display to user */
+  recoveryKey?: string;
+  /** Callback when user confirms they have saved the recovery key */
+  onRecoveryKeySaved?: () => void;
 }
 
 interface ModalStore {

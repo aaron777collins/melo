@@ -664,7 +664,7 @@ export async function register(
   options: RegisterOptions = {}
 ): Promise<MatrixSession> {
   const homeserverUrl = options.homeserverUrl || DEFAULT_HOMESERVER_URL;
-  const deviceDisplayName = options.deviceDisplayName || 'HAOS Web';
+  const deviceDisplayName = options.deviceDisplayName || 'Melo Web';
 
   // Strip @ prefix and server suffix if provided
   const localpart = username.startsWith('@')

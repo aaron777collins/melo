@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Enhanced Error Boundary System for HAOS-V2
+ * Enhanced Error Boundary System for Melo-V2
  * 
  * Provides comprehensive error boundaries with user-friendly error pages,
  * recovery options, and integration with error reporting services.
@@ -115,7 +115,7 @@ class ErrorReportingService {
     retryCount: number;
   }) {
     // Console logging for development
-    console.group(`🚨 HAOS Error Boundary [${context.level}:${context.name || 'unnamed'}]`);
+    console.group(`🚨 Melo Error Boundary [${context.level}:${context.name || 'unnamed'}]`);
     console.error("Error ID:", context.errorId);
     console.error("Retry Count:", context.retryCount);
     console.error("Error:", error);
@@ -138,7 +138,7 @@ class ErrorReportingService {
           },
         };
         
-        const existingLogs = JSON.parse(localStorage.getItem('haos-error-logs') || '[]');
+        const existingLogs = JSON.parse(localStorage.getItem('melo-error-logs') || '[]');
         existingLogs.push(errorLog);
         
         // Keep only last 100 errors
@@ -146,7 +146,7 @@ class ErrorReportingService {
           existingLogs.splice(0, existingLogs.length - 100);
         }
         
-        localStorage.setItem('haos-error-logs', JSON.stringify(existingLogs));
+        localStorage.setItem('melo-error-logs', JSON.stringify(existingLogs));
       } catch (storageError) {
         console.warn('Failed to store error log:', storageError);
       }
@@ -181,10 +181,10 @@ class ErrorReportingService {
   private static generateSessionId(): string {
     if (typeof window === 'undefined') return 'server-session';
     
-    let sessionId = sessionStorage.getItem('haos-error-boundary-session');
+    let sessionId = sessionStorage.getItem('melo-error-boundary-session');
     if (!sessionId) {
       sessionId = `eb-session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      sessionStorage.setItem('haos-error-boundary-session', sessionId);
+      sessionStorage.setItem('melo-error-boundary-session', sessionId);
     }
     return sessionId;
   }
@@ -192,7 +192,7 @@ class ErrorReportingService {
   static getErrorLogs(): any[] {
     if (typeof window === 'undefined') return [];
     try {
-      return JSON.parse(localStorage.getItem('haos-error-logs') || '[]');
+      return JSON.parse(localStorage.getItem('melo-error-logs') || '[]');
     } catch {
       return [];
     }
@@ -200,7 +200,7 @@ class ErrorReportingService {
 
   static clearErrorLogs(): void {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('haos-error-logs');
+      localStorage.removeItem('melo-error-logs');
     }
   }
 }
@@ -221,7 +221,7 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    const errorId = `haos-error-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const errorId = `melo-error-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     
     return {
       hasError: true,
@@ -268,10 +268,10 @@ export class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   private getSessionId(): string | undefined {
     // In a real implementation, get from session storage or generate
     if (typeof window !== 'undefined') {
-      let sessionId = sessionStorage.getItem('haos_session_id');
+      let sessionId = sessionStorage.getItem('melo_session_id');
       if (!sessionId) {
         sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        sessionStorage.setItem('haos_session_id', sessionId);
+        sessionStorage.setItem('melo_session_id', sessionId);
       }
       return sessionId;
     }

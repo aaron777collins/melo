@@ -3,7 +3,7 @@
 /**
  * Welcome Step Component
  * 
- * First step in the onboarding wizard that introduces new users to HAOS
+ * First step in the onboarding wizard that introduces new users to Melo
  * and explains what they'll accomplish during the onboarding process.
  */
 
@@ -63,7 +63,7 @@ export function WelcomeStep({ onNext, onSkip, className }: WelcomeStepProps) {
         
         <div>
           <h1 className="text-3xl font-bold mb-2">
-            Welcome to HAOS{user?.displayName ? `, ${user.displayName}` : ""}! 🎉
+            Welcome to Melo{user?.displayName ? `, ${user.displayName}` : ""}! 🎉
           </h1>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
             Your secure, decentralized chat platform powered by the Matrix protocol.
@@ -153,7 +153,7 @@ export function WelcomeStep({ onNext, onSkip, className }: WelcomeStepProps) {
                 New to Matrix?
               </p>
               <p className="text-blue-700 dark:text-blue-200">
-                Don't worry! HAOS makes Matrix simple and user-friendly. 
+                Don't worry! Melo makes Matrix simple and user-friendly. 
                 You'll be chatting confidently in no time. This setup should only take 2-3 minutes.
               </p>
             </div>

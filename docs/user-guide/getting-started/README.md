@@ -1,6 +1,6 @@
-# Getting Started with HAOS
+# Getting Started with Melo
 
-Welcome to HAOS! This section will guide you through your first steps on the platform.
+Welcome to Melo! This section will guide you through your first steps on the platform.
 
 ## 🎯 What You'll Learn
 

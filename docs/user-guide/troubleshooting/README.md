@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-Having issues with HAOS? This comprehensive troubleshooting guide will help you resolve common problems and get back to chatting with your community.
+Having issues with Melo? This comprehensive troubleshooting guide will help you resolve common problems and get back to chatting with your community.
 
 ## 🚨 Quick Fixes
 
@@ -18,7 +18,7 @@ Try these simple solutions first - they resolve 80% of common issues:
 **Web Browser:**
 - Press **Ctrl+Shift+R** (hard refresh)
 - Try **incognito/private mode**
-- **Clear cookies** for HAOS domain
+- **Clear cookies** for Melo domain
 - **Disable ad blockers** temporarily
 
 **Desktop App:**
@@ -103,7 +103,7 @@ tracert discord.com (Windows) / traceroute discord.com (Mac/Linux)
 
 ## 🔧 Step-by-Step Solutions
 
-### When HAOS Won't Load
+### When Melo Won't Load
 
 **Step 1: Browser Issues**
 1. Clear browser cache and cookies
@@ -115,7 +115,7 @@ tracert discord.com (Windows) / traceroute discord.com (Mac/Linux)
 1. Test internet connection on other sites
 2. Restart your router/modem
 3. Try a different network (mobile hotspot)
-4. Check if HAOS is blocked by firewall
+4. Check if Melo is blocked by firewall
 
 **Step 3: Account Issues**
 1. Verify you're using correct login credentials
@@ -152,7 +152,7 @@ tracert discord.com (Windows) / traceroute discord.com (Mac/Linux)
 4. Check if you're rate limited
 
 **Step 2: Clear Data**
-1. **Browser**: Clear site data for HAOS
+1. **Browser**: Clear site data for Melo
 2. **Desktop**: Clear app cache in settings
 3. **Mobile**: Clear app cache in device settings
 4. Log out and back in
@@ -238,9 +238,9 @@ tracert discord.com (Windows) / traceroute discord.com (Mac/Linux)
 
 **How to Contact:**
 1. **In-app support** - Settings → Support
-2. **Email support** - support@haos.app
+2. **Email support** - support@melo.app
 3. **Support server** - Join our official support community
-4. **Social media** - @HAOSSupport on Twitter
+4. **Social media** - @MeloSupport on Twitter
 
 **Information to Include:**
 - Detailed description of the issue
@@ -271,13 +271,13 @@ tracert discord.com (Windows) / traceroute discord.com (Mac/Linux)
 ### Checking System Status
 
 **Official Status Page:**
-- Visit [status.haos.app](https://status.haos.app)
+- Visit [status.melo.app](https://status.melo.app)
 - Check for ongoing incidents
 - Subscribe to status updates
 - View historical uptime
 
 **Social Media Updates:**
-- [@HAOSStatus](https://twitter.com/HAOSStatus) on Twitter
+- [@MeloStatus](https://twitter.com/MeloStatus) on Twitter
 - Official announcements
 - Maintenance schedules
 - Real-time updates
@@ -336,7 +336,7 @@ If you can't find a solution here:
 1. Check our detailed guides for specific issues
 2. Join our support community for peer help
 3. Contact our support team with detailed information
-4. Follow [@HAOSSupport](https://twitter.com/HAOSSupport) for updates
+4. Follow [@MeloSupport](https://twitter.com/MeloSupport) for updates
 
 **Quick Navigation:**
 - [Common Issues](./common-issues.md) → Detailed solutions

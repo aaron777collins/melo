@@ -133,10 +133,10 @@ export default function InviteCodePage({ params }: InviteCodePageProps) {
     
     // This is a limitation - we'd need a better way to track slug->roomId mappings
     // For now, check localStorage for any invites with matching slug
-    const allRoomKeys = Object.keys(localStorage).filter(key => key.startsWith('haos_invites_'));
+    const allRoomKeys = Object.keys(localStorage).filter(key => key.startsWith('melo_invites_'));
     
     for (const key of allRoomKeys) {
-      const roomId = key.replace('haos_invites_', '');
+      const roomId = key.replace('melo_invites_', '');
       const invites = inviteService.getInvites(roomId);
       const matchingInvite = invites.find(invite => invite.slug === slug);
       

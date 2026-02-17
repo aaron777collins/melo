@@ -1,6 +1,6 @@
-# HAOS v2 CI/CD Pipeline
+# Melo v2 CI/CD Pipeline
 
-This directory contains GitHub Actions workflows for automated testing, building, and deployment of HAOS v2.
+This directory contains GitHub Actions workflows for automated testing, building, and deployment of Melo v2.
 
 ## Workflows
 
@@ -60,7 +60,7 @@ This directory contains GitHub Actions workflows for automated testing, building
 ## Deployment Setup
 
 ### PM2 Configuration (`ecosystem.config.js`)
-- Application name: `haos-v2`
+- Application name: `melo-v2`
 - Single instance (can be scaled later)
 - Memory limit: 1GB
 - Structured logging to `./logs/`
@@ -82,7 +82,7 @@ On dev2.aaroncollins.info:
 2. pnpm installed globally
 3. PM2 installed globally
 4. SSH access configured for deploy user
-5. Repository cloned to `/var/www/haos-v2`
+5. Repository cloned to `/var/www/melo-v2`
 6. Environment variables configured
 
 ## Health Monitoring
@@ -108,13 +108,13 @@ This uses the health endpoint from task `p12-5-health-endpoints`.
 
 **Check deployment status:**
 ```bash
-pm2 status haos-v2
-pm2 logs haos-v2
+pm2 status melo-v2
+pm2 logs melo-v2
 ```
 
 **Manual restart:**
 ```bash
-pm2 restart haos-v2
+pm2 restart melo-v2
 ```
 
 **View build logs:**
@@ -143,6 +143,6 @@ Check GitHub Actions tab for detailed build/deploy logs.
 ### Logs and Monitoring
 
 - **CI Logs:** GitHub Actions tab
-- **Application Logs:** `/var/www/haos-v2/logs/` on server
-- **PM2 Logs:** `pm2 logs haos-v2`
+- **Application Logs:** `/var/www/melo-v2/logs/` on server
+- **PM2 Logs:** `pm2 logs melo-v2`
 - **Health Status:** `https://dev2.aaroncollins.info/api/health`

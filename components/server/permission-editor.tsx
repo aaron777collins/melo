@@ -3,7 +3,7 @@
 /**
  * Permission Editor Component
  * 
- * Granular permission toggle interface for HAOS roles.
+ * Granular permission toggle interface for Melo roles.
  * Provides Discord-style permission management with Matrix integration.
  */
 
@@ -44,7 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  HaosPermissions,
+  MeloPermissions,
   PermissionCategory,
   PermissionTemplate,
   PERMISSION_CATEGORIES,
@@ -53,7 +53,7 @@ import {
   calculateRequiredPowerLevel,
   validatePermissions,
   applyPermissionTemplate,
-  type HaosPermissions as PermissionsType
+  type MeloPermissions as PermissionsType
 } from "@/lib/matrix/permissions";
 
 // =============================================================================
@@ -62,7 +62,7 @@ import {
 
 interface PermissionEditorProps {
   /** Current permissions state */
-  permissions: HaosPermissions;
+  permissions: MeloPermissions;
   /** Current power level */
   powerLevel: number;
   /** Maximum power level user can assign */
@@ -70,7 +70,7 @@ interface PermissionEditorProps {
   /** Whether the editor is read-only */
   readOnly?: boolean;
   /** Callback when permissions change */
-  onPermissionsChange?: (permissions: HaosPermissions) => void;
+  onPermissionsChange?: (permissions: MeloPermissions) => void;
   /** Callback when power level needs to change */
   onPowerLevelChange?: (powerLevel: number) => void;
   /** Show power level requirements */
@@ -80,24 +80,24 @@ interface PermissionEditorProps {
 }
 
 interface PermissionItemProps {
-  permission: keyof HaosPermissions;
+  permission: keyof MeloPermissions;
   label: string;
   description: string;
   enabled: boolean;
   disabled: boolean;
   required: boolean;
   conflict: boolean;
-  onToggle: (permission: keyof HaosPermissions, enabled: boolean) => void;
+  onToggle: (permission: keyof MeloPermissions, enabled: boolean) => void;
   compact?: boolean;
 }
 
 interface PermissionCategoryProps {
   category: PermissionCategory;
-  permissions: HaosPermissions;
-  disabledPermissions: Set<keyof HaosPermissions>;
-  requiredPermissions: Set<keyof HaosPermissions>;
-  conflictPermissions: Set<keyof HaosPermissions>;
-  onPermissionToggle: (permission: keyof HaosPermissions, enabled: boolean) => void;
+  permissions: MeloPermissions;
+  disabledPermissions: Set<keyof MeloPermissions>;
+  requiredPermissions: Set<keyof MeloPermissions>;
+  conflictPermissions: Set<keyof MeloPermissions>;
+  onPermissionToggle: (permission: keyof MeloPermissions, enabled: boolean) => void;
   compact?: boolean;
 }
 
@@ -113,7 +113,7 @@ const CATEGORY_ICONS = {
   management: Crown,
 };
 
-const PERMISSION_LABELS: Record<keyof HaosPermissions, string> = {
+const PERMISSION_LABELS: Record<keyof MeloPermissions, string> = {
   // Server Management
   manageServer: "Manage Server",
   manageRoles: "Manage Roles",
@@ -160,7 +160,7 @@ const PERMISSION_LABELS: Record<keyof HaosPermissions, string> = {
   administrator: "Administrator",
 };
 
-const PERMISSION_DESCRIPTIONS: Record<keyof HaosPermissions, string> = {
+const PERMISSION_DESCRIPTIONS: Record<keyof MeloPermissions, string> = {
   // Server Management
   manageServer: "Change server name, icon, and other basic settings",
   manageRoles: "Create, edit, and delete server roles",
@@ -370,7 +370,7 @@ export function PermissionEditor({
   showPowerLevelInfo = true,
   compact = false
 }: PermissionEditorProps) {
-  const [localPermissions, setLocalPermissions] = useState<HaosPermissions>(permissions);
+  const [localPermissions, setLocalPermissions] = useState<MeloPermissions>(permissions);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
   // Update local state when props change
@@ -388,18 +388,18 @@ export function PermissionEditor({
   }, [localPermissions]);
 
   const disabledPermissions = useMemo(() => {
-    const disabled = new Set<keyof HaosPermissions>();
+    const disabled = new Set<keyof MeloPermissions>();
     if (readOnly || powerLevel >= maxPowerLevel) {
       // Disable all if read-only or at max power level
       Object.keys(localPermissions).forEach(perm => {
-        disabled.add(perm as keyof HaosPermissions);
+        disabled.add(perm as keyof MeloPermissions);
       });
     }
     return disabled;
   }, [readOnly, powerLevel, maxPowerLevel, localPermissions]);
 
   const requiredPermissions = useMemo(() => {
-    const required = new Set<keyof HaosPermissions>();
+    const required = new Set<keyof MeloPermissions>();
     // Add logic for required permissions (e.g., viewChannels required for sendMessages)
     if (localPermissions.sendMessages && !localPermissions.viewChannels) {
       required.add('viewChannels');
@@ -408,12 +408,12 @@ export function PermissionEditor({
   }, [localPermissions]);
 
   const conflictPermissions = useMemo(() => {
-    const conflicts = new Set<keyof HaosPermissions>();
+    const conflicts = new Set<keyof MeloPermissions>();
     if (!validation.valid) {
       // Add permissions that are enabled but require higher power level
       Object.entries(localPermissions).forEach(([perm, enabled]) => {
         if (enabled && requiredPowerLevel > powerLevel) {
-          conflicts.add(perm as keyof HaosPermissions);
+          conflicts.add(perm as keyof MeloPermissions);
         }
       });
     }
@@ -424,7 +424,7 @@ export function PermissionEditor({
   // Handlers
   // =============================================================================
 
-  const handlePermissionToggle = (permission: keyof HaosPermissions, enabled: boolean) => {
+  const handlePermissionToggle = (permission: keyof MeloPermissions, enabled: boolean) => {
     const newPermissions = { ...localPermissions, [permission]: enabled };
     
     // Handle permission dependencies

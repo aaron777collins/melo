@@ -1,6 +1,6 @@
-# HAOS V2 End-to-End Tests
+# Melo V2 End-to-End Tests
 
-Comprehensive Playwright E2E test suite for HAOS V2 Matrix client.
+Comprehensive Playwright E2E test suite for Melo V2 Matrix client.
 
 ## Test Coverage
 

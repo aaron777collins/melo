@@ -1,5 +1,5 @@
 /**
- * OpenAPI/Swagger Configuration for HAOS API
+ * OpenAPI/Swagger Configuration for Melo API
  * 
  * This file provides configuration and utilities for OpenAPI documentation
  * and Swagger UI integration.
@@ -11,17 +11,17 @@ export interface SwaggerConfig {
 }
 
 /**
- * OpenAPI 3.0 specification for HAOS API
+ * OpenAPI 3.0 specification for Melo API
  */
 export const openApiDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'HAOS API',
+    title: 'Melo API',
     version: '0.1.0',
     description: `
-# Home Assistant for Open Source (HAOS) API
+# Home Assistant for Open Source (Melo) API
 
-HAOS provides a comprehensive REST API for managing Matrix-based communication,
+Melo provides a comprehensive REST API for managing Matrix-based communication,
 administrative tasks, and real-time features.
 
 ## Features
@@ -57,25 +57,25 @@ All errors follow a consistent format:
 }
 \`\`\`
     `.trim(),
-    termsOfService: 'https://haos.example.com/terms',
+    termsOfService: 'https://melo.example.com/terms',
     contact: {
-      name: 'HAOS Support',
-      url: 'https://github.com/aaron777collins/haos-v2',
-      email: 'support@haos.example.com'
+      name: 'Melo Support',
+      url: 'https://github.com/aaron777collins/melo-v2',
+      email: 'support@melo.example.com'
     },
     license: {
       name: 'MIT',
-      url: 'https://github.com/aaron777collins/haos-v2/blob/main/LICENSE'
+      url: 'https://github.com/aaron777collins/melo-v2/blob/main/LICENSE'
     }
   },
   externalDocs: {
-    description: 'HAOS Documentation',
-    url: 'https://github.com/aaron777collins/haos-v2/blob/main/README.md'
+    description: 'Melo Documentation',
+    url: 'https://github.com/aaron777collins/melo-v2/blob/main/README.md'
   },
   servers: [
     {
       url: '{protocol}://{host}/api',
-      description: 'HAOS API Server',
+      description: 'Melo API Server',
       variables: {
         protocol: {
           enum: ['http', 'https'],
@@ -84,7 +84,7 @@ All errors follow a consistent format:
         },
         host: {
           default: 'localhost:3000',
-          description: 'HAOS server hostname and port'
+          description: 'Melo server hostname and port'
         }
       }
     }
@@ -542,7 +542,7 @@ export const swaggerUiConfig = {
     .swagger-ui .info .title { color: #1f2937; }
     .swagger-ui .scheme-container { background: #f9fafb; padding: 10px; border-radius: 4px; }
   `,
-  customSiteTitle: 'HAOS API Documentation',
+  customSiteTitle: 'Melo API Documentation',
   customfavIcon: '/favicon.ico',
   swaggerOptions: {
     persistAuthorization: true,

@@ -1,4 +1,4 @@
-import { Member, Profile, Server } from "@/lib/haos-types";
+import { Member, Profile, Server } from "@/lib/melo-types";
 
 /**
  * Legacy types for Prisma-based components.

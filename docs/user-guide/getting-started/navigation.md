@@ -1,10 +1,10 @@
 # Basic Navigation
 
-Learn how to navigate the HAOS interface efficiently and discover all the key features at your fingertips.
+Learn how to navigate the Melo interface efficiently and discover all the key features at your fingertips.
 
 ## 🗺️ Interface Overview
 
-The HAOS interface has four main areas:
+The Melo interface has four main areas:
 
 ### 1. Server Sidebar (Left)
 - **Server icons** - Click to switch between servers
@@ -222,7 +222,7 @@ Click the **gear icon** next to your username for:
 
 ## ✅ Navigation Mastered!
 
-You now know how to navigate HAOS effectively! 
+You now know how to navigate Melo effectively! 
 
 **What's next?**
 - Explore [Features](../features/README.md) to learn advanced capabilities

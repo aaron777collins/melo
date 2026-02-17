@@ -1,6 +1,6 @@
-# Docker Deployment Guide for HAOS v2
+# Docker Deployment Guide for Melo v2
 
-This guide provides instructions for deploying HAOS v2 using Docker and Docker Compose.
+This guide provides instructions for deploying Melo v2 using Docker and Docker Compose.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ This guide provides instructions for deploying HAOS v2 using Docker and Docker C
 1. **Clone and navigate to the project:**
    ```bash
    git clone <repository-url>
-   cd haos-v2
+   cd melo-v2
    ```
 
 2. **Create environment file:**
@@ -85,7 +85,7 @@ PORT=3000
 The stack includes:
 
 ### Core Services
-- **app**: HAOS v2 Next.js application (port 3000)
+- **app**: Melo v2 Next.js application (port 3000)
 - **db**: PostgreSQL 15 database
 - **redis**: Redis cache/sessions
 
@@ -140,10 +140,10 @@ docker compose exec app npx prisma db seed
 ### Backup
 ```bash
 # Create database backup
-docker compose exec db pg_dump -U haos_user haos_v2 > backup.sql
+docker compose exec db pg_dump -U melo_user melo_v2 > backup.sql
 
 # Restore from backup
-docker compose exec -i db psql -U haos_user haos_v2 < backup.sql
+docker compose exec -i db psql -U melo_user melo_v2 < backup.sql
 ```
 
 ## Monitoring and Logs

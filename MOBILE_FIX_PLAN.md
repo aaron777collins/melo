@@ -1,4 +1,4 @@
-# HAOS v2 Mobile Responsiveness Fix Plan
+# Melo v2 Mobile Responsiveness Fix Plan
 
 ## 🚨 CRITICAL FIXES (Implement First)
 

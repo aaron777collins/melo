@@ -191,7 +191,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
   // Load settings from localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('haos-media-device-settings');
+      const saved = localStorage.getItem('melo-media-device-settings');
       if (saved) {
         const parsedSettings = JSON.parse(saved);
         setSettings(parsedSettings);
@@ -204,7 +204,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
   // Save settings to localStorage whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem('haos-media-device-settings', JSON.stringify(settings));
+      localStorage.setItem('melo-media-device-settings', JSON.stringify(settings));
     } catch (error) {
       console.warn('Failed to save media device settings:', error);
     }

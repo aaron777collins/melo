@@ -1,5 +1,5 @@
 /**
- * HAOS Type Definitions
+ * Melo Type Definitions
  * 
  * These types mirror the old Prisma types for backward compatibility
  * but work with Matrix data instead.

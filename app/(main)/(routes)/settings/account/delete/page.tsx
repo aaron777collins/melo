@@ -16,8 +16,8 @@ import { AlertTriangle, UserMinus } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const metadata = {
-  title: "Delete Account - HAOS",
-  description: "Permanently delete your HAOS account and Matrix profile"
+  title: "Delete Account - Melo",
+  description: "Permanently delete your Melo account and Matrix profile"
 };
 
 export default async function AccountDeletionPage() {
@@ -37,7 +37,7 @@ export default async function AccountDeletionPage() {
             <h1 className="text-2xl font-bold">Delete Account</h1>
           </div>
           <p className="text-muted-foreground">
-            Permanently delete your HAOS account and Matrix profile. This action cannot be undone.
+            Permanently delete your Melo account and Matrix profile. This action cannot be undone.
           </p>
         </div>
 
@@ -60,7 +60,7 @@ export default async function AccountDeletionPage() {
               Delete Your Account
             </CardTitle>
             <CardDescription>
-              This will permanently delete your account from both HAOS and the Matrix network.
+              This will permanently delete your account from both Melo and the Matrix network.
               Please review the consequences carefully before proceeding.
             </CardDescription>
           </CardHeader>

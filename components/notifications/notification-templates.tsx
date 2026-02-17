@@ -82,7 +82,7 @@ interface TemplatePreviewProps {
 
 const SAMPLE_DATA = {
   sender: "Alice Johnson",
-  room: "HAOS Development",
+  room: "Melo Development",
   message: "Hey everyone! I just pushed the new notification system. What do you think?",
   time: "2 minutes ago"
 };
@@ -692,7 +692,7 @@ export function NotificationTemplates({ className }: NotificationTemplatesProps)
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'haos-notification-templates.json';
+    link.download = 'melo-notification-templates.json';
     link.click();
     URL.revokeObjectURL(url);
   }, [templates]);

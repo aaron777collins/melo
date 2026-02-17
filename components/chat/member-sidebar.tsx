@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Member, Profile } from "@/lib/haos-types";
+import { Member, Profile } from "@/lib/melo-types";
 import { Crown, ShieldAlert, ShieldCheck, UserX, Ban, VolumeX, MoreVertical } from "lucide-react";
 
 import { UserAvatar } from "@/components/user-avatar";

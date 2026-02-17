@@ -1,4 +1,4 @@
-# HAOS v2: Matrix-Based Communication Platform
+# Melo v2: Matrix-Based Communication Platform
 
 A modern, full-stack communication platform built with Next.js 14, React, Matrix Protocol, and TypeScript.
 
@@ -101,7 +101,7 @@ Running commands with pnpm `pnpm [command]`
 
 ## CI/CD Pipeline
 
-HAOS v2 includes a comprehensive CI/CD pipeline using GitHub Actions for automated testing, building, and deployment.
+Melo v2 includes a comprehensive CI/CD pipeline using GitHub Actions for automated testing, building, and deployment.
 
 ### Workflows
 
@@ -154,7 +154,7 @@ For detailed CI/CD documentation, see [.github/README.md](.github/README.md).
 
 ## Architecture
 
-HAOS v2 is built on modern web technologies:
+Melo v2 is built on modern web technologies:
 
 - **Frontend**: Next.js 14, React 18, TypeScript
 - **Styling**: TailwindCSS, Radix UI components

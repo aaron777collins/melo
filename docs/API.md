@@ -1,18 +1,18 @@
-# HAOS API Documentation
+# Melo API Documentation
 
 ## Overview
 
-HAOS provides a REST API for interacting with Matrix homeserver functionality, administrative tasks, and real-time communication features. The API follows RESTful conventions and uses JSON for request/response payloads.
+Melo provides a REST API for interacting with Matrix homeserver functionality, administrative tasks, and real-time communication features. The API follows RESTful conventions and uses JSON for request/response payloads.
 
 ## Base URL
 
 ```
-https://your-haos-domain.com/api
+https://your-melo-domain.com/api
 ```
 
 ## Authentication
 
-Most HAOS API endpoints use Matrix authentication with access tokens stored in HTTP-only cookies. Some endpoints may require additional authorization based on user roles.
+Most Melo API endpoints use Matrix authentication with access tokens stored in HTTP-only cookies. Some endpoints may require additional authorization based on user roles.
 
 ### Authentication Flow
 
@@ -496,7 +496,7 @@ Generate invite code for server.
   "success": true,
   "data": {
     "inviteCode": "abc123",
-    "inviteUrl": "https://haos.example.com/invite/abc123",
+    "inviteUrl": "https://melo.example.com/invite/abc123",
     "expiresAt": "2024-02-17T10:30:00.000Z"
   }
 }
@@ -542,14 +542,14 @@ Get server audit log.
 
 ## WebRTC Integration
 
-HAOS integrates with Matrix's native WebRTC capabilities for voice and video calls. The integration is handled primarily client-side through the Matrix SDK.
+Melo integrates with Matrix's native WebRTC capabilities for voice and video calls. The integration is handled primarily client-side through the Matrix SDK.
 
 ### Voice/Video Call Flow
 
 1. Client initiates call through Matrix SDK
-2. HAOS UI updates to show call interface
+2. Melo UI updates to show call interface
 3. WebRTC negotiation handled by Matrix homeserver
-4. HAOS tracks call state for UI updates
+4. Melo tracks call state for UI updates
 
 ### Real-time Features
 
@@ -610,20 +610,20 @@ try {
 
 ```bash
 # Health check
-curl -X GET https://haos.example.com/api/health
+curl -X GET https://melo.example.com/api/health
 
 # Login
-curl -X POST https://haos.example.com/api/auth/login \
+curl -X POST https://melo.example.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"alice","password":"password"}'
 
 # Get jobs (with authentication cookie)
-curl -X GET https://haos.example.com/api/admin/jobs \
+curl -X GET https://melo.example.com/api/admin/jobs \
   -H "Cookie: session=..." \
   -G -d "status=pending" -d "limit=10"
 
 # Create job
-curl -X POST https://haos.example.com/api/admin/jobs \
+curl -X POST https://melo.example.com/api/admin/jobs \
   -H "Content-Type: application/json" \
   -H "Cookie: session=..." \
   -d '{"type":"notification","payload":{"message":"Hello"}}'

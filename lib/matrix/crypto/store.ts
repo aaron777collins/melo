@@ -13,13 +13,13 @@
  * Prefix for the crypto database in IndexedDB
  * This keeps crypto data separate from other Matrix data
  */
-export const CRYPTO_DB_PREFIX = "haos_matrix_crypto";
+export const CRYPTO_DB_PREFIX = "melo_matrix_crypto";
 
 /**
  * Key used for storing the storage password in sessionStorage
  * This is used for encrypting the crypto store
  */
-export const STORAGE_PASSWORD_KEY = "haos_crypto_storage_password";
+export const STORAGE_PASSWORD_KEY = "melo_crypto_storage_password";
 
 // =============================================================================
 // Types

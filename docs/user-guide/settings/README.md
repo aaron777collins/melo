@@ -1,6 +1,6 @@
 # Settings & Customization
 
-Personalize your HAOS experience with comprehensive settings and customization options. Make the platform work exactly how you want it to.
+Personalize your Melo experience with comprehensive settings and customization options. Make the platform work exactly how you want it to.
 
 ## ⚙️ Settings Overview
 

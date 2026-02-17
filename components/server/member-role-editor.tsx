@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
-import { Member, Profile } from "@/lib/haos-types";
+import { Member, Profile } from "@/lib/melo-types";
 import { MatrixRole } from "@/components/server/role-manager";
 import rolesService from "@/lib/matrix/roles";
 import { UserAvatar } from "@/components/user-avatar";

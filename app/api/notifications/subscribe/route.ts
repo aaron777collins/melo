@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (client) {
       // Store in Matrix account data
       try {
-        const existingData = await (client as any).getAccountData('com.haos.push_subscriptions');
+        const existingData = await (client as any).getAccountData('com.melo.push_subscriptions');
         const existingSubscriptions = existingData?.getContent()?.subscriptions || [];
 
         // Remove any existing subscription for this device
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         filteredSubscriptions.push(pushSubscription);
 
         // Store updated subscriptions
-        await (client as any).setAccountData('com.haos.push_subscriptions', {
+        await (client as any).setAccountData('com.melo.push_subscriptions', {
           subscriptions: filteredSubscriptions,
           updated_at: new Date().toISOString()
         });
@@ -107,7 +107,7 @@ export async function DELETE(request: NextRequest) {
     if (client) {
       // Remove from Matrix account data
       try {
-        const existingData = await (client as any).getAccountData('com.haos.push_subscriptions');
+        const existingData = await (client as any).getAccountData('com.melo.push_subscriptions');
         const existingSubscriptions = existingData?.getContent()?.subscriptions || [];
 
         // Remove subscription for this device
@@ -116,7 +116,7 @@ export async function DELETE(request: NextRequest) {
         );
 
         // Store updated subscriptions
-        await (client as any).setAccountData('com.haos.push_subscriptions', {
+        await (client as any).setAccountData('com.melo.push_subscriptions', {
           subscriptions: filteredSubscriptions,
           updated_at: new Date().toISOString()
         });

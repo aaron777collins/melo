@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Channel, ChannelType, Server, Member, Profile } from "@/lib/haos-types";
+import { Channel, ChannelType, Server, Member, Profile } from "@/lib/melo-types";
 import { MatrixSpace, SpaceChannel, ChannelType as MatrixChannelType } from "@/lib/matrix/types/space";
 
 export type ModalType =

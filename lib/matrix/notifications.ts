@@ -1,7 +1,7 @@
 /**
  * Matrix Notification Service
  * 
- * Core notification service for HAOS that handles:
+ * Core notification service for Melo that handles:
  * - Browser notifications for real-time events
  * - Email notifications for offline users  
  * - Push notifications (framework setup)
@@ -441,7 +441,7 @@ export class MatrixNotificationService {
 
     // Emit custom event for UI updates
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("haos:notification", {
+      window.dispatchEvent(new CustomEvent("melo:notification", {
         detail: notificationData
       }));
     }
@@ -454,7 +454,7 @@ export class MatrixNotificationService {
     try {
       const notification = new Notification(data.title, {
         body: data.body,
-        icon: data.avatar || "/icons/haos-logo-32.png",
+        icon: data.avatar || "/icons/melo-logo-32.png",
         tag: data.roomId, // Replace previous notifications from same room
         requireInteraction: false,
         silent: !this.settings.sound
@@ -511,7 +511,7 @@ export class MatrixNotificationService {
     
     // Save to storage (implement as needed)
     if (typeof window !== "undefined") {
-      localStorage.setItem("haos:notification-settings", JSON.stringify(this.settings));
+      localStorage.setItem("melo:notification-settings", JSON.stringify(this.settings));
     }
   }
 
@@ -546,7 +546,7 @@ export class MatrixNotificationService {
       
       // Emit update event
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("haos:notification-updated", {
+        window.dispatchEvent(new CustomEvent("melo:notification-updated", {
           detail: notification
         }));
       }
@@ -561,7 +561,7 @@ export class MatrixNotificationService {
     
     // Emit update event
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("haos:notifications-read-all"));
+      window.dispatchEvent(new CustomEvent("melo:notifications-read-all"));
     }
   }
 
@@ -572,7 +572,7 @@ export class MatrixNotificationService {
     this.notifications = [];
     
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("haos:notifications-cleared"));
+      window.dispatchEvent(new CustomEvent("melo:notifications-cleared"));
     }
   }
 
@@ -628,7 +628,7 @@ export class MatrixNotificationService {
       }
 
       try {
-        const data = await (this.client as any).getAccountData('com.haos.push_subscriptions');
+        const data = await (this.client as any).getAccountData('com.melo.push_subscriptions');
         const content = data?.getContent();
         const subscriptions = content?.subscriptions || [];
         
@@ -647,7 +647,7 @@ export class MatrixNotificationService {
             !shouldUnsubscribe.some(r => r.subscriptionId === sub.id)
           );
           
-          await (this.client as any).setAccountData('com.haos.push_subscriptions', {
+          await (this.client as any).setAccountData('com.melo.push_subscriptions', {
             subscriptions: validSubscriptions,
             updated_at: new Date().toISOString()
           });
@@ -676,7 +676,7 @@ export class MatrixNotificationService {
       const testData: NotificationData = {
         id: `test-${Date.now()}`,
         type: NotificationType.DirectMessage,
-        title: "HAOS Test Notification",
+        title: "Melo Test Notification",
         body: "Your notification settings are working correctly!",
         timestamp: new Date(),
         read: false,

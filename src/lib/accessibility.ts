@@ -1,5 +1,5 @@
 /**
- * Accessibility utilities for HAOS
+ * Accessibility utilities for Melo
  * 
  * Provides utilities for:
  * - ARIA labels and descriptions
@@ -76,7 +76,7 @@ export const createKeyboardHandler = (handlers: Record<string, (event: React.Key
 };
 
 // ARIA utilities
-export const generateId = (prefix: string = 'haos') => {
+export const generateId = (prefix: string = 'melo') => {
   return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
 };
 

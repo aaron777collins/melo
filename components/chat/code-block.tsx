@@ -72,7 +72,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
 
   return (
     <pre 
-      className={`haos-code-block language-${detectedLanguage} ${className}`}
+      className={`melo-code-block language-${detectedLanguage} ${className}`}
       style={{
         backgroundColor: 'var(--code-background)',
         color: 'var(--code-text)',

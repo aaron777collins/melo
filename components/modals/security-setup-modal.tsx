@@ -211,7 +211,7 @@ export function SecuritySetupModal({ open, onClose, onComplete }: SecuritySetupM
   const handleDownloadRecoveryKey = useCallback(() => {
     if (state.generatedRecoveryKey) {
       const blob = new Blob([
-        `HAOS Matrix Recovery Key\n` +
+        `Melo Matrix Recovery Key\n` +
         `Generated: ${new Date().toISOString()}\n\n` +
         `Recovery Key:\n${state.generatedRecoveryKey}\n\n` +
         `Keep this key safe! You'll need it to access your encrypted messages ` +
@@ -221,7 +221,7 @@ export function SecuritySetupModal({ open, onClose, onComplete }: SecuritySetupM
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `haos-recovery-key-${Date.now()}.txt`;
+      a.download = `melo-recovery-key-${Date.now()}.txt`;
       a.click();
       URL.revokeObjectURL(url);
       

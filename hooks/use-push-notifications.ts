@@ -101,9 +101,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const pushService = getClientPushService();
       
       // Generate unique device ID
-      const deviceId = localStorage.getItem('haos:device-id') || (() => {
+      const deviceId = localStorage.getItem('melo:device-id') || (() => {
         const id = crypto.randomUUID();
-        localStorage.setItem('haos:device-id', id);
+        localStorage.setItem('melo:device-id', id);
         return id;
       })();
 
@@ -140,7 +140,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     try {
       const pushService = getClientPushService();
       
-      const deviceId = localStorage.getItem('haos:device-id');
+      const deviceId = localStorage.getItem('melo:device-id');
       if (!deviceId) {
         throw new Error('No device ID found');
       }

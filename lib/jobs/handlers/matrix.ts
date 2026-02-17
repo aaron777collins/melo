@@ -137,7 +137,7 @@ class MatrixHandler {
   }
   
   /**
-   * Sync user profile between Matrix and HAOS database
+   * Sync user profile between Matrix and Melo database
    */
   async syncProfile(payload: ProfileSyncPayload): Promise<{
     success: boolean;

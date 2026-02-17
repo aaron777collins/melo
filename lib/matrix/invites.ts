@@ -61,7 +61,7 @@ export class MatrixInviteService {
   constructor(client: MatrixClient, baseUrl?: string) {
     this.client = client;
     // Default to current origin for invite links
-    this.baseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://haos.app');
+    this.baseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://melo.app');
   }
 
   /**
@@ -178,7 +178,7 @@ export class MatrixInviteService {
    */
   getInvites(roomId: string): InviteLink[] {
     try {
-      const stored = localStorage.getItem(`haos_invites_${roomId}`);
+      const stored = localStorage.getItem(`melo_invites_${roomId}`);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -192,7 +192,7 @@ export class MatrixInviteService {
     try {
       const existing = this.getInvites(invite.roomId);
       const updated = [...existing, invite];
-      localStorage.setItem(`haos_invites_${invite.roomId}`, JSON.stringify(updated));
+      localStorage.setItem(`melo_invites_${invite.roomId}`, JSON.stringify(updated));
     } catch (error) {
       console.error("[InviteService] Failed to save invite:", error);
     }
@@ -205,7 +205,7 @@ export class MatrixInviteService {
     try {
       const existing = this.getInvites(roomId);
       const updated = existing.filter(invite => invite.url !== inviteUrl);
-      localStorage.setItem(`haos_invites_${roomId}`, JSON.stringify(updated));
+      localStorage.setItem(`melo_invites_${roomId}`, JSON.stringify(updated));
     } catch (error) {
       console.error("[InviteService] Failed to delete invite:", error);
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useId } from "react";
-import { Member, Profile } from "@/lib/haos-types";
+import { Member, Profile } from "@/lib/melo-types";
 import { Users, X } from "lucide-react";
 
 import { MemberSidebar } from "@/components/chat/member-sidebar";

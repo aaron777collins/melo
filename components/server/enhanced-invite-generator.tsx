@@ -265,7 +265,7 @@ export function EnhancedInviteGenerator({ spaceId, spaceName }: EnhancedInviteGe
                 )}
                 {customSlug && slugValid && (
                   <p className="text-sm text-muted-foreground">
-                    Invite URL: {typeof window !== 'undefined' ? window.location.origin : 'https://haos.app'}/invite/{customSlug}
+                    Invite URL: {typeof window !== 'undefined' ? window.location.origin : 'https://melo.app'}/invite/{customSlug}
                   </p>
                 )}
               </div>

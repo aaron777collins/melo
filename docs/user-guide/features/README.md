@@ -1,6 +1,6 @@
 # Features Overview
 
-Discover all the powerful features that make HAOS the perfect platform for communication and community building.
+Discover all the powerful features that make Melo the perfect platform for communication and community building.
 
 ## 🎯 Core Features
 
@@ -107,7 +107,7 @@ Discover all the powerful features that make HAOS the perfect platform for commu
 - **High contrast themes** for better visibility
 - **Adjustable font sizes** and zoom levels
 
-## 🏆 What Makes HAOS Special
+## 🏆 What Makes Melo Special
 
 ### Built for Communities
 - **Scalable architecture** supports servers of any size

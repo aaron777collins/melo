@@ -54,7 +54,7 @@ import {
 } from "@/lib/matrix/roles";
 import { PermissionEditor } from "@/components/server/permission-editor";
 import {
-  HaosPermissions,
+  MeloPermissions,
   PERMISSION_TEMPLATES,
   getPermissionTemplate,
   calculateRequiredPowerLevel,
@@ -280,9 +280,9 @@ export function CreateRoleModal() {
   const { isOpen, onClose, type, data } = useModal();
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [permissions, setPermissions] = useState<HaosPermissions>(() => {
+  const [permissions, setPermissions] = useState<MeloPermissions>(() => {
     const memberTemplate = getPermissionTemplate('member');
-    return memberTemplate?.permissions || {} as HaosPermissions;
+    return memberTemplate?.permissions || {} as MeloPermissions;
   });
 
   const isModalOpen = isOpen && type === "createRole";
@@ -308,7 +308,7 @@ export function CreateRoleModal() {
   // Handlers
   // =============================================================================
 
-  const handlePermissionsChange = (newPermissions: HaosPermissions) => {
+  const handlePermissionsChange = (newPermissions: MeloPermissions) => {
     setPermissions(newPermissions);
     
     // Update power level if permissions require it

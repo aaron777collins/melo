@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Enhanced Error Reporting Provider for HAOS-V2
+ * Enhanced Error Reporting Provider for Melo-V2
  * 
  * Initializes and provides the unified error reporting service
  * with environment-based configuration and Sentry integration.
@@ -98,13 +98,13 @@ export function EnhancedErrorReportingProvider({
               return null;
             }
 
-            // Add HAOS-specific context
+            // Add Melo-specific context
             return {
               ...context,
               tags: {
                 ...context.tags,
-                'haos.version': process.env.NEXT_PUBLIC_APP_VERSION || 'unknown',
-                'haos.deployment': process.env.VERCEL_ENV || 'local',
+                'melo.version': process.env.NEXT_PUBLIC_APP_VERSION || 'unknown',
+                'melo.deployment': process.env.VERCEL_ENV || 'local',
               },
               extra: {
                 ...context.extra,
@@ -118,7 +118,7 @@ export function EnhancedErrorReportingProvider({
           feedbackOptions: {
             showDialog: true,
             dialogTitle: 'Something went wrong',
-            dialogMessage: 'Help us improve HAOS by sharing what happened.',
+            dialogMessage: 'Help us improve Melo by sharing what happened.',
             collectUserInfo: true,
             allowScreenshot: false, // Privacy consideration
           },

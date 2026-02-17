@@ -1,6 +1,6 @@
 # Servers & Channels
 
-Servers are the foundation of HAOS - organized communities where people gather around shared interests. Learn how to create, manage, and customize servers and channels.
+Servers are the foundation of Melo - organized communities where people gather around shared interests. Learn how to create, manage, and customize servers and channels.
 
 ## 🏢 Understanding Servers
 

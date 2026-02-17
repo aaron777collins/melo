@@ -1,6 +1,6 @@
 # Voice & Video Calls
 
-Experience crystal-clear voice communication and high-quality video calls with HAOS's advanced real-time communication features.
+Experience crystal-clear voice communication and high-quality video calls with Melo's advanced real-time communication features.
 
 ## 🎙️ Voice Chat Basics
 
@@ -110,7 +110,7 @@ Experience crystal-clear voice communication and high-quality video calls with H
 
 **Push-to-Talk Mode:**
 - **Hotkey activation** - choose your preferred key
-- **Global hotkeys** - work outside HAOS
+- **Global hotkeys** - work outside Melo
 - **Delay settings** - how long to keep mic open
 - **Visual feedback** - mic status indicators
 

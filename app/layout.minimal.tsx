@@ -5,7 +5,7 @@ import { Open_Sans } from "next/font/google";
 const openSans = Open_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "HAOS",
+  title: "Melo",
   description: "Home Automation OS - Discord-style interface for Matrix",
 };
 

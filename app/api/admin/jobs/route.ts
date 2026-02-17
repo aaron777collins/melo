@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
  *                 description: Job-specific data
  *                 example:
  *                   userId: "@alice:example.com"
- *                   message: "Welcome to HAOS!"
+ *                   message: "Welcome to Melo!"
  *               options:
  *                 type: object
  *                 description: Job execution options

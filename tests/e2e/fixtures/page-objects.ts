@@ -1,5 +1,5 @@
 /**
- * Page Object Model for HAOS V2 E2E Tests
+ * Page Object Model for Melo V2 E2E Tests
  * 
  * Encapsulates page interactions for better maintainability.
  */

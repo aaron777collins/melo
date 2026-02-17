@@ -41,11 +41,11 @@ interface ServerInfo {
 
 const FEATURED_SERVERS: ServerInfo[] = [
   {
-    id: "#haos-community:matrix.org",
-    name: "HAOS Community",
-    description: "Official HAOS support and community discussions",
+    id: "#melo-community:matrix.org",
+    name: "Melo Community",
+    description: "Official Melo support and community discussions",
     memberCount: 250,
-    topic: "Get help, share feedback, and connect with other HAOS users",
+    topic: "Get help, share feedback, and connect with other Melo users",
     isPublic: true,
     category: "Community",
   },

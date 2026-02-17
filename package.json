@@ -1,6 +1,7 @@
 {
-  "name": "discord-clone",
+  "name": "melo",
   "version": "0.1.0",
+  "description": "A decentralized Matrix-based communication platform",
   "private": true,
   "scripts": {
     "dev": "next dev",

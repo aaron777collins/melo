@@ -51,11 +51,11 @@ const DEFAULT_EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: "dm_default",
     type: NotificationType.DirectMessage,
-    subject: "New message from {sender} - HAOS",
+    subject: "New message from {sender} - Melo",
     htmlTemplate: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px 8px 0 0; color: white;">
-          <h1 style="margin: 0; font-size: 24px;">HAOS</h1>
+          <h1 style="margin: 0; font-size: 24px;">Melo</h1>
           <p style="margin: 8px 0 0 0; opacity: 0.9;">New Direct Message</p>
         </div>
         
@@ -74,7 +74,7 @@ const DEFAULT_EMAIL_TEMPLATES: EmailTemplate[] = [
           
           <div style="text-align: center; margin-top: 24px;">
             <a href="{roomLink}" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
-              Reply in HAOS
+              Reply in Melo
             </a>
           </div>
           
@@ -86,14 +86,14 @@ const DEFAULT_EMAIL_TEMPLATES: EmailTemplate[] = [
       </div>
     `,
     textTemplate: `
-HAOS - New Direct Message
+Melo - New Direct Message
 
 From: {sender}
 Time: {timestamp}
 
 {message}
 
-Reply in HAOS: {roomLink}
+Reply in Melo: {roomLink}
 
 ---
 You received this because you have email notifications enabled for direct messages.
@@ -103,11 +103,11 @@ Manage settings: {settingsLink}
   {
     id: "mention_default",
     type: NotificationType.Mention,
-    subject: "{sender} mentioned you in {room} - HAOS",
+    subject: "{sender} mentioned you in {room} - Melo",
     htmlTemplate: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 8px 8px 0 0; color: white;">
-          <h1 style="margin: 0; font-size: 24px;">HAOS</h1>
+          <h1 style="margin: 0; font-size: 24px;">Melo</h1>
           <p style="margin: 8px 0 0 0; opacity: 0.9;">You were mentioned</p>
         </div>
         
@@ -126,7 +126,7 @@ Manage settings: {settingsLink}
           
           <div style="text-align: center; margin-top: 24px;">
             <a href="{roomLink}" style="background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
-              View in HAOS
+              View in Melo
             </a>
           </div>
           
@@ -138,7 +138,7 @@ Manage settings: {settingsLink}
       </div>
     `,
     textTemplate: `
-HAOS - You were mentioned
+Melo - You were mentioned
 
 From: {sender}
 Room: {room}
@@ -146,7 +146,7 @@ Time: {timestamp}
 
 {message}
 
-View in HAOS: {roomLink}
+View in Melo: {roomLink}
 
 ---
 You received this because you have email notifications enabled for mentions.
@@ -156,11 +156,11 @@ Manage settings: {settingsLink}
   {
     id: "invite_default",
     type: NotificationType.RoomInvite,
-    subject: "{sender} invited you to {room} - HAOS",
+    subject: "{sender} invited you to {room} - Melo",
     htmlTemplate: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 8px 8px 0 0; color: white;">
-          <h1 style="margin: 0; font-size: 24px;">HAOS</h1>
+          <h1 style="margin: 0; font-size: 24px;">Melo</h1>
           <p style="margin: 8px 0 0 0; opacity: 0.9;">Room Invitation</p>
         </div>
         
@@ -195,7 +195,7 @@ Manage settings: {settingsLink}
       </div>
     `,
     textTemplate: `
-HAOS - Room Invitation
+Melo - Room Invitation
 
 {sender} invited you to join: {room}
 Time: {timestamp}
@@ -431,7 +431,7 @@ export class EmailNotificationService {
    */
   private async sendBatchedEmail(to: string, notifications: EmailNotificationData[]): Promise<void> {
     const count = notifications.length;
-    const subject = `You have ${count} new notifications - HAOS`;
+    const subject = `You have ${count} new notifications - Melo`;
     
     // Create summary email
     const htmlParts = notifications.map(n => 
@@ -519,8 +519,8 @@ export function getEmailService(config?: EmailServiceConfig): EmailNotificationS
       config = {
         enabled: false,
         apiEndpoint: '/api/notifications/email',
-        fromEmail: 'noreply@haos.example.com',
-        fromName: 'HAOS Notifications',
+        fromEmail: 'noreply@melo.example.com',
+        fromName: 'Melo Notifications',
         batchingDelayMs: 300000, // 5 minutes
         maxBatchSize: 10
       };

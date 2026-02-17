@@ -20,11 +20,11 @@ const FAQData = [
     questions: [
       {
         question: 'Can I create my own server?',
-        answer: 'Yes! HAOS supports self-hosting and allows you to create and manage your own Matrix server with full control over users and permissions.'
+        answer: 'Yes! Melo supports self-hosting and allows you to create and manage your own Matrix server with full control over users and permissions.'
       },
       {
         question: 'What platforms are supported?',
-        answer: 'HAOS is a web application that works on desktop and mobile browsers. Native mobile and desktop apps are in development.'
+        answer: 'Melo is a web application that works on desktop and mobile browsers. Native mobile and desktop apps are in development.'
       }
     ]
   }

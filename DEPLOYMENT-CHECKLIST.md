@@ -1,4 +1,4 @@
-# HAOS-V2 Deployment Automation - Success Criteria Checklist
+# Melo-V2 Deployment Automation - Success Criteria Checklist
 
 ## ✅ Completed Implementation
 
@@ -185,7 +185,7 @@
 - `PROD_HOST` - Production server hostname
 - `PROD_USERNAME` - SSH username for production server
 - `PROD_SSH_KEY` - SSH private key for production server
-- `PROD_PATH` - Application path on production server (e.g., /var/www/haos-v2)
+- `PROD_PATH` - Application path on production server (e.g., /var/www/melo-v2)
 
 **Development Server (existing):**
 - `DEV2_HOST` - Development server hostname

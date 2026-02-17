@@ -3,7 +3,7 @@
 import React from "react";
 
 /**
- * Error Reporting Hook for HAOS-V2
+ * Error Reporting Hook for Melo-V2
  * 
  * Enhanced with unified error reporting service integration.
  * Provides error reporting functionality to monitoring services
@@ -156,10 +156,10 @@ class ErrorReportingService {
   private getSessionId(): string {
     if (typeof window === 'undefined') return 'server-session';
     
-    let sessionId = sessionStorage.getItem('haos-session-id');
+    let sessionId = sessionStorage.getItem('melo-session-id');
     if (!sessionId) {
       sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      sessionStorage.setItem('haos-session-id', sessionId);
+      sessionStorage.setItem('melo-session-id', sessionId);
     }
     return sessionId;
   }
@@ -171,7 +171,7 @@ class ErrorReportingService {
 
   private storeErrorLocally(report: ErrorReport) {
     try {
-      const stored = JSON.parse(localStorage.getItem('haos-error-reports') || '[]');
+      const stored = JSON.parse(localStorage.getItem('melo-error-reports') || '[]');
       stored.push(report);
 
       // Keep only the most recent errors
@@ -179,7 +179,7 @@ class ErrorReportingService {
         stored.splice(0, stored.length - this.config.maxStoredErrors);
       }
 
-      localStorage.setItem('haos-error-reports', JSON.stringify(stored));
+      localStorage.setItem('melo-error-reports', JSON.stringify(stored));
     } catch (error) {
       console.warn('Failed to store error report locally:', error);
     }
@@ -211,7 +211,7 @@ class ErrorReportingService {
     // Multiple backend options
     const promises = [];
 
-    // Option 1: Custom HAOS endpoint
+    // Option 1: Custom Melo endpoint
     if (this.config.endpoint) {
       promises.push(this.sendToCustomEndpoint(reports));
     }
@@ -244,7 +244,7 @@ class ErrorReportingService {
       body: JSON.stringify({
         reports,
         metadata: {
-          source: 'haos-v2',
+          source: 'melo-v2',
           timestamp: new Date().toISOString(),
         },
       }),
@@ -280,7 +280,7 @@ class ErrorReportingService {
   getStoredErrors(): ErrorReport[] {
     if (typeof window === 'undefined') return [];
     try {
-      return JSON.parse(localStorage.getItem('haos-error-reports') || '[]');
+      return JSON.parse(localStorage.getItem('melo-error-reports') || '[]');
     } catch {
       return [];
     }
@@ -288,7 +288,7 @@ class ErrorReportingService {
 
   clearStoredErrors(): void {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('haos-error-reports');
+      localStorage.removeItem('melo-error-reports');
     }
     this.queue = [];
   }
@@ -350,7 +350,7 @@ export function useErrorReporting(options: UseErrorReportingOptions = {}) {
       
       if (options.showToast !== false) {
         toast.success("Error reported successfully", {
-          description: "Thank you for helping us improve HAOS",
+          description: "Thank you for helping us improve Melo",
         });
       }
 
@@ -514,7 +514,7 @@ export function useErrorReportingService(options: UseErrorReportingServiceOption
         
         if (options.showToast !== false) {
           toast.success("Error reported successfully", {
-            description: "Thank you for helping us improve HAOS",
+            description: "Thank you for helping us improve Melo",
           });
         }
       }

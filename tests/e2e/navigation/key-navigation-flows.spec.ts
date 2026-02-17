@@ -2,7 +2,7 @@
  * Key Navigation Flow Tests
  * 
  * Tests for critical navigation patterns and user flows
- * throughout the HAOS v2 application.
+ * throughout the Melo v2 application.
  */
 
 import { test, expect } from '@playwright/test';

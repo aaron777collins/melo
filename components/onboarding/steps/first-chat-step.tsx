@@ -3,7 +3,7 @@
 /**
  * First Chat Step Component
  * 
- * Interactive tutorial that teaches users the basics of chatting in HAOS.
+ * Interactive tutorial that teaches users the basics of chatting in Melo.
  * Shows chat features like sending messages, reactions, and basic formatting.
  */
 
@@ -48,19 +48,19 @@ interface ChatMessage {
 const TUTORIAL_MESSAGES: ChatMessage[] = [
   {
     id: "1",
-    sender: "HAOS Bot",
+    sender: "Melo Bot",
     content: "Welcome to your first chat! 👋 This is where conversations happen.",
     timestamp: "2:30 PM",
   },
   {
     id: "2", 
-    sender: "HAOS Bot",
+    sender: "Melo Bot",
     content: "Messages appear in chronological order, with the newest at the bottom.",
     timestamp: "2:30 PM",
   },
   {
     id: "3",
-    sender: "HAOS Bot", 
+    sender: "Melo Bot", 
     content: "Try typing a message in the text box below! You can use basic formatting like **bold** and *italic*.",
     timestamp: "2:31 PM",
   },
@@ -214,7 +214,7 @@ export function FirstChatStep({
         </div>
         <h1 className="text-2xl font-bold">Learn to Chat</h1>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Let's learn the basics of sending messages and interacting in HAOS
+          Let's learn the basics of sending messages and interacting in Melo
           {selectedServer && ` in ${selectedServer.name}`}
         </p>
       </div>
@@ -387,7 +387,7 @@ export function FirstChatStep({
         <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
           <CheckCircle className="w-4 h-4 text-green-600" />
           <AlertDescription className="text-green-800 dark:text-green-200">
-            <strong>Great job!</strong> You've mastered the basics of chatting in HAOS. 
+            <strong>Great job!</strong> You've mastered the basics of chatting in Melo. 
             You're ready to start real conversations!
           </AlertDescription>
         </Alert>

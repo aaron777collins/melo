@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive accessibility improvements have been implemented for the HAOS application, focusing on screen readers, keyboard navigation, and inclusive design.
+Comprehensive accessibility improvements have been implemented for the Melo application, focusing on screen readers, keyboard navigation, and inclusive design.
 
 ## Implementation Summary
 

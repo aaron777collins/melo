@@ -1,10 +1,10 @@
-# HAOS API Documentation (Generated)
+# Melo API Documentation (Generated)
 
 *This documentation is auto-generated from source code. Last updated: 2026-02-16T23:11:22.212Z*
 
 ## Overview
 
-This document provides detailed information about all HAOS API endpoints, automatically extracted from the source code.
+This document provides detailed information about all Melo API endpoints, automatically extracted from the source code.
 
 ## Real-time
 
@@ -198,7 +198,7 @@ Jobs are executed asynchronously by worker processes.
                 description: Job-specific data
                 example:
                   userId: "@alice:example.com"
-                  message: "Welcome to HAOS!"
+                  message: "Welcome to Melo!"
               options:
                 type: object
                 description: Job execution options

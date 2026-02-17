@@ -1,9 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * HAOS V2 Playwright Configuration
+ * Melo V2 Playwright Configuration
  * 
- * Comprehensive E2E testing suite for the HAOS V2 Matrix client.
+ * Comprehensive E2E testing suite for the Melo V2 Matrix client.
  * Runs against Dev2 server: https://dev2.aaroncollins.info
  */
 export default defineConfig({

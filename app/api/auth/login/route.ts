@@ -110,7 +110,7 @@ export async function POST(req: Request) {
     
     const session = await loginWithPassword(username, password, {
       homeserverUrl: homeserverUrl || process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL,
-      deviceDisplayName: "HAOS Web",
+      deviceDisplayName: "Melo Web",
       requestRefreshToken: true,
     });
 
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Use type assertion for custom account data key
-      const accountData = client.getAccountData('im.haos.two_factor' as any);
+      const accountData = client.getAccountData('im.melo.two_factor' as any);
       const twoFactorData = accountData?.getContent();
       twoFactorEnabled = twoFactorData?.enabled === true && twoFactorData?.secret;
       

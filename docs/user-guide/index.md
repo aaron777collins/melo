@@ -1,6 +1,6 @@
-# HAOS User Guide
+# Melo User Guide
 
-Welcome to HAOS! This comprehensive guide will help you get started and make the most of your chat experience.
+Welcome to Melo! This comprehensive guide will help you get started and make the most of your chat experience.
 
 ## 📚 Quick Navigation
 
@@ -30,9 +30,9 @@ Welcome to HAOS! This comprehensive guide will help you get started and make the
 
 ---
 
-## About HAOS
+## About Melo
 
-HAOS is a modern communication platform that brings people together through:
+Melo is a modern communication platform that brings people together through:
 
 - **Servers**: Organized communities with multiple channels
 - **Real-time Messaging**: Instant communication with emoji reactions and file sharing  

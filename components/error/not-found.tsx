@@ -4,7 +4,7 @@
  * Enhanced 404 Not Found Page Component
  * 
  * Provides a user-friendly 404 page with helpful navigation options,
- * search suggestions, and recovery paths for HAOS-V2.
+ * search suggestions, and recovery paths for Melo-V2.
  */
 
 import React, { useState, useEffect } from "react";
@@ -111,7 +111,7 @@ const suggestions: SuggestionItem[] = [
   {
     title: "Help Center",
     path: "/help",
-    description: "Get help using HAOS",
+    description: "Get help using Melo",
     category: "help"
   },
   {
@@ -160,7 +160,7 @@ function useRecentPages() {
     if (typeof window === 'undefined') return;
 
     try {
-      const recent = JSON.parse(localStorage.getItem('haos-recent-pages') || '[]');
+      const recent = JSON.parse(localStorage.getItem('melo-recent-pages') || '[]');
       setRecentPages(recent.slice(0, 3)); // Show only last 3
     } catch {
       setRecentPages([]);

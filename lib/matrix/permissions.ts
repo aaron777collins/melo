@@ -13,9 +13,9 @@ import { getClient } from "./client";
 // =============================================================================
 
 /**
- * Granular permission structure for HAOS roles
+ * Granular permission structure for Melo roles
  */
-export interface HaosPermissions {
+export interface MeloPermissions {
   // === Server Management ===
   /** Can change server name, icon, banner */
   manageServer: boolean;
@@ -102,7 +102,7 @@ export interface PermissionCategory {
   id: string;
   name: string;
   description: string;
-  permissions: (keyof HaosPermissions)[];
+  permissions: (keyof MeloPermissions)[];
   icon: string;
 }
 
@@ -113,7 +113,7 @@ export interface PermissionTemplate {
   id: string;
   name: string;
   description: string;
-  permissions: HaosPermissions;
+  permissions: MeloPermissions;
   recommendedPowerLevel: number;
   color: string;
 }
@@ -383,9 +383,9 @@ export const PERMISSION_TEMPLATES: PermissionTemplate[] = [
 // =============================================================================
 
 /**
- * Maps HAOS permissions to Matrix event types and required power levels
+ * Maps Melo permissions to Matrix event types and required power levels
  */
-export const MATRIX_PERMISSION_MAPPINGS: Record<keyof HaosPermissions, MatrixPermissionMapping[]> = {
+export const MATRIX_PERMISSION_MAPPINGS: Record<keyof MeloPermissions, MatrixPermissionMapping[]> = {
   // Server Management
   manageServer: [
     { eventType: 'm.room.name', powerLevel: 100, isStateEvent: true, scope: 'both' },
@@ -494,13 +494,13 @@ export function getPermissionTemplate(templateId: string): PermissionTemplate | 
 /**
  * Calculate the minimum power level required for a set of permissions
  */
-export function calculateRequiredPowerLevel(permissions: HaosPermissions): number {
+export function calculateRequiredPowerLevel(permissions: MeloPermissions): number {
   let maxPowerLevel = 0;
 
   for (const [permission, enabled] of Object.entries(permissions)) {
     if (!enabled) continue;
 
-    const mappings = MATRIX_PERMISSION_MAPPINGS[permission as keyof HaosPermissions];
+    const mappings = MATRIX_PERMISSION_MAPPINGS[permission as keyof MeloPermissions];
     for (const mapping of mappings) {
       maxPowerLevel = Math.max(maxPowerLevel, mapping.powerLevel);
     }
@@ -510,10 +510,10 @@ export function calculateRequiredPowerLevel(permissions: HaosPermissions): numbe
 }
 
 /**
- * Generate Matrix power levels content from HAOS permissions
+ * Generate Matrix power levels content from Melo permissions
  */
 export function generateMatrixPowerLevels(
-  permissions: HaosPermissions,
+  permissions: MeloPermissions,
   basePowerLevel: number = 0,
   existingPowerLevels?: any
 ): any {
@@ -533,7 +533,7 @@ export function generateMatrixPowerLevels(
   for (const [permission, enabled] of Object.entries(permissions)) {
     if (!enabled) continue;
 
-    const mappings = MATRIX_PERMISSION_MAPPINGS[permission as keyof HaosPermissions];
+    const mappings = MATRIX_PERMISSION_MAPPINGS[permission as keyof MeloPermissions];
     for (const mapping of mappings) {
       if (mapping.isStateEvent) {
         if (mapping.eventType === 'state_default') {
@@ -566,7 +566,7 @@ export function generateMatrixPowerLevels(
  */
 export function hasPermission(
   userPowerLevel: number,
-  permission: keyof HaosPermissions,
+  permission: keyof MeloPermissions,
   roomPowerLevels?: any
 ): boolean {
   const mappings = MATRIX_PERMISSION_MAPPINGS[permission];
@@ -603,10 +603,10 @@ export function hasPermission(
 export function getUserPermissions(
   userPowerLevel: number,
   roomPowerLevels?: any
-): HaosPermissions {
-  const permissions: HaosPermissions = {} as HaosPermissions;
+): MeloPermissions {
+  const permissions: MeloPermissions = {} as MeloPermissions;
   
-  for (const permission of Object.keys(MATRIX_PERMISSION_MAPPINGS) as (keyof HaosPermissions)[]) {
+  for (const permission of Object.keys(MATRIX_PERMISSION_MAPPINGS) as (keyof MeloPermissions)[]) {
     permissions[permission] = hasPermission(userPowerLevel, permission, roomPowerLevels);
   }
   
@@ -617,7 +617,7 @@ export function getUserPermissions(
  * Validate that permissions are consistent with power level
  */
 export function validatePermissions(
-  permissions: HaosPermissions,
+  permissions: MeloPermissions,
   powerLevel: number
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
@@ -652,9 +652,9 @@ export function validatePermissions(
  * Apply permission template to existing permissions
  */
 export function applyPermissionTemplate(
-  currentPermissions: HaosPermissions,
+  currentPermissions: MeloPermissions,
   templateId: string
-): HaosPermissions {
+): MeloPermissions {
   const template = getPermissionTemplate(templateId);
   if (!template) {
     throw new Error(`Permission template '${templateId}' not found`);
@@ -664,11 +664,11 @@ export function applyPermissionTemplate(
 }
 
 /**
- * Update room power levels based on HAOS permissions
+ * Update room power levels based on Melo permissions
  */
 export async function updateRoomPermissions(
   roomId: string,
-  permissions: HaosPermissions,
+  permissions: MeloPermissions,
   basePowerLevel: number = 0
 ): Promise<void> {
   const client = getClient();
@@ -719,7 +719,7 @@ export async function getChannelPermissions(channelId: string): Promise<ChannelP
     const room = client.getRoom(channelId);
     if (!room) return null;
 
-    const permissionData = room.getAccountData("dev.haos.channel_permissions");
+    const permissionData = room.getAccountData("dev.melo.channel_permissions");
     return (permissionData?.getContent() as ChannelPermissions) || null;
   } catch (error) {
     console.error("Failed to get channel permissions:", error);
@@ -743,7 +743,7 @@ export async function setChannelPermissions(
     permissions.lastUpdated = new Date().toISOString();
     permissions.version = (permissions.version || 0) + 1;
 
-    await client.setRoomAccountData(channelId, "dev.haos.channel_permissions", permissions);
+    await client.setRoomAccountData(channelId, "dev.melo.channel_permissions", permissions);
     console.log(`Updated channel permissions for ${channelId}`);
   } catch (error) {
     console.error("Failed to set channel permissions:", error);
@@ -758,7 +758,7 @@ export async function setChannelRolePermissionOverride(
   channelId: string,
   roleId: string,
   roleName: string,
-  permissionOverrides: Partial<HaosPermissions>,
+  permissionOverrides: Partial<MeloPermissions>,
   createdBy: string
 ): Promise<void> {
   const existingPermissions = await getChannelPermissions(channelId);
@@ -807,7 +807,7 @@ export async function setChannelUserPermissionOverride(
   channelId: string,
   userId: string,
   displayName: string,
-  permissionOverrides: Partial<HaosPermissions>,
+  permissionOverrides: Partial<MeloPermissions>,
   createdBy: string
 ): Promise<void> {
   const existingPermissions = await getChannelPermissions(channelId);
@@ -895,7 +895,7 @@ export async function removeChannelUserPermissionOverride(
 export async function hasChannelPermission(
   channelId: string,
   userId: string,
-  permission: keyof HaosPermissions,
+  permission: keyof MeloPermissions,
   userRoles?: { roleId: string, roleName: string, powerLevel: number }[],
   roomPowerLevels?: any
 ): Promise<PermissionCheckResult> {
@@ -994,10 +994,10 @@ export async function getChannelUserPermissions(
   channelId: string,
   userId: string,
   userRoles?: { roleId: string, roleName: string, powerLevel: number }[]
-): Promise<HaosPermissions> {
-  const permissions: HaosPermissions = {} as HaosPermissions;
+): Promise<MeloPermissions> {
+  const permissions: MeloPermissions = {} as MeloPermissions;
   
-  for (const permission of Object.keys(MATRIX_PERMISSION_MAPPINGS) as (keyof HaosPermissions)[]) {
+  for (const permission of Object.keys(MATRIX_PERMISSION_MAPPINGS) as (keyof MeloPermissions)[]) {
     const result = await hasChannelPermission(channelId, userId, permission, userRoles);
     permissions[permission] = result.allowed;
   }
@@ -1018,7 +1018,7 @@ export async function executeBulkPermissionOperation(
 
   for (const targetId of operation.targetIds) {
     try {
-      let permissionOverrides: Partial<HaosPermissions> = {};
+      let permissionOverrides: Partial<MeloPermissions> = {};
 
       if (operation.type === 'copy' && operation.copyFromId) {
         // Copy permissions from another target

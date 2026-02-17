@@ -278,7 +278,7 @@ function PrivacySettingsContent() {
                 • Blocked users are maintained using the Matrix ignored users list for compatibility across Matrix clients.
               </p>
               <p>
-                • Privacy settings only affect interactions within this HAOS instance and may not apply to other Matrix clients.
+                • Privacy settings only affect interactions within this Melo instance and may not apply to other Matrix clients.
               </p>
               <p>
                 • Some settings may take a few moments to take effect across all your devices.

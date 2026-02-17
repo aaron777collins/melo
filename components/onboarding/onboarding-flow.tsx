@@ -4,7 +4,7 @@
  * Onboarding Flow Component
  * 
  * Main wizard component that orchestrates the multi-step onboarding process
- * for new HAOS users. Includes profile setup, server joining, and chat tutorials.
+ * for new Melo users. Includes profile setup, server joining, and chat tutorials.
  */
 
 import React, { useEffect } from "react";
@@ -242,7 +242,7 @@ export function OnboardingFlow({
         <div className="sticky top-0 bg-background border-b p-6 z-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold">Welcome to HAOS</h2>
+              <h2 className="text-xl font-semibold">Welcome to Melo</h2>
               {getCurrentStepData()?.isOptional && (
                 <Badge variant="secondary" className="text-xs">
                   Optional

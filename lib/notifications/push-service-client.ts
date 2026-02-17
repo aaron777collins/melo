@@ -405,7 +405,7 @@ export function getClientPushService(): ClientPushNotificationService {
 // =============================================================================
 
 export const SERVICE_WORKER_TEMPLATE = `
-// HAOS Push Notification Service Worker
+// Melo Push Notification Service Worker
 // This handles background push notifications and user interactions
 
 self.addEventListener('push', function(event) {

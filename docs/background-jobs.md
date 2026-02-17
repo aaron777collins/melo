@@ -1,6 +1,6 @@
 # Background Job Queue System
 
-A comprehensive background job queue system for HAOS v2, enabling async processing of tasks like email sending, file processing, notifications, and more.
+A comprehensive background job queue system for Melo v2, enabling async processing of tasks like email sending, file processing, notifications, and more.
 
 ## Features
 
@@ -76,7 +76,7 @@ A comprehensive background job queue system for HAOS v2, enabling async processi
 ### Matrix Operations
 - `matrix:room-cleanup` - Clean up old room data
 - `matrix:user-export` - Export user data
-- `matrix:sync-profile` - Sync profile between Matrix and HAOS
+- `matrix:sync-profile` - Sync profile between Matrix and Melo
 
 ### System Cleanup
 - `cleanup:old-files` - Remove old files from filesystem
@@ -95,7 +95,7 @@ import { jobQueue } from "@/lib/jobs/queue";
 await jobQueue.add("email:send", {
   to: "user@example.com",
   subject: "Welcome!",
-  html: "<p>Welcome to HAOS!</p>",
+  html: "<p>Welcome to Melo!</p>",
 });
 
 // High priority job with retry options
@@ -168,7 +168,7 @@ Access the admin interface at `/admin/jobs` to:
 
 ```env
 # Database (required)
-DATABASE_URL="postgresql://user:password@localhost:5432/haos"
+DATABASE_URL="postgresql://user:password@localhost:5432/melo"
 
 # Job Queue Settings (optional)
 JOB_QUEUE_DEFAULT_CONCURRENCY=1
@@ -226,14 +226,14 @@ Use PM2 or similar for production worker management:
 {
   "apps": [
     {
-      "name": "haos-worker-general",
+      "name": "melo-worker-general",
       "script": "npx tsx scripts/start-worker.ts",
       "args": "--concurrency 5",
       "instances": 2,
       "autorestart": true
     },
     {
-      "name": "haos-worker-email",
+      "name": "melo-worker-email",
       "script": "npx tsx scripts/start-worker.ts", 
       "args": "--types email --concurrency 10",
       "instances": 1,

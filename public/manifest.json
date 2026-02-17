@@ -1,6 +1,6 @@
 {
-  "name": "HAOS - Home Automation OS",
-  "short_name": "HAOS",
+  "name": "Melo - Home Automation OS",
+  "short_name": "Melo",
   "description": "Discord-style interface for Matrix communication",
   "start_url": "/",
   "display": "standalone",

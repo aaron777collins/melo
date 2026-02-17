@@ -36,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getClient } from "@/lib/matrix/client";
 import { type MatrixProfile } from "@/lib/current-profile";
-import { type Server, type Channel } from "@/lib/haos-types";
+import { type Server, type Channel } from "@/lib/melo-types";
 
 // =============================================================================
 // Types
@@ -99,7 +99,7 @@ const MUTE_DURATIONS = [
   { label: "Until I turn it back on", value: () => addWeeks(new Date(), 520) }, // ~10 years
 ];
 
-const ACCOUNT_DATA_TYPE = "com.haos.notification_settings";
+const ACCOUNT_DATA_TYPE = "com.melo.notification_settings";
 
 // =============================================================================
 // Utility Functions

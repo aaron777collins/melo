@@ -1,10 +1,10 @@
-# HAOS v2 Bundle Optimization
+# Melo v2 Bundle Optimization
 
-This document outlines the bundle optimization strategies implemented for HAOS v2 to achieve significant bundle size reduction and improved performance.
+This document outlines the bundle optimization strategies implemented for Melo v2 to achieve significant bundle size reduction and improved performance.
 
 ## Overview
 
-The HAOS v2 application is a complex Next.js application with heavy dependencies including:
+The Melo v2 application is a complex Next.js application with heavy dependencies including:
 - Matrix JS SDK for real-time communication
 - LiveKit for video/audio streaming
 - Extensive UI component library (Radix UI)

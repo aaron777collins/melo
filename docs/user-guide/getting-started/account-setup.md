@@ -1,12 +1,12 @@
 # Account Setup
 
-Setting up your HAOS account is quick and easy. Follow these steps to get started.
+Setting up your Melo account is quick and easy. Follow these steps to get started.
 
 ## 📝 Creating Your Account
 
 ### Step 1: Visit the Sign-Up Page
 
-1. Navigate to the HAOS website
+1. Navigate to the Melo website
 2. Click **"Sign Up"** in the top-right corner
 3. You'll be taken to the registration page
 
@@ -28,7 +28,7 @@ You can create an account using:
 
 **For Social Sign-Up:**
 1. Click your preferred provider (Google/GitHub)
-2. Authorize HAOS to access your account
+2. Authorize Melo to access your account
 3. Choose a username (or use your existing one)
 4. Complete the setup
 
@@ -38,7 +38,7 @@ After signing up:
 
 1. Check your email inbox for a verification message
 2. Click the **"Verify Email"** link
-3. You'll be redirected back to HAOS
+3. You'll be redirected back to Melo
 4. Your account is now active!
 
 > **💡 Tip**: Check your spam folder if you don't see the verification email within a few minutes.
@@ -79,7 +79,7 @@ After signing up:
 
 ## 📱 Mobile App Setup
 
-1. Download the HAOS app from your app store
+1. Download the Melo app from your app store
 2. Sign in with your existing credentials
 3. Enable push notifications for the best experience
 4. Sync your settings across devices

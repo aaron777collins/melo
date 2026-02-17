@@ -3,7 +3,7 @@
  * Simple test script to verify push notification setup
  */
 
-console.log('🔔 Testing HAOS Push Notification Setup\n');
+console.log('🔔 Testing Melo Push Notification Setup\n');
 
 // Test 1: Check environment variables
 console.log('1. Environment Configuration:');

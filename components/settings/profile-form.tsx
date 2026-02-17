@@ -230,7 +230,7 @@ export function ProfileForm({ profile, onUpdate }: ProfileFormProps) {
 
       // Update bio (store in account data)
       if (data.bio !== undefined) {
-        await client.setAccountData('org.haos.profile.bio' as any, {
+        await client.setAccountData('org.melo.profile.bio' as any, {
           bio: data.bio,
           updated: Date.now(),
         } as any);

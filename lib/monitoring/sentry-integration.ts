@@ -1,7 +1,7 @@
 /**
- * Sentry Integration for HAOS-V2 Error Reporting
+ * Sentry Integration for Melo-V2 Error Reporting
  * 
- * Provides Sentry SDK integration with HAOS-specific configuration,
+ * Provides Sentry SDK integration with Melo-specific configuration,
  * source map support, and Matrix-aware context enrichment.
  */
 
@@ -61,7 +61,7 @@ export class SentryErrorReportingService implements ErrorReportingService {
       if (this.config.dsn) {
         this.sentry = await import('@sentry/nextjs');
         
-        // Initialize Sentry with HAOS-specific configuration
+        // Initialize Sentry with Melo-specific configuration
         this.sentry.init({
           dsn: this.config.dsn,
           environment: this.config.environment,
@@ -108,7 +108,7 @@ export class SentryErrorReportingService implements ErrorReportingService {
               return null;
             }
 
-            // Enhance with HAOS-specific context
+            // Enhance with Melo-specific context
             return this.enhanceEvent(event, hint);
           },
 
@@ -155,9 +155,9 @@ export class SentryErrorReportingService implements ErrorReportingService {
           });
         }
 
-        // HAOS-specific tags
-        scope.setTag('haos.version', process.env.NEXT_PUBLIC_APP_VERSION || 'unknown');
-        scope.setTag('haos.environment', this.config.environment);
+        // Melo-specific tags
+        scope.setTag('melo.version', process.env.NEXT_PUBLIC_APP_VERSION || 'unknown');
+        scope.setTag('melo.environment', this.config.environment);
         if (matrixServer) {
           scope.setTag('matrix.homeserver', matrixServer);
         }
@@ -264,7 +264,7 @@ export class SentryErrorReportingService implements ErrorReportingService {
       this.sentry.captureUserFeedback({
         event_id: errorId,
         name: feedback.email ? feedback.email.split('@')[0] : 'Anonymous User',
-        email: feedback.email || 'anonymous@haos.local',
+        email: feedback.email || 'anonymous@melo.local',
         comments: feedback.description,
       });
 
@@ -295,7 +295,7 @@ export class SentryErrorReportingService implements ErrorReportingService {
       const result = await this.sentry.showReportDialog({
         eventId: errorId,
         title: 'Something went wrong',
-        subtitle: 'Help us improve HAOS by sharing what happened.',
+        subtitle: 'Help us improve Melo by sharing what happened.',
         subtitle2: 'Your feedback helps make the app better for everyone.',
         labelName: 'Name (optional)',
         labelEmail: 'Email (optional)',
@@ -449,14 +449,14 @@ export class SentryErrorReportingService implements ErrorReportingService {
   }
 
   private enhanceEvent(event: any, hint?: any): any {
-    // Add HAOS-specific fingerprinting
+    // Add Melo-specific fingerprinting
     if (event?.exception?.values?.[0]) {
       const error = event.exception.values[0];
       
       // Enhance stack trace with source maps context
       if (error.stacktrace?.frames) {
         error.stacktrace.frames.forEach((frame: any) => {
-          if (frame.filename?.includes('haos-v2')) {
+          if (frame.filename?.includes('melo-v2')) {
             frame.in_app = true;
           }
         });

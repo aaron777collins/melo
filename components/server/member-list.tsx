@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useMatrixClient } from "@/hooks/use-matrix-client";
 import { useModal } from "@/hooks/use-modal-store";
-import { Member, MemberRole, Profile } from "@/lib/haos-types";
+import { Member, MemberRole, Profile } from "@/lib/melo-types";
 import { MatrixRole } from "@/components/server/role-manager";
 import rolesService from "@/lib/matrix/roles";
 import { createModerationService } from "@/lib/matrix/moderation";

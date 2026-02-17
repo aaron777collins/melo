@@ -27,7 +27,7 @@ program.parse();
 const options = program.opts();
 
 async function main() {
-  console.log("🚀 Starting HAOS Background Job Worker");
+  console.log("🚀 Starting Melo Background Job Worker");
   console.log("=====================================");
   
   const concurrency = parseInt(options.concurrency);

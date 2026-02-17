@@ -53,7 +53,7 @@ export default function DocsPage() {
               <Button asChild variant="outline">
                 <Link href="/">
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Return to HAOS
+                  Return to Melo
                 </Link>
               </Button>
             </div>
@@ -69,7 +69,7 @@ export default function DocsPage() {
         <div className="container mx-auto p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">HAOS API Documentation</h1>
+              <h1 className="text-2xl font-bold">Melo API Documentation</h1>
               <p className="text-muted-foreground text-sm">
                 Interactive API explorer and documentation
               </p>
@@ -84,7 +84,7 @@ export default function DocsPage() {
               <Button asChild variant="outline" size="sm">
                 <Link href="/">
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Back to HAOS
+                  Back to Melo
                 </Link>
               </Button>
             </div>
@@ -98,12 +98,12 @@ export default function DocsPage() {
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
             <div>
-              <p>HAOS API Documentation - Development Environment</p>
+              <p>Melo API Documentation - Development Environment</p>
             </div>
             <div className="flex items-center gap-4">
               <span>Generated from source code</span>
               <Link 
-                href="https://github.com/aaron777collins/haos-v2" 
+                href="https://github.com/aaron777collins/melo-v2" 
                 className="text-blue-600 hover:underline inline-flex items-center gap-1"
               >
                 <ExternalLink className="h-3 w-3" />

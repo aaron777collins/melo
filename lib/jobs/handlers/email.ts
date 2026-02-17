@@ -282,7 +282,7 @@ class EmailHandler {
     
     const emailPayload: SendEmailPayload = {
       to: userEmail,
-      subject: `Your ${type} HAOS digest`,
+      subject: `Your ${type} Melo digest`,
       html: digestContent.html,
       text: digestContent.text,
     };
@@ -302,7 +302,7 @@ class EmailHandler {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Your ${type} HAOS Digest</title>
+          <title>Your ${type} Melo Digest</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { background: #5865f2; color: white; padding: 20px; border-radius: 8px; }
@@ -313,7 +313,7 @@ class EmailHandler {
         </head>
         <body>
           <div class="header">
-            <h1>Your ${type} HAOS Digest</h1>
+            <h1>Your ${type} Melo Digest</h1>
             <p>Here's what happened while you were away</p>
           </div>
           
@@ -365,7 +365,7 @@ class EmailHandler {
     `;
     
     const text = `
-Your ${type} HAOS Digest
+Your ${type} Melo Digest
 
 ${notifications.length > 0 ? `
 Notifications (${notifications.length}):

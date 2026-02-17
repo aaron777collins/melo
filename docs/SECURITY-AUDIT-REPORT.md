@@ -1,4 +1,4 @@
-# HAOS v2 Security Audit Report
+# Melo v2 Security Audit Report
 
 **Audit Date:** 2025-02-14  
 **Auditor:** Sophie (Security Audit Subagent)  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This security audit examined the HAOS v2 Matrix E2EE implementation, including crypto initialization, room encryption, device verification, cross-signing, key backup, secret storage (4S), and LiveKit integration.
+This security audit examined the Melo v2 Matrix E2EE implementation, including crypto initialization, room encryption, device verification, cross-signing, key backup, secret storage (4S), and LiveKit integration.
 
 ### Risk Summary
 
@@ -371,7 +371,7 @@ export async function setupSecretStorage(options): Promise<SecretStorageSetupRes
 ```typescript
 // Account data created but not proper 4S integration
 await client.setAccountData("m.secret_storage.default_key", {
-  key: "haos_default_key",
+  key: "melo_default_key",
   // ... partial implementation
 });
 ```
@@ -875,9 +875,9 @@ describe('Rate Limiting', () => {
 
 ## 13. Conclusion
 
-The HAOS v2 E2EE implementation provides a reasonable foundation but requires significant work before it can be considered secure for production use. The critical issues around recovery key generation, cross-signing reset, and incomplete secret storage integration must be addressed immediately.
+The Melo v2 E2EE implementation provides a reasonable foundation but requires significant work before it can be considered secure for production use. The critical issues around recovery key generation, cross-signing reset, and incomplete secret storage integration must be addressed immediately.
 
-The good news is that the Matrix JS SDK handles most of the cryptographic heavy lifting correctly - the issues are primarily in the HAOS wrapper layer. By properly utilizing the SDK's built-in functions rather than reimplementing crypto operations, most of these issues can be resolved.
+The good news is that the Matrix JS SDK handles most of the cryptographic heavy lifting correctly - the issues are primarily in the Melo wrapper layer. By properly utilizing the SDK's built-in functions rather than reimplementing crypto operations, most of these issues can be resolved.
 
 ### Next Steps
 

@@ -1,6 +1,6 @@
 # Joining Your First Server
 
-Servers are the heart of HAOS - they're organized communities where people gather to chat, share, and connect around common interests.
+Servers are the heart of Melo - they're organized communities where people gather to chat, share, and connect around common interests.
 
 ## 🏠 What is a Server?
 
@@ -18,8 +18,8 @@ The most common way to join a server is through an invite link.
 ### Step 1: Get an Invite Link
 
 Invite links look like:
-- `https://haos.app/invite/abc123`
-- `haos.app/invite/xyz789`
+- `https://melo.app/invite/abc123`
+- `melo.app/invite/xyz789`
 - Or just the code: `abc123`
 
 You might receive these from:
@@ -143,7 +143,7 @@ If you need to leave a server:
 
 ## ✅ Success!
 
-You're now part of your first HAOS server! Here's what to do next:
+You're now part of your first Melo server! Here's what to do next:
 
 - **Next step**: [Learn Basic Navigation](./navigation.md) →
 - Explore server channels and features

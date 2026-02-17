@@ -20,7 +20,7 @@ export default async function MainLayout({
       {/* Keyboard navigation help for screen readers */}
       <KeyboardNavigationHints />
       
-      <div className="h-full" role="application" aria-label="HAOS Chat Application">
+      <div className="h-full" role="application" aria-label="Melo Chat Application">
         {/* Navigation sidebar - hidden on mobile, fixed on desktop */}
         <aside 
           id="navigation-sidebar"

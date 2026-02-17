@@ -40,10 +40,10 @@ export interface BlockedUser {
 // =============================================================================
 
 /** Account data event type for privacy settings */
-const PRIVACY_SETTINGS_EVENT_TYPE = "dev.haos.privacy_settings";
+const PRIVACY_SETTINGS_EVENT_TYPE = "dev.melo.privacy_settings";
 
 /** Account data event type for blocked users metadata */
-const BLOCKED_USERS_EVENT_TYPE = "dev.haos.blocked_users_metadata";
+const BLOCKED_USERS_EVENT_TYPE = "dev.melo.blocked_users_metadata";
 
 // =============================================================================
 // Privacy Settings Management

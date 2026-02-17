@@ -4,7 +4,7 @@
  * Interactive API Explorer Component
  * 
  * Development-only component that provides an interactive interface for exploring
- * and testing HAOS API endpoints. Uses Swagger UI for documentation display
+ * and testing Melo API endpoints. Uses Swagger UI for documentation display
  * and includes custom functionality for testing with session authentication.
  */
 
@@ -308,8 +308,8 @@ export function ApiExplorer() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">HAOS API Explorer</h1>
-        <p className="text-muted-foreground">Interactive development tool for testing HAOS API endpoints</p>
+        <h1 className="text-3xl font-bold mb-2">Melo API Explorer</h1>
+        <p className="text-muted-foreground">Interactive development tool for testing Melo API endpoints</p>
         <Badge variant="secondary" className="mt-2">Development Only</Badge>
       </div>
 

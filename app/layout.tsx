@@ -20,13 +20,13 @@ import { Open_Sans } from "next/font/google";
 const openSans = Open_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "HAOS",
+  title: "Melo",
   description: "Home Automation OS - Discord-style interface for Matrix",
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'HAOS',
+    title: 'Melo',
   },
   icons: {
     icon: '/favicon.ico',
@@ -64,7 +64,7 @@ export default function RootLayout({
                 attribute="class"
                 defaultTheme="dark"
                 enableSystem
-                storageKey="haos-theme"
+                storageKey="melo-theme"
               >
                 <SectionErrorBoundary name="matrix-auth" enableAutoRecovery={true}>
                   <MatrixAuthProvider>

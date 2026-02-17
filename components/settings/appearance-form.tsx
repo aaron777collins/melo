@@ -101,7 +101,7 @@ export function AppearanceForm() {
     const loadSettings = async () => {
       try {
         // First try localStorage
-        const localSettings = localStorage.getItem('haos-appearance-settings');
+        const localSettings = localStorage.getItem('melo-appearance-settings');
         if (localSettings) {
           const settings = JSON.parse(localSettings);
           form.reset(settings);
@@ -138,7 +138,7 @@ export function AppearanceForm() {
       applyThemeChanges(data);
 
       // Save to localStorage for persistence
-      localStorage.setItem('haos-appearance-settings', JSON.stringify(data));
+      localStorage.setItem('melo-appearance-settings', JSON.stringify(data));
 
       // TODO: Save to Matrix account data
       // await saveToMatrixAccountData(data);

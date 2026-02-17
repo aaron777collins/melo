@@ -1,4 +1,4 @@
-// Emoji search utility for HAOS
+// Emoji search utility for Melo
 
 // Import a comprehensive emoji dataset
 import emojis from './emoji-data.json';

@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       // This creates a persistent audit trail in the room
       await client.sendStateEvent(
         roomId,
-        'org.haos.reports.message' as any,
+        'org.melo.reports.message' as any,
         {
           ...reportData,
           status: 'pending',
@@ -113,7 +113,7 @@ export async function POST(req: Request) {
       // 2. Log in moderation audit trail
       await client.sendStateEvent(
         roomId,
-        'org.haos.moderation.log' as any,
+        'org.melo.moderation.log' as any,
         {
           action: 'report_message',
           moderatorId: userId, // The reporter becomes the "moderator" for logging purposes

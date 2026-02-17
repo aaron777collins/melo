@@ -84,7 +84,7 @@ export function LoginForm({
     if (user && enableOnboarding) {
       // Check if this is a new user who just registered
       const isNewUser = typeof window !== "undefined" 
-        ? localStorage.getItem("haos-new-user-flag") === "true"
+        ? localStorage.getItem("melo-new-user-flag") === "true"
         : false;
       
       if (isNewUser) {
@@ -151,7 +151,7 @@ export function useLoginFormIntegration({
    */
   const isNewUser = () => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem("haos-new-user-flag") === "true";
+    return localStorage.getItem("melo-new-user-flag") === "true";
   };
 
   return {
@@ -172,7 +172,7 @@ export function useLoginFormIntegration({
  * Can be called from settings or help pages
  */
 export function triggerOnboardingWizard() {
-  const event = new CustomEvent("haos:start-onboarding-wizard");
+  const event = new CustomEvent("melo:start-onboarding-wizard");
   window.dispatchEvent(event);
 }
 
@@ -182,8 +182,8 @@ export function triggerOnboardingWizard() {
 export function shouldShowOnboarding(): boolean {
   if (typeof window === "undefined") return false;
   
-  const isNewUser = localStorage.getItem("haos-new-user-flag") === "true";
-  const hasCompletedWizard = localStorage.getItem("haos-onboarding-wizard-state");
+  const isNewUser = localStorage.getItem("melo-new-user-flag") === "true";
+  const hasCompletedWizard = localStorage.getItem("melo-onboarding-wizard-state");
   
   return isNewUser && !hasCompletedWizard;
 }

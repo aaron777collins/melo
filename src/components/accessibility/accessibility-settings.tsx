@@ -119,7 +119,7 @@ export function AccessibilitySettings({ className = "" }: AccessibilitySettingsP
             Accessibility
           </CardTitle>
           <CardDescription>
-            Customize HAOS to work better with screen readers, keyboard navigation, and other accessibility tools.
+            Customize Melo to work better with screen readers, keyboard navigation, and other accessibility tools.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -282,7 +282,7 @@ export function AccessibilitySettings({ className = "" }: AccessibilitySettingsP
         <CardHeader>
           <CardTitle>Keyboard Shortcuts</CardTitle>
           <CardDescription>
-            Essential keyboard shortcuts for navigating HAOS
+            Essential keyboard shortcuts for navigating Melo
           </CardDescription>
         </CardHeader>
         <CardContent>

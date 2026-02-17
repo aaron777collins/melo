@@ -329,18 +329,18 @@ function generateOpenAPISpec(endpoints: EndpointInfo[]): any {
   const spec = {
     openapi: '3.0.0',
     info: {
-      title: 'HAOS API',
+      title: 'Melo API',
       version: '0.1.0',
       description: 'Home Assistant for Open Source - Matrix-based communication platform',
       contact: {
-        name: 'HAOS Team',
-        url: 'https://github.com/aaron777collins/haos-v2'
+        name: 'Melo Team',
+        url: 'https://github.com/aaron777collins/melo-v2'
       }
     },
     servers: [
       {
         url: '{protocol}://{host}/api',
-        description: 'HAOS API Server',
+        description: 'Melo API Server',
         variables: {
           protocol: {
             enum: ['http', 'https'],
@@ -348,7 +348,7 @@ function generateOpenAPISpec(endpoints: EndpointInfo[]): any {
           },
           host: {
             default: 'localhost:3000',
-            description: 'HAOS server host'
+            description: 'Melo server host'
           }
         }
       }
@@ -431,13 +431,13 @@ function generateOpenAPISpec(endpoints: EndpointInfo[]): any {
  * Generate markdown documentation
  */
 function generateMarkdownDocs(endpoints: EndpointInfo[]): string {
-  let markdown = `# HAOS API Documentation (Generated)
+  let markdown = `# Melo API Documentation (Generated)
 
 *This documentation is auto-generated from source code. Last updated: ${new Date().toISOString()}*
 
 ## Overview
 
-This document provides detailed information about all HAOS API endpoints, automatically extracted from the source code.
+This document provides detailed information about all Melo API endpoints, automatically extracted from the source code.
 
 `;
 

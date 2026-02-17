@@ -1,7 +1,7 @@
 /**
  * Crypto Module Tests
  *
- * Comprehensive tests for HAOS v2 E2EE implementation including:
+ * Comprehensive tests for Melo v2 E2EE implementation including:
  * - Recovery key generation and validation
  * - Cross-signing operations
  * - Secret storage functionality
@@ -320,8 +320,8 @@ describe('Crypto Store Module', () => {
   describe('clearCryptoStore', () => {
     test('deletes matching databases and clears sessionStorage', async () => {
       const mockDatabases = [
-        { name: 'haos_matrix_crypto_db1' },
-        { name: 'haos_matrix_crypto_db2' },
+        { name: 'melo_matrix_crypto_db1' },
+        { name: 'melo_matrix_crypto_db2' },
         { name: 'other_db' },
       ];
       

@@ -1,5 +1,5 @@
 /**
- * Accessibility hook for HAOS
+ * Accessibility hook for Melo
  * 
  * Manages accessibility preferences and provides utilities
  */
@@ -74,7 +74,7 @@ export function useAccessibility() {
 
   // Load saved settings
   useEffect(() => {
-    const savedSettings = localStorage.getItem('haos-accessibility-settings');
+    const savedSettings = localStorage.getItem('melo-accessibility-settings');
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
@@ -87,7 +87,7 @@ export function useAccessibility() {
 
   // Save settings when they change
   useEffect(() => {
-    localStorage.setItem('haos-accessibility-settings', JSON.stringify(settings));
+    localStorage.setItem('melo-accessibility-settings', JSON.stringify(settings));
   }, [settings]);
 
   // Update settings

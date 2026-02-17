@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChannelType, MemberRole, Channel, Member, Profile } from "@/lib/haos-types";
+import { ChannelType, MemberRole, Channel, Member, Profile } from "@/lib/melo-types";
 import { Hash, Mic, ShieldAlert, ShieldCheck, Video, Users, Eye, EyeOff } from "lucide-react";
 
 import { ServerWithMembersWithProfiles } from "@/types";

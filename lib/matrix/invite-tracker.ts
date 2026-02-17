@@ -44,7 +44,7 @@ export function trackInviteUsage(
     });
 
     // Save the updated invites
-    localStorage.setItem(`haos_invites_${event.roomId}`, JSON.stringify(updatedInvites));
+    localStorage.setItem(`melo_invites_${event.roomId}`, JSON.stringify(updatedInvites));
 
     // Store detailed usage analytics if needed
     const usageHistory = getInviteUsageHistory(event.roomId);
@@ -52,7 +52,7 @@ export function trackInviteUsage(
     
     // Keep only the last 100 usage events per room to prevent storage bloat
     const trimmedHistory = usageHistory.slice(-100);
-    localStorage.setItem(`haos_invite_usage_${event.roomId}`, JSON.stringify(trimmedHistory));
+    localStorage.setItem(`melo_invite_usage_${event.roomId}`, JSON.stringify(trimmedHistory));
 
     console.log(`[InviteTracker] Tracked invite usage: ${event.userId} joined ${event.roomId} via ${event.inviteUrl}`);
   } catch (error) {
@@ -65,7 +65,7 @@ export function trackInviteUsage(
  */
 export function getInviteUsageHistory(roomId: string): InviteUsageEvent[] {
   try {
-    const stored = localStorage.getItem(`haos_invite_usage_${roomId}`);
+    const stored = localStorage.getItem(`melo_invite_usage_${roomId}`);
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
@@ -101,7 +101,7 @@ export function cleanupOldUsageHistory(maxAge: number = 30 * 24 * 60 * 60 * 1000
   const cutoffDate = new Date(Date.now() - maxAge);
   
   // Get all invite usage keys
-  const usageKeys = Object.keys(localStorage).filter(key => key.startsWith('haos_invite_usage_'));
+  const usageKeys = Object.keys(localStorage).filter(key => key.startsWith('melo_invite_usage_'));
   
   usageKeys.forEach(key => {
     try {

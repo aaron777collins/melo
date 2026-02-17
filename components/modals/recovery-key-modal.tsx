@@ -54,7 +54,7 @@ export function RecoveryKeyModal() {
     setIsDownloading(true);
     try {
       // Create a text file with the recovery key
-      const content = `HAOS Recovery Key
+      const content = `Melo Recovery Key
 Generated: ${new Date().toLocaleString()}
 
 Your recovery key:
@@ -72,7 +72,7 @@ ${recoveryKey}
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = `haos-recovery-key-${new Date().toISOString().split('T')[0]}.txt`;
+      link.download = `melo-recovery-key-${new Date().toISOString().split('T')[0]}.txt`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

@@ -1,6 +1,6 @@
-# HAOS-V2 Deployment Automation
+# Melo-V2 Deployment Automation
 
-This document describes the comprehensive deployment automation system implemented for HAOS-V2, including CI/CD pipelines, deployment scripts, and monitoring capabilities.
+This document describes the comprehensive deployment automation system implemented for Melo-V2, including CI/CD pipelines, deployment scripts, and monitoring capabilities.
 
 ## 🏗️ System Overview
 
@@ -393,8 +393,8 @@ Triggered when:
 
 2. **Service Recovery**
    ```bash
-   pm2 restart haos-v2
-   pm2 logs haos-v2
+   pm2 restart melo-v2
+   pm2 logs melo-v2
    ```
 
 3. **Database Recovery**
@@ -433,4 +433,4 @@ For deployment issues or questions:
 
 **Last Updated:** February 2024
 **Version:** 1.0.0
-**Maintained by:** HAOS-V2 Development Team
+**Maintained by:** Melo-V2 Development Team

@@ -45,8 +45,8 @@ export type UseOnboardingResult = OnboardingState & OnboardingActions;
 // Constants
 // =============================================================================
 
-const ONBOARDING_STORAGE_KEY = "haos-onboarding-completed";
-const NEW_USER_STORAGE_KEY = "haos-new-user-flag";
+const ONBOARDING_STORAGE_KEY = "melo-onboarding-completed";
+const NEW_USER_STORAGE_KEY = "melo-new-user-flag";
 const ONBOARDING_VERSION = "1.0"; // Increment to reset onboarding for all users
 
 // =============================================================================

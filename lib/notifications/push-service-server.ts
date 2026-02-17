@@ -93,8 +93,8 @@ export class ServerWebPushProvider {
       notification: {
         title: data.title,
         body: data.body,
-        icon: data.icon || '/icons/haos-logo-192.png',
-        badge: data.badge || '/icons/haos-badge-72.png',
+        icon: data.icon || '/icons/melo-logo-192.png',
+        badge: data.badge || '/icons/melo-badge-72.png',
         tag: data.tag,
         data: data.data,
         actions: data.actions,
@@ -380,8 +380,8 @@ export class ServerPushNotificationService {
     return {
       title,
       body,
-      icon: '/icons/haos-logo-192.png',
-      badge: '/icons/haos-badge-72.png',
+      icon: '/icons/melo-logo-192.png',
+      badge: '/icons/melo-badge-72.png',
       tag: room.roomId, // Group notifications by room
       data: {
         roomId: room.roomId,

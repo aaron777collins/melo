@@ -81,7 +81,7 @@ export function GifPickerModal() {
     setError(null);
     try {
       const response = await fetch(
-        `${TENOR_BASE_URL}/trending?key=${TENOR_API_KEY}&client_key=haos&limit=20&media_filter=gif,tinygif`
+        `${TENOR_BASE_URL}/trending?key=${TENOR_API_KEY}&client_key=melo&limit=20&media_filter=gif,tinygif`
       );
       
       if (!response.ok) {
@@ -113,7 +113,7 @@ export function GifPickerModal() {
     setError(null);
     try {
       const response = await fetch(
-        `${TENOR_BASE_URL}/search?key=${TENOR_API_KEY}&client_key=haos&q=${encodeURIComponent(query)}&limit=20&media_filter=gif,tinygif`
+        `${TENOR_BASE_URL}/search?key=${TENOR_API_KEY}&client_key=melo&q=${encodeURIComponent(query)}&limit=20&media_filter=gif,tinygif`
       );
       
       if (!response.ok) {

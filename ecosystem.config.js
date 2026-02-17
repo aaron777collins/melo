@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'haos-v2',
+      name: 'melo-v2',
       script: 'pnpm',
       args: 'start',
       env: {

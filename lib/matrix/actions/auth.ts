@@ -121,7 +121,7 @@ export async function loginAction(
     // Perform login
     const session = await loginWithPassword(username, password, {
       homeserverUrl,
-      deviceDisplayName: "HAOS Web",
+      deviceDisplayName: "Melo Web",
       requestRefreshToken: true,
     });
 
@@ -175,7 +175,7 @@ export async function registerAction(
     // Perform registration
     const session = await matrixRegister(username, password, email, {
       homeserverUrl,
-      deviceDisplayName: "HAOS Web",
+      deviceDisplayName: "Melo Web",
     });
 
     // Store session in cookie

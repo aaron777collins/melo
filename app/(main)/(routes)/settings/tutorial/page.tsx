@@ -30,7 +30,7 @@ export default function TutorialPage() {
               <span>New User Onboarding</span>
             </CardTitle>
             <CardDescription>
-              Learn the basics of HAOS with our guided tutorial
+              Learn the basics of Melo with our guided tutorial
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -41,7 +41,7 @@ export default function TutorialPage() {
                 <li>• Creating and joining servers</li>
                 <li>• Customizing your profile and settings</li>
                 <li>• Privacy and security features (advanced)</li>
-                <li>• Additional HAOS features and tips</li>
+                <li>• Additional Melo features and tips</li>
               </ul>
             </div>
             
@@ -117,9 +117,9 @@ export default function TutorialPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h4 className="font-medium mb-1 text-sm">About HAOS</h4>
+              <h4 className="font-medium mb-1 text-sm">About Melo</h4>
               <p className="text-xs text-muted-foreground">
-                HAOS is a decentralized chat platform powered by Matrix, giving you control over your data and communications.
+                Melo is a decentralized chat platform powered by Matrix, giving you control over your data and communications.
               </p>
             </div>
             

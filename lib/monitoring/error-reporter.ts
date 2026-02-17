@@ -1,5 +1,5 @@
 /**
- * Error Reporting Service Abstraction for HAOS-V2
+ * Error Reporting Service Abstraction for Melo-V2
  * 
  * Provides a unified interface for error reporting across different services
  * (Sentry, custom endpoints, local logging) with environment-based configuration.
@@ -367,10 +367,10 @@ export class ErrorReportingManager implements ErrorReportingService {
   private getSessionId(): string {
     if (typeof window === 'undefined') return 'server-session';
     
-    let sessionId = sessionStorage.getItem('haos-error-session');
+    let sessionId = sessionStorage.getItem('melo-error-session');
     if (!sessionId) {
       sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      sessionStorage.setItem('haos-error-session', sessionId);
+      sessionStorage.setItem('melo-error-session', sessionId);
     }
     return sessionId;
   }
@@ -400,7 +400,7 @@ class ConsoleErrorService implements ErrorReportingService {
     const errorId = context.errorId || `console-${Date.now()}`;
     
     if (this.config.verboseMode) {
-      console.group(`🚨 HAOS Error [${context.level}:${context.component || 'unknown'}]`);
+      console.group(`🚨 Melo Error [${context.level}:${context.component || 'unknown'}]`);
       console.error('Error ID:', errorId);
       console.error('Message:', error.message);
       console.error('Stack:', error.stack);
@@ -408,7 +408,7 @@ class ConsoleErrorService implements ErrorReportingService {
       if (feedback) console.error('Feedback:', feedback);
       console.groupEnd();
     } else {
-      console.error(`🚨 HAOS Error [${errorId}]:`, error.message, context);
+      console.error(`🚨 Melo Error [${errorId}]:`, error.message, context);
     }
 
     return errorId;
@@ -417,7 +417,7 @@ class ConsoleErrorService implements ErrorReportingService {
   async reportMessage(message: string, level: 'info' | 'warning' | 'error', context?: Partial<ErrorContext>): Promise<string> {
     const logger = level === 'info' ? console.log : level === 'warning' ? console.warn : console.error;
     const errorId = `console-${Date.now()}`;
-    logger(`📝 HAOS ${level.toUpperCase()} [${errorId}]:`, message, context);
+    logger(`📝 Melo ${level.toUpperCase()} [${errorId}]:`, message, context);
     return errorId;
   }
 
@@ -439,7 +439,7 @@ class ConsoleErrorService implements ErrorReportingService {
  * Persists errors to localStorage for offline scenarios and debugging
  */
 class LocalStorageErrorService implements ErrorReportingService {
-  private readonly STORAGE_KEY = 'haos-error-reports';
+  private readonly STORAGE_KEY = 'melo-error-reports';
 
   constructor(
     private config: { enabled: boolean; maxEntries?: number },

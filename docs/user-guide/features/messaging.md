@@ -1,6 +1,6 @@
 # Messaging & Chat
 
-Master the art of communication on HAOS with our comprehensive messaging features, from basic chat to advanced formatting and rich media sharing.
+Master the art of communication on Melo with our comprehensive messaging features, from basic chat to advanced formatting and rich media sharing.
 
 ## 💬 Basic Messaging
 
@@ -29,7 +29,7 @@ Master the art of communication on HAOS with our comprehensive messaging feature
 
 ### Markdown Support
 
-HAOS supports full Markdown formatting:
+Melo supports full Markdown formatting:
 
 | Format | Syntax | Result |
 |--------|--------|--------|

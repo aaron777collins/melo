@@ -1,7 +1,7 @@
 /**
  * Matrix Roles Service
  * 
- * Maps Matrix power levels to Discord-style roles for HAOS.
+ * Maps Matrix power levels to Discord-style roles for Melo.
  * Provides utilities for creating, updating, and managing roles within Matrix spaces.
  */
 
@@ -29,7 +29,7 @@ export interface CreateRoleData {
   /** Whether role is mentionable */
   isMentionable?: boolean;
   /** Granular permissions (optional - will use template if not provided) */
-  permissions?: import('./permissions').HaosPermissions;
+  permissions?: import('./permissions').MeloPermissions;
 }
 
 /**
@@ -323,7 +323,7 @@ export async function updateCustomRole(
     updatedRoles[roleIndex] = updatedRole;
 
     // Store updated roles in room account data
-    await client.setRoomAccountData(roomId, "dev.haos.custom_roles", {
+    await client.setRoomAccountData(roomId, "dev.melo.custom_roles", {
       version: "1.0.0",
       roles: updatedRoles,
     });
@@ -400,7 +400,7 @@ export async function deleteCustomRole(
       }));
 
     // Store updated roles in room account data
-    await client.setRoomAccountData(roomId, "dev.haos.custom_roles", {
+    await client.setRoomAccountData(roomId, "dev.melo.custom_roles", {
       version: "1.0.0",
       roles: reorderedRoles,
     });
@@ -438,7 +438,7 @@ export async function reorderCustomRoles(
     });
 
     // Store updated roles in room account data
-    await client.setRoomAccountData(roomId, "dev.haos.custom_roles", {
+    await client.setRoomAccountData(roomId, "dev.melo.custom_roles", {
       version: "1.0.0",
       roles: updatedRoles,
     });
@@ -504,7 +504,7 @@ export async function createCustomRole(
 
     // Store in room account data
     const updatedRoles = [...existingRoles, roleMetadata];
-    await client.setRoomAccountData(roomId, "dev.haos.custom_roles", {
+    await client.setRoomAccountData(roomId, "dev.melo.custom_roles", {
       version: "1.0.0",
       roles: updatedRoles,
     });
@@ -528,7 +528,7 @@ export async function getCustomRoles(roomId: string): Promise<any[]> {
 
   try {
     const room = client.getRoom(roomId);
-    const roleData = room?.getAccountData("dev.haos.custom_roles");
+    const roleData = room?.getAccountData("dev.melo.custom_roles");
     return roleData?.getContent()?.roles || [];
   } catch (error) {
     console.error("Failed to get custom roles:", error);
@@ -565,7 +565,7 @@ export async function assignRoleToUser(
     role.memberCount = (role.memberCount || 0) + 1;
     const updatedRoles = customRoles.map(r => r.id === roleId ? role : r);
     
-    await client.setRoomAccountData(roomId, "dev.haos.custom_roles", {
+    await client.setRoomAccountData(roomId, "dev.melo.custom_roles", {
       version: "1.0.0",
       roles: updatedRoles,
     });

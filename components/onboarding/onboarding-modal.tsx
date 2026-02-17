@@ -4,7 +4,7 @@
  * New User Onboarding Modal
  * 
  * Comprehensive tutorial system that launches after user registration
- * to introduce new users to HAOS features and functionality.
+ * to introduce new users to Melo features and functionality.
  */
 
 import React, { useState, useEffect } from "react";
@@ -64,16 +64,16 @@ function WelcomeStep() {
       </div>
       <div>
         <h3 className="text-xl font-semibold mb-2">
-          Welcome to HAOS, {user?.displayName || "friend"}! 🎉
+          Welcome to Melo, {user?.displayName || "friend"}! 🎉
         </h3>
         <p className="text-muted-foreground">
-          HAOS is your decentralized chat platform powered by Matrix. 
+          Melo is your decentralized chat platform powered by Matrix. 
           Let's take a quick tour of the essential features to get you started.
         </p>
       </div>
       <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
         <p className="text-sm text-blue-800 dark:text-blue-200">
-          💡 <strong>Pro tip:</strong> You can skip this tutorial anytime, but we recommend going through it to make the most of HAOS!
+          💡 <strong>Pro tip:</strong> You can skip this tutorial anytime, but we recommend going through it to make the most of Melo!
         </p>
       </div>
     </div>
@@ -103,7 +103,7 @@ function ChatBasicsStep() {
         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <h4 className="font-medium mb-1">Matrix-Powered</h4>
           <p className="text-sm text-muted-foreground">
-            Unlike Discord, HAOS is decentralized - your data stays under your control.
+            Unlike Discord, Melo is decentralized - your data stays under your control.
           </p>
         </div>
       </div>
@@ -147,7 +147,7 @@ function SettingsStep() {
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
         <Settings className="w-5 h-5 text-purple-500" />
-        <h3 className="text-lg font-semibold">Customizing HAOS</h3>
+        <h3 className="text-lg font-semibold">Customizing Melo</h3>
       </div>
       <div className="space-y-3">
         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -234,7 +234,7 @@ function FeaturesOverviewStep() {
       </div>
       <div className="bg-green-50 dark:bg-green-950/30 p-3 rounded-lg border border-green-200 dark:border-green-800">
         <p className="text-sm text-green-800 dark:text-green-200">
-          🚀 <strong>Ready to explore!</strong> You'll discover these features naturally as you use HAOS.
+          🚀 <strong>Ready to explore!</strong> You'll discover these features naturally as you use Melo.
         </p>
       </div>
     </div>
@@ -250,7 +250,7 @@ function CompletionStep() {
       <div>
         <h3 className="text-xl font-semibold mb-2">You're All Set! 🎊</h3>
         <p className="text-muted-foreground">
-          Great job completing the onboarding! You now know the basics of HAOS.
+          Great job completing the onboarding! You now know the basics of Melo.
         </p>
       </div>
       <div className="space-y-2">
@@ -289,7 +289,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
   const steps: OnboardingStep[] = [
     {
       id: "welcome",
-      title: "Welcome to HAOS",
+      title: "Welcome to Melo",
       description: "Let's get you started with a quick tour",
       icon: <Sparkles className="w-5 h-5" />,
       content: <WelcomeStep />,
@@ -313,7 +313,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
     {
       id: "settings",
       title: "Settings & Customization",
-      description: "Making HAOS your own",
+      description: "Making Melo your own",
       icon: <Settings className="w-5 h-5" />,
       content: <SettingsStep />,
       actionLabel: "Open Settings",
@@ -336,7 +336,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
     {
       id: "features",
       title: "Additional Features",
-      description: "Exploring advanced HAOS capabilities",
+      description: "Exploring advanced Melo capabilities",
       icon: <Plus className="w-5 h-5" />,
       content: <FeaturesOverviewStep />,
       isAdvanced: true,

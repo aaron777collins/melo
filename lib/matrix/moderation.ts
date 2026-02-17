@@ -353,7 +353,7 @@ export class MatrixModerationService {
 
       await this.client.sendStateEvent(
         roomId,
-        'org.haos.moderation.mute' as any,
+        'org.melo.moderation.mute' as any,
         muteData,
         targetUserId
       );
@@ -432,7 +432,7 @@ export class MatrixModerationService {
       }
 
       // Get mute information from room state
-      const muteState = room.currentState.getStateEvents('org.haos.moderation.mute' as any, targetUserId);
+      const muteState = room.currentState.getStateEvents('org.melo.moderation.mute' as any, targetUserId);
       
       let originalPowerLevel = PowerLevels.USER; // Default fallback
       if (muteState) {
@@ -446,7 +446,7 @@ export class MatrixModerationService {
       // Remove mute state
       await this.client.sendStateEvent(
         roomId,
-        'org.haos.moderation.mute' as any,
+        'org.melo.moderation.mute' as any,
         {},
         targetUserId
       );
@@ -523,7 +523,7 @@ export class MatrixModerationService {
       }
 
       // Get mute information from state
-      const muteState = room.currentState.getStateEvents('org.haos.moderation.mute' as any, targetUserId);
+      const muteState = room.currentState.getStateEvents('org.melo.moderation.mute' as any, targetUserId);
       
       if (muteState) {
         const muteData = muteState.getContent();
@@ -578,7 +578,7 @@ export class MatrixModerationService {
       }> = [];
 
       // Get all mute state events
-      const muteStates = room.currentState.events.get('org.haos.moderation.mute' as any);
+      const muteStates = room.currentState.events.get('org.melo.moderation.mute' as any);
       if (!muteStates) {
         return [];
       }
@@ -631,7 +631,7 @@ export class MatrixModerationService {
 
       await this.client.sendStateEvent(
         roomId,
-        'org.haos.moderation.ban' as any,
+        'org.melo.moderation.ban' as any,
         banData,
         targetUserId
       );
@@ -664,14 +664,14 @@ export class MatrixModerationService {
         const member = room.getMember(targetUserId);
         if (member?.membership === 'ban') {
           // Use a system user ID for automatic unbans
-          const systemUserId = this.client.getUserId() || '@system:haos';
+          const systemUserId = this.client.getUserId() || '@system:melo';
           const result = await this.unbanUser(roomId, systemUserId, targetUserId);
           
           if (result.success) {
             // Remove ban state after successful unban
             await this.client.sendStateEvent(
               roomId,
-              'org.haos.moderation.ban' as any,
+              'org.melo.moderation.ban' as any,
               {},
               targetUserId
             );
@@ -719,7 +719,7 @@ export class MatrixModerationService {
       }
 
       // Get ban information from state
-      const banState = room.currentState.getStateEvents('org.haos.moderation.ban' as any, targetUserId);
+      const banState = room.currentState.getStateEvents('org.melo.moderation.ban' as any, targetUserId);
       
       if (banState) {
         const banData = banState.getContent();
@@ -786,7 +786,7 @@ export class MatrixModerationService {
         if (member.membership !== 'ban') continue;
 
         // Get ban information from state
-        const banState = room.currentState.getStateEvents('org.haos.moderation.ban' as any, member.userId);
+        const banState = room.currentState.getStateEvents('org.melo.moderation.ban' as any, member.userId);
         
         let banInfo = {};
         if (banState) {
@@ -860,12 +860,12 @@ export class MatrixModerationService {
       }
 
       // Get all ban state events
-      const banStates = room.currentState.events.get('org.haos.moderation.ban' as any);
+      const banStates = room.currentState.events.get('org.melo.moderation.ban' as any);
       if (!banStates) {
         return result;
       }
 
-      const systemUserId = this.client.getUserId() || '@system:haos';
+      const systemUserId = this.client.getUserId() || '@system:melo';
       const now = new Date();
 
       // Check each ban for expiry
@@ -886,7 +886,7 @@ export class MatrixModerationService {
               // Remove ban state
               await this.client.sendStateEvent(
                 roomId,
-                'org.haos.moderation.ban' as any,
+                'org.melo.moderation.ban' as any,
                 {},
                 userId
               );
@@ -927,7 +927,7 @@ export class MatrixModerationService {
         const muteStatus = await this.isUserMuted(roomId, targetUserId);
         if (muteStatus.isMuted) {
           // Use a system user ID for automatic unmutes
-          const systemUserId = this.client.getUserId() || '@system:haos';
+          const systemUserId = this.client.getUserId() || '@system:melo';
           await this.unmuteUser(roomId, systemUserId, targetUserId);
           console.log(`Automatically unmuted ${targetUserId} in ${roomId} after ${duration}ms`);
         }
@@ -1202,7 +1202,7 @@ export class MatrixModerationService {
       // Use type assertion for custom state event type
       await this.client.sendStateEvent(
         logEntry.roomId,
-        'org.haos.moderation.log' as any,
+        'org.melo.moderation.log' as any,
         {
           ...logEntry,
           version: '1.0'
@@ -1241,7 +1241,7 @@ export class MatrixModerationService {
       }
 
       // Get all moderation log state events
-      const stateEvents = room.currentState.events.get('org.haos.moderation.log' as any);
+      const stateEvents = room.currentState.events.get('org.melo.moderation.log' as any);
       if (!stateEvents) {
         return [];
       }

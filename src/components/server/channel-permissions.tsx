@@ -50,7 +50,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useChannelPermissions } from '@/hooks/use-channel-permissions';
-import { PERMISSION_CATEGORIES, type HaosPermissions } from '@/lib/matrix/permissions';
+import { PERMISSION_CATEGORIES, type MeloPermissions } from '@/lib/matrix/permissions';
 import rolesService from '@/lib/matrix/roles';
 import type { 
   ChannelRolePermissionOverride,
@@ -80,10 +80,10 @@ export function ChannelPermissions({ channelId, currentUserId }: ChannelPermissi
   const [activeTab, setActiveTab] = useState<'roles' | 'users' | 'bulk'>('roles');
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [selectedUser, setSelectedUser] = useState<string>('');
-  const [editingPermissions, setEditingPermissions] = useState<Partial<HaosPermissions>>({});
+  const [editingPermissions, setEditingPermissions] = useState<Partial<MeloPermissions>>({});
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [bulkTargets, setBulkTargets] = useState<string[]>([]);
-  const [bulkPermissions, setBulkPermissions] = useState<(keyof HaosPermissions)[]>([]);
+  const [bulkPermissions, setBulkPermissions] = useState<(keyof MeloPermissions)[]>([]);
 
   // Get available roles for the channel
   const [availableRoles, setAvailableRoles] = useState<Array<{ id: string; name: string; powerLevel: number }>>([]);
@@ -126,8 +126,8 @@ export function ChannelPermissions({ channelId, currentUserId }: ChannelPermissi
   };
 
   const getPermissionStatus = (
-    permission: keyof HaosPermissions,
-    overrides: Partial<HaosPermissions>
+    permission: keyof MeloPermissions,
+    overrides: Partial<MeloPermissions>
   ): 'inherit' | 'allow' | 'deny' => {
     if (!(permission in overrides)) return 'inherit';
     return overrides[permission] ? 'allow' : 'deny';
@@ -142,7 +142,7 @@ export function ChannelPermissions({ channelId, currentUserId }: ChannelPermissi
   };
 
   const handlePermissionToggle = (
-    permission: keyof HaosPermissions,
+    permission: keyof MeloPermissions,
     currentStatus: 'inherit' | 'allow' | 'deny'
   ) => {
     const newPermissions = { ...editingPermissions };
@@ -412,8 +412,8 @@ interface PermissionEditorProps {
   selectedUser?: string;
   onRoleSelect?: (roleId: string) => void;
   onUserSelect?: (userId: string) => void;
-  permissions: Partial<HaosPermissions>;
-  onPermissionsChange: (permissions: Partial<HaosPermissions>) => void;
+  permissions: Partial<MeloPermissions>;
+  onPermissionsChange: (permissions: Partial<MeloPermissions>) => void;
   onSave: () => void;
   onCancel: () => void;
   isUpdating: boolean;
@@ -435,7 +435,7 @@ function PermissionEditor({
   const isRole = !!availableRoles;
   const selected = selectedRole || selectedUser;
 
-  const handlePermissionToggle = (permission: keyof HaosPermissions) => {
+  const handlePermissionToggle = (permission: keyof MeloPermissions) => {
     const newPermissions = { ...permissions };
     
     if (!(permission in permissions)) {
@@ -449,7 +449,7 @@ function PermissionEditor({
     onPermissionsChange(newPermissions);
   };
 
-  const getPermissionStatus = (permission: keyof HaosPermissions): 'inherit' | 'allow' | 'deny' => {
+  const getPermissionStatus = (permission: keyof MeloPermissions): 'inherit' | 'allow' | 'deny' => {
     if (!(permission in permissions)) return 'inherit';
     return permissions[permission] ? 'allow' : 'deny';
   };
@@ -641,8 +641,8 @@ interface BulkPermissionManagerProps {
   availableUsers: Array<{ id: string; displayName: string }>;
   selectedTargets: string[];
   onTargetsChange: (targets: string[]) => void;
-  selectedPermissions: (keyof HaosPermissions)[];
-  onPermissionsChange: (permissions: (keyof HaosPermissions)[]) => void;
+  selectedPermissions: (keyof MeloPermissions)[];
+  onPermissionsChange: (permissions: (keyof MeloPermissions)[]) => void;
   onExecuteOperation: (operation: Omit<BulkPermissionOperation, 'targetIds'>) => void;
   isUpdating: boolean;
 }

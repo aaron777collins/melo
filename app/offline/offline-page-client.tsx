@@ -23,7 +23,7 @@ export default function OfflinePageClient() {
             You&apos;re Offline
           </h1>
           <p className="text-gray-300 text-lg">
-            HAOS needs an internet connection to sync with your Matrix homeserver.
+            Melo needs an internet connection to sync with your Matrix homeserver.
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export default function OfflinePageClient() {
 
         {/* Auto-retry Info */}
         <div className="text-xs text-gray-500 border-t border-gray-700 pt-4">
-          <p>HAOS will automatically retry connecting when your network is restored.</p>
+          <p>Melo will automatically retry connecting when your network is restored.</p>
         </div>
       </div>
 

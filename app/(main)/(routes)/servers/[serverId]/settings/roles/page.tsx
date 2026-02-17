@@ -27,7 +27,7 @@ interface RolesPageProps {
 // =============================================================================
 
 export const metadata: Metadata = {
-  title: "Server Roles - HAOS",
+  title: "Server Roles - Melo",
   description: "Manage server roles and permissions",
 };
 

@@ -150,7 +150,7 @@ export function TwoFactorPrompt({
           {!isBackupCode ? (
             <>
               <p>• Open your authenticator app (Google Authenticator, Authy, etc.)</p>
-              <p>• Find your HAOS account entry</p>
+              <p>• Find your Melo account entry</p>
               <p>• Enter the 6-digit code shown</p>
             </>
           ) : (

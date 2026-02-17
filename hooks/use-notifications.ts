@@ -71,7 +71,7 @@ export function useNotifications(): UseNotificationsReturn {
   const loadSettings = useCallback(() => {
     try {
       if (typeof window !== "undefined") {
-        const saved = localStorage.getItem("haos:notification-settings");
+        const saved = localStorage.getItem("melo:notification-settings");
         if (saved) {
           const parsedSettings = JSON.parse(saved);
           setSettings({ ...DEFAULT_NOTIFICATION_SETTINGS, ...parsedSettings });
@@ -89,7 +89,7 @@ export function useNotifications(): UseNotificationsReturn {
   const saveSettings = useCallback((newSettings: NotificationSettings) => {
     try {
       if (typeof window !== "undefined") {
-        localStorage.setItem("haos:notification-settings", JSON.stringify(newSettings));
+        localStorage.setItem("melo:notification-settings", JSON.stringify(newSettings));
       }
     } catch (error) {
       console.error("Failed to save notification settings:", error);
@@ -196,16 +196,16 @@ export function useNotifications(): UseNotificationsReturn {
       setNotifications([]);
     };
 
-    window.addEventListener("haos:notification", handleNewNotification as EventListener);
-    window.addEventListener("haos:notification-updated", handleNotificationUpdate as EventListener);
-    window.addEventListener("haos:notifications-read-all", handleNotificationsReadAll);
-    window.addEventListener("haos:notifications-cleared", handleNotificationsCleared);
+    window.addEventListener("melo:notification", handleNewNotification as EventListener);
+    window.addEventListener("melo:notification-updated", handleNotificationUpdate as EventListener);
+    window.addEventListener("melo:notifications-read-all", handleNotificationsReadAll);
+    window.addEventListener("melo:notifications-cleared", handleNotificationsCleared);
 
     return () => {
-      window.removeEventListener("haos:notification", handleNewNotification as EventListener);
-      window.removeEventListener("haos:notification-updated", handleNotificationUpdate as EventListener);
-      window.removeEventListener("haos:notifications-read-all", handleNotificationsReadAll);
-      window.removeEventListener("haos:notifications-cleared", handleNotificationsCleared);
+      window.removeEventListener("melo:notification", handleNewNotification as EventListener);
+      window.removeEventListener("melo:notification-updated", handleNotificationUpdate as EventListener);
+      window.removeEventListener("melo:notifications-read-all", handleNotificationsReadAll);
+      window.removeEventListener("melo:notifications-cleared", handleNotificationsCleared);
     };
   }, []);
 

@@ -1,5 +1,5 @@
 /**
- * Rate limiting utility for HAOS v2 API endpoints
+ * Rate limiting utility for Melo v2 API endpoints
  * Implements per-user and per-IP rate limiting with different limits for authenticated vs anonymous users
  */
 

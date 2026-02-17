@@ -51,7 +51,7 @@ export default function SignInPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#313338]">
       <div className="bg-[#1e1f22] p-8 rounded-lg shadow-lg max-w-md w-full">
         <h1 className="text-2xl font-bold text-white mb-6 text-center">
-          Welcome to HAOS
+          Welcome to Melo
         </h1>
         <p className="text-zinc-400 text-center mb-6">
           Sign in to your Matrix account
@@ -139,7 +139,7 @@ export default function SignInPage() {
         {/* Matrix Info */}
         <div className="mt-6 p-3 bg-zinc-700/20 rounded border border-zinc-600/30">
           <p className="text-zinc-400 text-xs text-center">
-            HAOS uses the Matrix protocol for secure, decentralized communication.
+            Melo uses the Matrix protocol for secure, decentralized communication.
             Use your existing Matrix account or register on any Matrix homeserver.
           </p>
         </div>

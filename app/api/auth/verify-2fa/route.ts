@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       // Wait briefly for initial sync
       await new Promise(resolve => setTimeout(resolve, 100));
       // Use type assertion for custom account data key
-      accountData = client.getAccountData('im.haos.two_factor' as any);
+      accountData = client.getAccountData('im.melo.two_factor' as any);
     } catch (error) {
       console.error("[2FA_VERIFY] Failed to get account data:", error);
       return NextResponse.json(
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
           };
           
           // Use type assertion for custom account data key and value
-          await client.setAccountData('im.haos.two_factor' as any, updatedData as any);
+          await client.setAccountData('im.melo.two_factor' as any, updatedData as any);
         } catch (error) {
           console.error("[2FA_VERIFY] Failed to update backup codes:", error);
           // Don't fail the login for this, just log it

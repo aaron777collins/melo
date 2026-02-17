@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChannelType, MemberRole } from "@/lib/haos-types";
+import { ChannelType, MemberRole } from "@/lib/melo-types";
 import { ChevronRight, Plus, Settings } from "lucide-react";
 
 import { ServerWithMembersWithProfiles } from "@/types";
@@ -38,7 +38,7 @@ export function ServerSection({
     if (!serverIdToUse) return null;
     
     const channelTypeSuffix = channelType ? `-${channelType}` : "";
-    return `haos-collapse-${serverIdToUse}-${sectionType}${channelTypeSuffix}`;
+    return `melo-collapse-${serverIdToUse}-${sectionType}${channelTypeSuffix}`;
   }, [serverId, server?.id, sectionType, channelType]);
   
   // Load initial collapse state from localStorage

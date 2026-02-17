@@ -2,7 +2,7 @@
 
 ```yaml
 - generic [ref=e4]:
-  - heading "Welcome to HAOS" [level=1] [ref=e5]
+  - heading "Welcome to Melo" [level=1] [ref=e5]
   - paragraph [ref=e6]: Sign in to your Matrix account
   - generic [ref=e7]:
     - generic [ref=e8]:
@@ -19,5 +19,5 @@
     - text: Don't have an account?
     - link "Create one here" [ref=e17] [cursor=pointer]:
       - /url: /sign-up
-  - paragraph [ref=e19]: HAOS uses the Matrix protocol for secure, decentralized communication. Use your existing Matrix account or register on any Matrix homeserver.
+  - paragraph [ref=e19]: Melo uses the Matrix protocol for secure, decentralized communication. Use your existing Matrix account or register on any Matrix homeserver.
 ```

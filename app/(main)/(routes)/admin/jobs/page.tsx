@@ -15,6 +15,6 @@ export default function JobQueueAdminPage() {
 }
 
 export const metadata = {
-  title: "Job Queue Admin - HAOS",
+  title: "Job Queue Admin - Melo",
   description: "Monitor and manage background jobs",
 };

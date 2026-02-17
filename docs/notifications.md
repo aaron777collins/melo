@@ -1,6 +1,6 @@
-# HAOS v2 Notification System
+# Melo v2 Notification System
 
-This document describes the desktop and browser notification system implemented for HAOS v2, which provides real-time notifications for Matrix events.
+This document describes the desktop and browser notification system implemented for Melo v2, which provides real-time notifications for Matrix events.
 
 ## Overview
 
@@ -343,4 +343,4 @@ The notification system is optimized for performance:
 
 ## Conclusion
 
-The HAOS v2 notification system provides a comprehensive, user-friendly notification experience that integrates seamlessly with the Matrix protocol. It offers extensive customization options while maintaining good performance and security practices.
+The Melo v2 notification system provides a comprehensive, user-friendly notification experience that integrates seamlessly with the Matrix protocol. It offers extensive customization options while maintaining good performance and security practices.

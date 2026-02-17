@@ -83,8 +83,8 @@ export class WebPushProvider implements PushProvider {
       notification: {
         title: data.title,
         body: data.body,
-        icon: data.icon || '/icons/haos-logo-192.png',
-        badge: data.badge || '/icons/haos-badge-72.png',
+        icon: data.icon || '/icons/melo-logo-192.png',
+        badge: data.badge || '/icons/melo-badge-72.png',
         tag: data.tag,
         data: data.data,
         actions: data.actions,

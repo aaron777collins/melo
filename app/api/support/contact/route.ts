@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate ticket ID
-    const ticketId = `HAOS-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const ticketId = `Melo-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
 
     // Create support ticket message
     const supportMessage = formatSupportMessage({

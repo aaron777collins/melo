@@ -23,7 +23,7 @@ import { NotificationCenter } from "@/components/notifications/notification-cent
 import { NotificationTemplates } from "@/components/notifications/notification-templates";
 
 export const metadata = {
-  title: "Advanced Notification Settings - HAOS",
+  title: "Advanced Notification Settings - Melo",
   description: "Configure advanced notification preferences, templates, and integrations"
 };
 
@@ -85,7 +85,7 @@ function PushNotificationSettings() {
           <h3 className="text-lg font-medium mb-2">Push Notifications</h3>
           <p className="text-sm text-muted-foreground mb-4">
             Push notification support is being developed. This will enable
-            notifications even when HAOS is closed.
+            notifications even when Melo is closed.
           </p>
           <div className="space-y-2 text-left max-w-md mx-auto">
             <div className="text-sm">

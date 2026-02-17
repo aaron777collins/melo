@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import permissionsService, { type HaosPermissions } from '@/lib/matrix/permissions';
+import permissionsService, { type MeloPermissions } from '@/lib/matrix/permissions';
 import rolesService from '@/lib/matrix/roles';
 import type { 
   ChannelPermissions,
@@ -19,7 +19,7 @@ interface UseChannelPermissionsReturn {
   // Data
   channelPermissions: ChannelPermissions | null;
   userRoles: Array<{ roleId: string; roleName: string; powerLevel: number }>;
-  effectivePermissions: HaosPermissions | null;
+  effectivePermissions: MeloPermissions | null;
   
   // Loading states
   isLoading: boolean;
@@ -29,19 +29,19 @@ interface UseChannelPermissionsReturn {
   setRolePermissionOverride: (
     roleId: string, 
     roleName: string,
-    permissions: Partial<HaosPermissions>
+    permissions: Partial<MeloPermissions>
   ) => Promise<void>;
   
   setUserPermissionOverride: (
     userId: string,
     displayName: string,
-    permissions: Partial<HaosPermissions>
+    permissions: Partial<MeloPermissions>
   ) => Promise<void>;
   
   removeRoleOverride: (roleId: string) => Promise<void>;
   removeUserOverride: (userId: string) => Promise<void>;
   
-  checkPermission: (permission: keyof HaosPermissions) => Promise<PermissionCheckResult>;
+  checkPermission: (permission: keyof MeloPermissions) => Promise<PermissionCheckResult>;
   
   executeBulkOperation: (operation: BulkPermissionOperation) => Promise<{
     success: string[];
@@ -57,7 +57,7 @@ export function useChannelPermissions({
 }: UseChannelPermissionsProps): UseChannelPermissionsReturn {
   const [channelPermissions, setChannelPermissions] = useState<ChannelPermissions | null>(null);
   const [userRoles, setUserRoles] = useState<Array<{ roleId: string; roleName: string; powerLevel: number }>>([]);
-  const [effectivePermissions, setEffectivePermissions] = useState<HaosPermissions | null>(null);
+  const [effectivePermissions, setEffectivePermissions] = useState<MeloPermissions | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   
@@ -146,7 +146,7 @@ export function useChannelPermissions({
   const setRolePermissionOverride = useCallback(async (
     roleId: string,
     roleName: string,
-    permissions: Partial<HaosPermissions>
+    permissions: Partial<MeloPermissions>
   ) => {
     if (!userId) throw new Error('User not authenticated');
     
@@ -173,7 +173,7 @@ export function useChannelPermissions({
   const setUserPermissionOverride = useCallback(async (
     targetUserId: string,
     displayName: string,
-    permissions: Partial<HaosPermissions>
+    permissions: Partial<MeloPermissions>
   ) => {
     if (!userId) throw new Error('User not authenticated');
     
@@ -247,7 +247,7 @@ export function useChannelPermissions({
     }
   }, [channelId, userId, loadChannelPermissions, loadEffectivePermissions]);
 
-  const checkPermission = useCallback(async (permission: keyof HaosPermissions): Promise<PermissionCheckResult> => {
+  const checkPermission = useCallback(async (permission: keyof MeloPermissions): Promise<PermissionCheckResult> => {
     if (!userId) {
       return {
         allowed: false,

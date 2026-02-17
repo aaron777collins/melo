@@ -57,7 +57,7 @@ export function TwoFactorForm({ profile }: TwoFactorFormProps) {
     
     try {
       // Use type assertion for custom account data key
-      const accountData = client.getAccountData('im.haos.two_factor' as any);
+      const accountData = client.getAccountData('im.melo.two_factor' as any);
       const data = accountData?.getContent() as TwoFactorData;
       setTwoFactorData(data || { enabled: false });
     } catch (error) {
@@ -76,7 +76,7 @@ export function TwoFactorForm({ profile }: TwoFactorFormProps) {
     
     try {
       // Use type assertion for custom account data key and value
-      await client.setAccountData('im.haos.two_factor' as any, data as any);
+      await client.setAccountData('im.melo.two_factor' as any, data as any);
       setTwoFactorData(data);
       toast.success('2FA settings updated');
     } catch (error) {
@@ -92,7 +92,7 @@ export function TwoFactorForm({ profile }: TwoFactorFormProps) {
     try {
       const newSecret = otpGenerateSecret();
       const user = client?.getUserId() || 'user';
-      const service = 'HAOS';
+      const service = 'Melo';
       
       const otpUrl = generateURI({
         label: user,

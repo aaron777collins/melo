@@ -130,7 +130,7 @@ export function PWAInstallPrompt({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">
-                  Install HAOS
+                  Install Melo
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Add to home screen for quick access
@@ -173,7 +173,7 @@ export function PWAInstallPrompt({
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    Install HAOS for a better experience
+                    Install Melo for a better experience
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Get offline access, faster loading, and push notifications
@@ -212,7 +212,7 @@ export function PWAInstallPrompt({
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <Download className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">Install HAOS</CardTitle>
+              <CardTitle className="text-lg">Install Melo</CardTitle>
               <Badge variant="secondary" className="text-xs">
                 PWA
               </Badge>
@@ -227,7 +227,7 @@ export function PWAInstallPrompt({
             </Button>
           </div>
           <CardDescription>
-            Install HAOS as a Progressive Web App for the best experience
+            Install Melo as a Progressive Web App for the best experience
           </CardDescription>
         </CardHeader>
         

@@ -1,11 +1,11 @@
-# HAOS v2 Mobile Responsiveness Audit Report
+# Melo v2 Mobile Responsiveness Audit Report
 **Date:** February 15, 2026  
 **Auditor:** p11-12-mobile-audit subagent  
 **Target Breakpoints:** 320px, 375px, 768px  
 
 ## Executive Summary
 
-HAOS v2 has a **partial mobile responsiveness implementation** with some good foundations but significant gaps. The app uses a Discord-inspired layout with mobile navigation patterns, but several critical components lack proper mobile optimization.
+Melo v2 has a **partial mobile responsiveness implementation** with some good foundations but significant gaps. The app uses a Discord-inspired layout with mobile navigation patterns, but several critical components lack proper mobile optimization.
 
 ## Current Mobile Implementation Status
 

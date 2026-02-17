@@ -26,8 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       userId: userId as string,
       title: title as string,
       body: body as string,
-      icon: '/icons/haos-logo-192.png',
-      badge: '/icons/haos-badge-72.png',
+      icon: '/icons/melo-logo-192.png',
+      badge: '/icons/melo-badge-72.png',
       tag: tag as string || 'test-notification',
       data: {
         url: '/',

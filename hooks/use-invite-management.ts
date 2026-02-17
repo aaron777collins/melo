@@ -104,7 +104,7 @@ export function useInviteManagement(
     });
 
     // Save updated invites
-    localStorage.setItem(`haos_invites_${roomId}`, JSON.stringify(updatedInvites));
+    localStorage.setItem(`melo_invites_${roomId}`, JSON.stringify(updatedInvites));
     refreshInvites();
   }, [roomId, inviteService, refreshInvites]);
 

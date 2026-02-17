@@ -74,7 +74,7 @@ class ErrorLogger {
           },
         };
         
-        const existingLogs = JSON.parse(localStorage.getItem('haos-error-logs') || '[]');
+        const existingLogs = JSON.parse(localStorage.getItem('melo-error-logs') || '[]');
         existingLogs.push(errorLog);
         
         // Keep only last 50 errors
@@ -82,7 +82,7 @@ class ErrorLogger {
           existingLogs.splice(0, existingLogs.length - 50);
         }
         
-        localStorage.setItem('haos-error-logs', JSON.stringify(existingLogs));
+        localStorage.setItem('melo-error-logs', JSON.stringify(existingLogs));
       } catch (storageError) {
         console.warn('Failed to store error log:', storageError);
       }
@@ -197,7 +197,7 @@ export function AppErrorFallback({ error, onReload }: ErrorFallbackProps) {
             Application Error
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            HAOS encountered an unexpected error and needs to restart.
+            Melo encountered an unexpected error and needs to restart.
           </p>
         </div>
 
@@ -386,7 +386,7 @@ export const ChatErrorBoundary: React.FC<{ children: ReactNode }> = ({ children 
 export function getErrorLogs(): any[] {
   if (typeof window === 'undefined') return [];
   try {
-    return JSON.parse(localStorage.getItem('haos-error-logs') || '[]');
+    return JSON.parse(localStorage.getItem('melo-error-logs') || '[]');
   } catch {
     return [];
   }
@@ -394,6 +394,6 @@ export function getErrorLogs(): any[] {
 
 export function clearErrorLogs(): void {
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('haos-error-logs');
+    localStorage.removeItem('melo-error-logs');
   }
 }

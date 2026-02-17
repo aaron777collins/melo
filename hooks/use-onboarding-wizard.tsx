@@ -80,15 +80,15 @@ export type UseOnboardingWizardResult = OnboardingWizardState & OnboardingWizard
 // Constants
 // =============================================================================
 
-const WIZARD_STORAGE_KEY = "haos-onboarding-wizard-state";
+const WIZARD_STORAGE_KEY = "melo-onboarding-wizard-state";
 const WIZARD_VERSION = "1.0";
 
 // Default steps configuration
 const DEFAULT_STEPS: OnboardingWizardStep[] = [
   {
     id: "welcome",
-    title: "Welcome to HAOS",
-    description: "Learn about HAOS and Matrix",
+    title: "Welcome to Melo",
+    description: "Learn about Melo and Matrix",
     isComplete: false,
   },
   {
@@ -257,7 +257,7 @@ export function useOnboardingWizard(): UseOnboardingWizardResult {
     } else {
       // First time - check if should auto-start wizard
       const newUserFlag = typeof window !== "undefined" 
-        ? localStorage.getItem("haos-new-user-flag") === "true"
+        ? localStorage.getItem("melo-new-user-flag") === "true"
         : false;
       
       setState(prev => ({
@@ -382,7 +382,7 @@ export function useOnboardingWizard(): UseOnboardingWizardResult {
     
     // Clear new user flag
     if (typeof window !== "undefined") {
-      localStorage.removeItem("haos-new-user-flag");
+      localStorage.removeItem("melo-new-user-flag");
     }
   }, []);
 

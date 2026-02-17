@@ -34,7 +34,7 @@ const DEFAULT_CONFIG: LogConfig = {
   maxFiles: parseInt(process.env.LOG_MAX_FILES || '5'),
   maxSize: process.env.LOG_MAX_SIZE || '10MB',
   format: 'json',
-  service: 'haos-v2',
+  service: 'melo-v2',
   version: process.env.npm_package_version || '1.0.0',
   environment: process.env.NODE_ENV || 'development',
 };

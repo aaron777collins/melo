@@ -1,6 +1,6 @@
 "use client";
 
-import { Member, MemberRole, Profile, Server } from "@/lib/haos-types";
+import { Member, MemberRole, Profile, Server } from "@/lib/melo-types";
 import { ShieldAlert, ShieldCheck } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 

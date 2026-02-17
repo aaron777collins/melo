@@ -15,7 +15,7 @@ interface MediaRoomProps {
 }
 
 /**
- * Enhanced Media Room component for audio/video calls with HAOS styling
+ * Enhanced Media Room component for audio/video calls with Melo styling
  * Integrates with Matrix authentication and custom video call components
  */
 export function MediaRoom({ chatId, video, audio }: MediaRoomProps) {

@@ -303,7 +303,7 @@ export async function setupSecretStorage(
           "m.secret_storage.v1.aes-hmac-sha2",
           {
             key: recoveryKeyInfo.keyData,
-            name: "HAOS Recovery Key",
+            name: "Melo Recovery Key",
             ...(securityPhrase && recoveryKeyInfo.salt ? {
               passphrase: {
                 algorithm: "m.pbkdf2" as const,

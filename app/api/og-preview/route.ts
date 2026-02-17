@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'HAOS-LinkPreview/1.0 (Matrix Client)',
+          'User-Agent': 'Melo-LinkPreview/1.0 (Matrix Client)',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.5',
           'Accept-Encoding': 'gzip, deflate',

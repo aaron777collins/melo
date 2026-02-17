@@ -100,7 +100,7 @@ export interface ExportData {
     createdAt: string;
     /** Export format */
     format: 'json' | 'csv';
-    /** HAOS version */
+    /** Melo version */
     version: string;
     /** User ID who requested export */
     userId: string;
@@ -216,7 +216,7 @@ export function downloadExportData(data: ExportData, format: ExportFormat, filen
   const blob = exportDataToBlob(data, format);
   const url = URL.createObjectURL(blob);
   
-  const defaultFilename = `haos-data-export-${data.export.userId.replace('@', '').replace(':', '_')}-${new Date().toISOString().split('T')[0]}.${format}`;
+  const defaultFilename = `melo-data-export-${data.export.userId.replace('@', '').replace(':', '_')}-${new Date().toISOString().split('T')[0]}.${format}`;
   
   const link = document.createElement('a');
   link.href = url;
@@ -481,7 +481,7 @@ function exportDataToCsvBlob(data: ExportData): Blob {
   const csvSections: string[] = [];
 
   // Export metadata
-  csvSections.push('# HAOS Data Export');
+  csvSections.push('# Melo Data Export');
   csvSections.push(`# Created: ${data.export.createdAt}`);
   csvSections.push(`# User: ${data.export.userId}`);
   csvSections.push(`# Format: CSV`);

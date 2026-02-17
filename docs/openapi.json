@@ -1,18 +1,18 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "HAOS API",
+    "title": "Melo API",
     "version": "0.1.0",
     "description": "Home Assistant for Open Source - Matrix-based communication platform",
     "contact": {
-      "name": "HAOS Team",
-      "url": "https://github.com/aaron777collins/haos-v2"
+      "name": "Melo Team",
+      "url": "https://github.com/aaron777collins/melo-v2"
     }
   },
   "servers": [
     {
       "url": "{protocol}://{host}/api",
-      "description": "HAOS API Server",
+      "description": "Melo API Server",
       "variables": {
         "protocol": {
           "enum": [
@@ -23,7 +23,7 @@
         },
         "host": {
           "default": "localhost:3000",
-          "description": "HAOS server host"
+          "description": "Melo server host"
         }
       }
     }
@@ -302,7 +302,7 @@
       },
       "post": {
         "summary": "Create Background Job",
-        "description": "Creates a new background job with the specified type and payload.\nJobs are executed asynchronously by worker processes.\n/api/admin/jobs:\n  post:\n    summary: Create new background job\n    description: Add a new job to the background processing queue\n    tags: [Admin]\n    security:\n      - cookieAuth: []\n    requestBody:\n      required: true\n      content:\n        application/json:\n          schema:\n            type: object\n            required:\n              - type\n              - payload\n            properties:\n              type:\n                type: string\n                description: Job type (must be a registered job handler)\n                example: notification\n              payload:\n                type: object\n                description: Job-specific data\n                example:\n                  userId: \"@alice:example.com\"\n                  message: \"Welcome to HAOS!\"\n              options:\n                type: object\n                description: Job execution options\n                properties:\n                  priority:\n                    type: integer\n                    minimum: 0\n                    maximum: 10\n                    description: Job priority (higher numbers = higher priority)\n                    example: 1\n                  delay:\n                    type: integer\n                    description: Delay before execution in milliseconds\n                    example: 5000\n                  retries:\n                    type: integer\n                    description: Maximum retry attempts\n                    example: 3\n    responses:\n      200:\n        description: Job created successfully\n        content:\n          application/json:\n            schema:\n              type: object\n              properties:\n                success:\n                  type: boolean\n                  example: true\n                data:\n                  $ref: '#/components/schemas/BackgroundJob'\n      400:\n        description: Invalid job type or missing required fields\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/ErrorResponse'\n      401:\n        $ref: '#/components/responses/Unauthorized'\n      500:\n        $ref: '#/components/responses/Error'\n/",
+        "description": "Creates a new background job with the specified type and payload.\nJobs are executed asynchronously by worker processes.\n/api/admin/jobs:\n  post:\n    summary: Create new background job\n    description: Add a new job to the background processing queue\n    tags: [Admin]\n    security:\n      - cookieAuth: []\n    requestBody:\n      required: true\n      content:\n        application/json:\n          schema:\n            type: object\n            required:\n              - type\n              - payload\n            properties:\n              type:\n                type: string\n                description: Job type (must be a registered job handler)\n                example: notification\n              payload:\n                type: object\n                description: Job-specific data\n                example:\n                  userId: \"@alice:example.com\"\n                  message: \"Welcome to Melo!\"\n              options:\n                type: object\n                description: Job execution options\n                properties:\n                  priority:\n                    type: integer\n                    minimum: 0\n                    maximum: 10\n                    description: Job priority (higher numbers = higher priority)\n                    example: 1\n                  delay:\n                    type: integer\n                    description: Delay before execution in milliseconds\n                    example: 5000\n                  retries:\n                    type: integer\n                    description: Maximum retry attempts\n                    example: 3\n    responses:\n      200:\n        description: Job created successfully\n        content:\n          application/json:\n            schema:\n              type: object\n              properties:\n                success:\n                  type: boolean\n                  example: true\n                data:\n                  $ref: '#/components/schemas/BackgroundJob'\n      400:\n        description: Invalid job type or missing required fields\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/ErrorResponse'\n      401:\n        $ref: '#/components/responses/Unauthorized'\n      500:\n        $ref: '#/components/responses/Error'\n/",
         "tags": [
           "Admin"
         ],

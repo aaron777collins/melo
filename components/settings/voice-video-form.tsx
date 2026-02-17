@@ -115,7 +115,7 @@ export function VoiceVideoForm() {
   // Load settings from localStorage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('haos-voice-video-settings');
+      const saved = localStorage.getItem('melo-voice-video-settings');
       if (saved) {
         const parsedSettings = JSON.parse(saved);
         setSettings(prev => ({ ...prev, ...parsedSettings }));
@@ -128,7 +128,7 @@ export function VoiceVideoForm() {
   // Save settings to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('haos-voice-video-settings', JSON.stringify(settings));
+      localStorage.setItem('melo-voice-video-settings', JSON.stringify(settings));
     } catch (error) {
       console.warn('Failed to save voice-video settings:', error);
     }

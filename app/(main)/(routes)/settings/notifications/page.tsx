@@ -16,7 +16,7 @@ import { Bell, Settings, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Notification Settings - HAOS",
+  title: "Notification Settings - Melo",
   description: "Manage notification preferences for servers and channels"
 };
 

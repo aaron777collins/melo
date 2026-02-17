@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Shield, Smartphone, Lock, Key } from "lucide-react";
 
 export const metadata = {
-  title: "Security Settings - HAOS",
+  title: "Security Settings - Melo",
   description: "Manage your account security, device sessions, and authentication settings"
 };
 

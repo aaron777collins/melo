@@ -1,4 +1,4 @@
-import type { HaosPermissions } from '@/lib/matrix/permissions';
+import type { MeloPermissions } from '@/lib/matrix/permissions';
 
 export interface SlowmodeSettings {
   /**
@@ -38,7 +38,7 @@ export interface ChannelRolePermissionOverride {
   /** Role name for display */
   roleName: string;
   /** Permission overrides - only specified permissions are overridden */
-  permissions: Partial<HaosPermissions>;
+  permissions: Partial<MeloPermissions>;
   /** When this override was created */
   createdAt: string;
   /** Who created this override */
@@ -54,7 +54,7 @@ export interface ChannelUserPermissionOverride {
   /** User display name for UI */
   displayName: string;
   /** Permission overrides - only specified permissions are overridden */
-  permissions: Partial<HaosPermissions>;
+  permissions: Partial<MeloPermissions>;
   /** When this override was created */
   createdAt: string;
   /** Who created this override */
@@ -92,7 +92,7 @@ export interface BulkPermissionOperation {
   /** Target IDs (role IDs or user IDs) */
   targetIds: string[];
   /** Permissions to modify */
-  permissions: (keyof HaosPermissions)[];
+  permissions: (keyof MeloPermissions)[];
   /** Grant or deny the permissions */
   action: 'allow' | 'deny' | 'inherit';
   /** Optional: copy permissions from another role/user */

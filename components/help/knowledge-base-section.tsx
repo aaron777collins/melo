@@ -7,7 +7,7 @@ const KNOWLEDGE_BASE_SECTIONS = [
     category: 'Getting Started',
     articles: [
       { 
-        title: 'What is HAOS?', 
+        title: 'What is Melo?', 
         description: 'Learn about our Discord-like chat platform powered by Matrix',
         href: '/docs/getting-started/introduction'
       },
@@ -27,8 +27,8 @@ const KNOWLEDGE_BASE_SECTIONS = [
         href: '/docs/advanced/encryption'
       },
       { 
-        title: 'Self-Hosting HAOS', 
-        description: 'How to set up and run your own HAOS instance',
+        title: 'Self-Hosting Melo', 
+        description: 'How to set up and run your own Melo instance',
         href: '/docs/advanced/self-hosting'
       }
     ]

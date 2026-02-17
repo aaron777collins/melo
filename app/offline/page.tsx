@@ -3,7 +3,7 @@ import Link from "next/link";
 import OfflinePageClient from "./offline-page-client";
 
 export const metadata = {
-  title: "HAOS - Offline",
+  title: "Melo - Offline",
   description: "You are currently offline"
 };
 

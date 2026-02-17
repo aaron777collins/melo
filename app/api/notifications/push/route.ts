@@ -12,7 +12,7 @@ async function getUserPushSubscriptions(userId: string): Promise<PushSubscriptio
   }
 
   try {
-    const data = await (client as any).getAccountData('com.haos.push_subscriptions');
+    const data = await (client as any).getAccountData('com.melo.push_subscriptions');
     const content = data?.getContent();
     const allSubscriptions = content?.subscriptions || [];
     
@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     const notificationData = {
       title: payload.title,
       body: payload.body,
-      icon: payload.icon || '/icons/haos-logo-192.png',
-      badge: payload.badge || '/icons/haos-badge-72.png',
+      icon: payload.icon || '/icons/melo-logo-192.png',
+      badge: payload.badge || '/icons/melo-badge-72.png',
       tag: payload.tag,
       data: payload.data || {},
       actions: payload.actions,
@@ -98,10 +98,10 @@ export async function GET(request: NextRequest) {
 
     const testPayload = {
       userId,
-      title: 'HAOS Test Notification',
+      title: 'Melo Test Notification',
       body: 'Push notifications are working! This is a test message.',
-      icon: '/icons/haos-logo-192.png',
-      badge: '/icons/haos-badge-72.png',
+      icon: '/icons/melo-logo-192.png',
+      badge: '/icons/melo-badge-72.png',
       tag: 'test-notification',
       data: {
         type: 'test',

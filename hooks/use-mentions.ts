@@ -55,9 +55,14 @@ interface UseMentionsReturn {
   members: RoomMember[];
   
   /**
-   * Array of rooms for channel autocomplete
+   * Array of rooms for channel autocomplete (legacy)
    */
   rooms: Room[];
+  
+  /**
+   * Array of channels for channel autocomplete
+   */
+  channels: MentionChannel[];
   
   /**
    * Current mention range being typed (includes type: "user" | "channel")
@@ -231,8 +236,7 @@ function replaceMention(
  */
 export function useMentions(roomId: string): UseMentionsReturn {
   const { members } = useRoom(roomId);
-  // TODO: Implement space functionality when useSpace hook is available
-  const space = null;
+  const { allChannels } = useSpaces();
   
   // State
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -249,10 +253,19 @@ export function useMentions(roomId: string): UseMentionsReturn {
     return members.filter(member => member.membership === "join");
   }, [members]);
 
-  // Get relevant rooms for channel mentions
-  // TODO: Implement space functionality when useSpace hook is available
+  // Get relevant channels for channel mentions from spaces
+  const availableChannels = useMemo(() => {
+    return allChannels.map(channel => ({
+      id: channel.id,
+      name: channel.name,
+      type: channel.type as "text" | "voice" | "announcement"
+    }));
+  }, [allChannels]);
+
+  // Convert to Room objects for compatibility (temporary)
   const spaceRooms: Room[] = useMemo(() => {
-    // Space functionality not yet implemented - return empty array for now
+    // For now, return empty array since we're providing channels directly
+    // The parseMentions function below will use availableChannels instead
     return [];
   }, []);
   
@@ -425,14 +438,14 @@ export function useMentions(roomId: string): UseMentionsReturn {
       const mentionText = match[0]; // Full #channelname
       
       // Find the corresponding channel
-      const channel = spaceRooms.find(room => 
-        (room.name || "").toLowerCase().replace(/\s+/g, "-") === channelName.toLowerCase()
+      const channel = availableChannels.find(ch => 
+        ch.name.toLowerCase().replace(/\s+/g, "-") === channelName.toLowerCase()
       );
       
       if (channel) {
         mentions.push({
-          channelId: channel.roomId,
-          displayName: channel.name || "Unnamed Channel",
+          channelId: channel.id,
+          displayName: channel.name,
           offset: match.index!,
           length: mentionText.length,
           type: "channel",
@@ -444,7 +457,7 @@ export function useMentions(roomId: string): UseMentionsReturn {
       text: content,
       mentions,
     };
-  }, [activeMembers, spaceRooms]);
+  }, [activeMembers, availableChannels]);
   
   // =============================================================================
   // Return Value
@@ -455,7 +468,8 @@ export function useMentions(roomId: string): UseMentionsReturn {
     mentionQuery,
     autocompletePosition,
     members: activeMembers,
-    rooms: spaceRooms,
+    rooms: spaceRooms, // Kept for backward compatibility
+    channels: availableChannels, // New property for channel mentions
     currentMentionRange,
     handleInputChange,
     handleUserSelect,

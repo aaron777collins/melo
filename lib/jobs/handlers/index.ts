@@ -4,7 +4,7 @@
  * Registers all available job handlers for different job types.
  */
 
-import { emailHandler } from "./email";
+import { emailHandler, initializeEmailHandler, getEmailServiceStatus } from "./email";
 import { fileProcessingHandler } from "./file-processing";
 import { notificationHandler } from "./notification";
 import { cleanupHandler } from "./cleanup";
@@ -53,3 +53,6 @@ export function registerJobHandler(type: string, handler: JobHandler): void {
 export function getAvailableJobTypes(): string[] {
   return Object.keys(jobHandlers);
 }
+
+// Export initialization utilities
+export { initializeEmailHandler, getEmailServiceStatus };

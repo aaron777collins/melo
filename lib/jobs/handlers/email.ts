@@ -5,6 +5,109 @@
  */
 
 import { jobQueue } from "../queue";
+import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
+import type { MatrixClient } from 'matrix-js-sdk';
+
+// =============================================================================
+// SMTP Configuration
+// =============================================================================
+
+interface SMTPConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  auth: {
+    user: string;
+    pass: string;
+  };
+}
+
+/**
+ * Get SMTP configuration from environment variables
+ */
+function getSMTPConfig(): SMTPConfig | null {
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host || !port || !user || !pass) {
+    console.warn('SMTP configuration not complete. Email sending will be simulated.');
+    return null;
+  }
+
+  return {
+    host,
+    port: parseInt(port, 10),
+    secure: process.env.SMTP_SECURE === 'true', // true for 465, false for 587
+    auth: { user, pass }
+  };
+}
+
+/**
+ * Create nodemailer transporter
+ */
+function createEmailTransporter(): Transporter | null {
+  const config = getSMTPConfig();
+  if (!config) return null;
+
+  return nodemailer.createTransporter(config);
+}
+
+// =============================================================================
+// User Email Utilities
+// =============================================================================
+
+/**
+ * Get user email from Matrix profile or account data
+ * First tries account data, then profile, then returns null
+ */
+async function getUserEmail(matrixClient: MatrixClient, userId: string): Promise<string | null> {
+  try {
+    // Method 1: Try account data first (preferred location for email)
+    try {
+      const accountData = await matrixClient.getAccountDataFromServer('m.email');
+      if (accountData && accountData.email) {
+        console.log(`Found email in account data for ${userId}: ${accountData.email}`);
+        return accountData.email;
+      }
+    } catch (error) {
+      console.debug('No email found in account data:', error);
+    }
+
+    // Method 2: Try profile information
+    try {
+      const profile = await matrixClient.getProfileInfo(userId);
+      // Check if profile has a custom email field
+      if (profile && (profile as any).email) {
+        console.log(`Found email in profile for ${userId}: ${(profile as any).email}`);
+        return (profile as any).email;
+      }
+    } catch (error) {
+      console.debug('Error getting profile info:', error);
+    }
+
+    // Method 3: If Matrix ID looks like an email, use that
+    if (userId.includes('@') && userId.includes('.')) {
+      const extractedEmail = userId.replace('@', '').split(':')[0] + '@' + userId.split(':')[1];
+      if (extractedEmail.includes('@')) {
+        console.log(`Using Matrix ID as email for ${userId}: ${extractedEmail}`);
+        return extractedEmail;
+      }
+    }
+
+    console.warn(`No email found for user ${userId}`);
+    return null;
+  } catch (error) {
+    console.error(`Error getting email for user ${userId}:`, error);
+    return null;
+  }
+}
+
+// =============================================================================
+// Types
+// =============================================================================
 
 export interface SendEmailPayload {
   to: string | string[];
@@ -37,31 +140,62 @@ export interface DigestEmailPayload {
 }
 
 class EmailHandler {
+  private transporter: Transporter | null = null;
+  private matrixClient: MatrixClient | null = null;
+
+  constructor() {
+    this.transporter = createEmailTransporter();
+  }
+
   /**
-   * Send a single email
+   * Set Matrix client for user email lookups
+   */
+  setMatrixClient(client: MatrixClient): void {
+    this.matrixClient = client;
+  }
+
+  /**
+   * Send a single email using nodemailer
    */
   async sendEmail(payload: SendEmailPayload): Promise<{ success: boolean; messageId?: string }> {
     try {
-      console.log(`Sending email to ${Array.isArray(payload.to) ? payload.to.join(", ") : payload.to}`);
+      const recipients = Array.isArray(payload.to) ? payload.to.join(", ") : payload.to;
+      console.log(`Sending email to ${recipients}`);
       console.log(`Subject: ${payload.subject}`);
       
-      // TODO: Integrate with actual email service (SendGrid, AWS SES, etc.)
-      // For now, we'll simulate sending
+      if (!this.transporter) {
+        console.warn('Email transporter not configured. Simulating email send.');
+        console.log('Email content (HTML):', payload.html || 'No HTML content');
+        console.log('Email content (Text):', payload.text || 'No text content');
+        
+        // Return simulated success
+        const messageId = `simulated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        console.log(`Email simulated successfully: ${messageId}`);
+        return { success: true, messageId };
+      }
+
+      // Prepare email options
+      const mailOptions = {
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: payload.to,
+        subject: payload.subject,
+        text: payload.text,
+        html: payload.html,
+        attachments: payload.attachments?.map(att => ({
+          filename: att.filename,
+          content: att.content,
+          contentType: att.contentType
+        }))
+      };
+
+      // Send the email
+      const result = await this.transporter.sendMail(mailOptions);
       
-      // If using the existing email service from the notifications module
-      // const emailService = await import("@/lib/notifications/email-service");
-      // const result = await emailService.sendEmail(payload);
-      
-      // Simulate email sending delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      console.log(`Email sent successfully: ${messageId}`);
+      console.log(`Email sent successfully: ${result.messageId}`);
       
       return {
         success: true,
-        messageId,
+        messageId: result.messageId,
       };
     } catch (error) {
       console.error("Failed to send email:", error);
@@ -127,18 +261,26 @@ class EmailHandler {
     
     console.log(`Sending ${type} digest to user ${userId}`);
     
-    // TODO: Get user email and preferences
-    // const user = await getUserProfile(userId);
-    // if (!user.email || !user.emailNotifications) {
-    //   console.log(`User ${userId} doesn't have email or notifications disabled`);
-    //   return { success: true }; // Not an error
-    // }
+    // Get user email from Matrix client
+    if (!this.matrixClient) {
+      console.error('Matrix client not set. Cannot get user email.');
+      return { success: false };
+    }
+
+    const userEmail = await getUserEmail(this.matrixClient, userId);
+    if (!userEmail) {
+      console.log(`User ${userId} doesn't have email configured. Skipping digest.`);
+      return { success: true }; // Not an error - user just doesn't want email
+    }
+
+    // TODO: Check user email preferences (for now assume they want digests)
+    // This would typically check Matrix account data for notification preferences
     
     // Generate digest content
     const digestContent = this.generateDigestContent(content, type);
     
     const emailPayload: SendEmailPayload = {
-      to: `user-${userId}@example.com`, // TODO: Get actual email
+      to: userEmail,
       subject: `Your ${type} HAOS digest`,
       html: digestContent.html,
       text: digestContent.text,
@@ -251,4 +393,41 @@ Manage your notification preferences: [link]
   }
 }
 
+// =============================================================================
+// Email Handler Instance and Initialization
+// =============================================================================
+
 export const emailHandler = new EmailHandler();
+
+/**
+ * Initialize the email handler with a Matrix client
+ * This should be called at application startup
+ */
+export function initializeEmailHandler(matrixClient: MatrixClient): void {
+  emailHandler.setMatrixClient(matrixClient);
+  console.log('Email handler initialized with Matrix client');
+}
+
+/**
+ * Get SMTP configuration status
+ */
+export function getEmailServiceStatus(): {
+  configured: boolean;
+  simulationMode: boolean;
+  message: string;
+} {
+  const config = getSMTPConfig();
+  if (!config) {
+    return {
+      configured: false,
+      simulationMode: true,
+      message: 'SMTP not configured. Email sending will be simulated. See .env.example for required variables.'
+    };
+  }
+  
+  return {
+    configured: true,
+    simulationMode: false,
+    message: `SMTP configured for ${config.host}:${config.port}`
+  };
+}

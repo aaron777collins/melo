@@ -28,21 +28,62 @@ export const ContactForm: React.FC = () => {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
     if (!formData.email || !formData.category || !formData.message) {
-      toast.error('Please fill out all fields.');
+      toast({
+        title: "Validation Error",
+        description: "Please fill out all fields.",
+        variant: "destructive"
+      });
       return;
     }
 
-    // TODO: Implement actual support ticket submission
-    // This would typically involve sending data to a backend service
-    toast.success('Support request submitted! We will get back to you via email soon.');
+    setIsSubmitting(true);
 
-    // Reset form
-    setFormData({ email: '', category: '', message: '' });
+    try {
+      const response = await fetch('/api/support/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          category: formData.category,
+          message: formData.message
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit support ticket');
+      }
+
+      // Success! Show confirmation with ticket ID
+      toast({
+        title: "Support Ticket Submitted",
+        description: `${result.message} (Ticket ID: ${result.ticketId})`,
+        variant: "default"
+      });
+
+      // Reset form
+      setFormData({ email: '', category: '', message: '' });
+
+    } catch (error) {
+      console.error('Error submitting support ticket:', error);
+      toast({
+        title: "Submission Failed",
+        description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -102,8 +143,8 @@ export const ContactForm: React.FC = () => {
           />
         </div>
 
-        <Button type="submit" className="w-full">
-          Submit Support Request
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Submit Support Request'}
         </Button>
       </form>
     </div>

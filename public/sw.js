@@ -1,1 +1,114 @@
-if(!self.define){let e,s={};const t=(t,a)=>(t=new URL(t+".js",a).href,s[t]||new Promise(s=>{if("document"in self){const e=document.createElement("script");e.src=t,e.onload=s,document.head.appendChild(e)}else e=t,importScripts(t),s()}).then(()=>{let e=s[t];if(!e)throw new Error(`Module ${t} didn’t register its module`);return e}));self.define=(a,i)=>{const n=e||("document"in self?document.currentScript.src:"")||location.href;if(s[n])return;let r={};const c=e=>t(e,n),o={module:{uri:n},exports:r,require:c};s[n]=Promise.all(a.map(e=>o[e]||c(e))).then(e=>(i(...e),r))}}define(["./workbox-67e23458"],function(e){"use strict";importScripts("fallback-zbHXARlEPQj3owNJQefZh.js"),self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"/_next/app-build-manifest.json",revision:"7db54aa145b4ae663b907914095fad86"},{url:"/_next/static/chunks/1128-3a2040340a1e12f4.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/2815-8fdbb9b5ecb3dfc1.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/3156-abc169d917590bd3.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/3273-13a589d3065dbba2.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/3701-9e3a986c6f1100c7.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/5058-75570a650c07709c.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/5724-ff83afc992997a38.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/6435-ffe1edc17f502efc.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/7609-a2a4717215e76a44.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/7914-c5278dac49562abf.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/8540.763e5e88a4befd1f.js",revision:"763e5e88a4befd1f"},{url:"/_next/static/chunks/9406.55194b972e5d9b85.js",revision:"55194b972e5d9b85"},{url:"/_next/static/chunks/9718.f306de950b620de2.js",revision:"f306de950b620de2"},{url:"/_next/static/chunks/9998-76406b22c4cd5fb7.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(auth)/(routes)/sign-in/%5B%5B...sign-in%5D%5D/page-80aff0f2336ede45.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(auth)/(routes)/sign-up/%5B%5B...sign-up%5D%5D/page-90d8204e2e26505f.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(auth)/layout-3e1edeaaaad45c58.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(invite)/(routes)/invite/%5BinviteCode%5D/page-7ca63fbb7d136774.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/admin/jobs/page-a5a5b4932b026a73.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/channels/@me/%5BroomId%5D/page-8679181db1d9819c.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/channels/@me/page-768edf4f2563e0a5.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/channels/%5BchannelId%5D/page-09033f95cb182077.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/conversations/%5BmemberId%5D/page-db99a15b4ad623c5.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/layout-5e5baa29f35d32fd.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/page-bcd355caf88315b9.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/settings/audit-log/page-32f53fb9cb58ac94.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/settings/bans/page-d715495159102c38.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/settings/layout-248c33f327be4e04.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/settings/members/page-46928df449c05c0c.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/settings/page-8bb403d7d3bcb6fa.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/%5BserverId%5D/settings/roles/page-29a55777305d5f9e.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/servers/create/templates/page-77fa6b29e901dd89.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/accessibility/page-03ecd75e59cedb86.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/account/delete/page-ffd753f783551590.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/appearance/page-b5fd8752219f6c34.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/data-export/page-bf7f4b4f4d305b51.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/help/page-fbfb03bb47c49cad.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/language/page-75da4aa755149642.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/layout-82063af7932207a1.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/notifications/advanced/page-0dc4bfceca6c2cae.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/notifications/page-80bf64c5940b09a0.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/page-aa36c44c759082a9.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/privacy/page-f3a4d31369862a28.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/profile/page-5ac36dc341b9f227.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/security/page-da4f5d543da1f4df.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/tutorial/page-beb127c174e07f82.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/(routes)/settings/voice-video/page-18c0fef6b193d3b2.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(main)/layout-8b9539a627cc956e.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/(setup)/page-c9813ab14ba454a0.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/_not-found/page-4f65d90ff52a9b70.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/docs/page-127fc6e0ea3b8cfd.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/layout-a32d313efe35e724.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/link-preview-test/page-803fadeb98ba7037.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/not-found-f266513e02956e35.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/app/offline/page-694d252608576d92.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/livekit-ca641a09bff31857.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/main-app-1d573e579e1b342d.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/main-b3229cd7aec46330.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/matrix-64c6cc226b304429.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/pages/_app-c9c65dde1e57750e.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/pages/_error-d74b617a129ccb20.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/polyfills-42372ed130431b0a.js",revision:"846118c33b2c0e922d7b3a7676f81f6f"},{url:"/_next/static/chunks/ui-9bfe418d432359da.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/chunks/webpack-6117a56d2496eafa.js",revision:"zbHXARlEPQj3owNJQefZh"},{url:"/_next/static/css/1903f2537f83fa47.css",revision:"1903f2537f83fa47"},{url:"/_next/static/css/5460e0dfa25a3573.css",revision:"5460e0dfa25a3573"},{url:"/_next/static/css/fb2f69fbe3050484.css",revision:"fb2f69fbe3050484"},{url:"/_next/static/media/04c24f78ad5a47d8-s.woff2",revision:"b8e2d34878304af0af7552f727e9cca8"},{url:"/_next/static/media/13a314e63820922b-s.woff2",revision:"6e493671117e231571a1746987fbaa18"},{url:"/_next/static/media/37da3febcafd463e-s.woff2",revision:"6ffaf41555a2cfd84d55fb08dcb642d7"},{url:"/_next/static/media/403511e41efd5e81-s.woff2",revision:"7f28d9acd0a8a4c1464195d229d07842"},{url:"/_next/static/media/51f6eedf9be77cd7-s.woff2",revision:"0533fc3fb6d983441a399f94eb182d81"},{url:"/_next/static/media/9e769f40faa52555-s.woff2",revision:"01f355e30be7cae19120d5f796d25b42"},{url:"/_next/static/media/c1a1fe1e2bf9b2ee-s.woff2",revision:"5e13deb3df6f4ad52a1ed482edd90bc1"},{url:"/_next/static/media/d6fc113833db48fe-s.woff2",revision:"ea21aa8efaf84307316a1633d34995d1"},{url:"/_next/static/media/e1df014bb05b8510-s.woff2",revision:"8027aefd3d59e5fa3da8e3d65e05a4b7"},{url:"/_next/static/media/e807dee2426166ad-s.p.woff2",revision:"23145c7141614ebba8c5dd949478c01e"},{url:"/_next/static/zbHXARlEPQj3owNJQefZh/_buildManifest.js",revision:"f57f99d80a38c78c18f60501ece7a155"},{url:"/_next/static/zbHXARlEPQj3owNJQefZh/_ssgManifest.js",revision:"b6652df95db52feb4daf4eca35380933"},{url:"/favicon.ico",revision:"c30c7d42707a47a3f4591831641e50dc"},{url:"/icon-192.png",revision:"c30c7d42707a47a3f4591831641e50dc"},{url:"/icon-512.png",revision:"c30c7d42707a47a3f4591831641e50dc"},{url:"/manifest.json",revision:"e6b9653f766ff8ec15b2c7122229df20"},{url:"/offline",revision:"zbHXARlEPQj3owNJQefZh"}],{ignoreURLParametersMatching:[]}),e.cleanupOutdatedCaches(),e.registerRoute("/",new e.NetworkFirst({cacheName:"start-url",plugins:[{cacheWillUpdate:async({request:e,response:s,event:t,state:a})=>s&&"opaqueredirect"===s.type?new Response(s.body,{status:200,statusText:"OK",headers:s.headers}):s},{handlerDidError:async({request:e})=>self.fallback(e)}]}),"GET"),e.registerRoute(/^https:\/\/.*\.(?:png|jpg|jpeg|svg|gif|ico|webp)$/i,new e.CacheFirst({cacheName:"images",plugins:[new e.ExpirationPlugin({maxEntries:100,maxAgeSeconds:86400}),{handlerDidError:async({request:e})=>self.fallback(e)}]}),"GET"),e.registerRoute(/^https:\/\/.*\/_next\/static\/.*/i,new e.CacheFirst({cacheName:"static-resources",plugins:[new e.ExpirationPlugin({maxEntries:100,maxAgeSeconds:86400}),{handlerDidError:async({request:e})=>self.fallback(e)}]}),"GET"),e.registerRoute(/^https:\/\/.*\/api\/.*/i,new e.NetworkFirst({cacheName:"api-cache",networkTimeoutSeconds:10,plugins:[new e.ExpirationPlugin({maxEntries:50,maxAgeSeconds:300}),{handlerDidError:async({request:e})=>self.fallback(e)}]}),"GET"),e.registerRoute(/^https:\/\/.*\/_matrix\/client\/.*/i,new e.NetworkFirst({cacheName:"matrix-api-cache",networkTimeoutSeconds:15,plugins:[new e.ExpirationPlugin({maxEntries:100,maxAgeSeconds:600}),{handlerDidError:async({request:e})=>self.fallback(e)}]}),"GET")});
+// HAOS Push Notification Service Worker
+// This handles background push notifications and user interactions
+
+console.log('HAOS Service Worker loaded');
+
+self.addEventListener('push', function(event) {
+  console.log('Push event received:', event);
+  
+  if (!event.data) {
+    console.log('Push event has no data');
+    return;
+  }
+
+  try {
+    const data = event.data.json();
+    console.log('Push data:', data);
+    
+    const notification = data.notification;
+    
+    if (!notification) {
+      console.log('No notification data in push event');
+      return;
+    }
+    
+    event.waitUntil(
+      self.registration.showNotification(notification.title, {
+        body: notification.body,
+        icon: notification.icon || '/icons/haos-logo-192.png',
+        badge: notification.badge || '/icons/haos-badge-72.png',
+        tag: notification.tag,
+        data: notification.data,
+        actions: notification.actions,
+        requireInteraction: notification.requireInteraction || false,
+        silent: notification.silent || false,
+        timestamp: notification.timestamp || Date.now(),
+        vibrate: notification.vibrate || [200, 100, 200]
+      })
+    );
+    
+    console.log('Notification displayed:', notification.title);
+  } catch (error) {
+    console.error('Error handling push event:', error);
+  }
+});
+
+self.addEventListener('notificationclick', function(event) {
+  console.log('Notification clicked:', event.notification.tag, event.action);
+  
+  event.notification.close();
+
+  const data = event.notification.data;
+  const action = event.action;
+
+  if (action === 'dismiss') {
+    console.log('Notification dismissed');
+    return; // Just close the notification
+  }
+
+  // Handle view action or notification click
+  if (data && data.url) {
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
+        console.log('Looking for existing clients:', clients.length);
+        
+        // Try to focus existing window
+        for (let client of clients) {
+          if (client.url.includes(window.location.origin) && 'focus' in client) {
+            console.log('Focusing existing client');
+            return client.focus();
+          }
+        }
+        
+        // Open new window
+        if (clients.openWindow) {
+          const targetUrl = data.url.startsWith('http') ? data.url : window.location.origin + data.url;
+          console.log('Opening new window:', targetUrl);
+          return clients.openWindow(targetUrl);
+        }
+      }).catch(error => {
+        console.error('Error handling notification click:', error);
+      })
+    );
+  } else {
+    // Default: try to focus the app
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clients) {
+        if (clients.length > 0 && 'focus' in clients[0]) {
+          return clients[0].focus();
+        } else if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      }).catch(error => {
+        console.error('Error focusing app:', error);
+      })
+    );
+  }
+});
+
+self.addEventListener('notificationclose', function(event) {
+  console.log('Notification closed:', event.notification.tag);
+  // Track notification dismissal analytics if needed
+});
+
+// Handle service worker installation
+self.addEventListener('install', function(event) {
+  console.log('HAOS Service Worker installing');
+  self.skipWaiting();
+});
+
+// Handle service worker activation
+self.addEventListener('activate', function(event) {
+  console.log('HAOS Service Worker activating');
+  event.waitUntil(self.clients.claim());
+});

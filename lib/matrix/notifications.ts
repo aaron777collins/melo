@@ -434,8 +434,10 @@ export class MatrixNotificationService {
       await this.showDesktopNotification(notificationData);
     }
 
+    // Send push notification
+    await this.sendPushNotification(event, eventRoom, notificationType);
+
     // TODO: Send email notification for offline users
-    // TODO: Send push notification
 
     // Emit custom event for UI updates
     if (typeof window !== "undefined") {
@@ -596,6 +598,32 @@ export class MatrixNotificationService {
   }
 
   /**
+   * Send push notification for Matrix event
+   */
+  private async sendPushNotification(
+    event: MatrixEvent,
+    room: Room,
+    notificationType: NotificationType
+  ): Promise<void> {
+    try {
+      // Import push service dynamically to avoid SSR issues
+      const { getPushService } = await import('@/lib/notifications/push-service');
+      const pushService = getPushService();
+
+      if (!pushService.getConfig().enabled) {
+        console.log('Push notifications disabled, skipping');
+        return;
+      }
+
+      // Send push notification with Matrix client
+      await pushService.sendPushNotification(event, room, notificationType, this.client);
+      
+    } catch (error) {
+      console.error('Failed to send push notification:', error);
+    }
+  }
+
+  /**
    * Send test notification
    */
   async testNotification(): Promise<boolean> {
@@ -616,10 +644,28 @@ export class MatrixNotificationService {
       };
 
       await this.showDesktopNotification(testData);
+      
+      // Also test push notification
+      await this.testPushNotification();
+      
       return true;
     } catch (error) {
       console.error("Test notification failed:", error);
       return false;
+    }
+  }
+
+  /**
+   * Send test push notification
+   */
+  async testPushNotification(): Promise<void> {
+    try {
+      const response = await fetch('/api/notifications/push?userId=test-user');
+      if (!response.ok) {
+        console.warn('Test push notification failed');
+      }
+    } catch (error) {
+      console.error('Failed to send test push notification:', error);
     }
   }
 

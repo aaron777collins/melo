@@ -8,6 +8,7 @@
 
 import { MatrixEvent, Room } from "matrix-js-sdk";
 import { NotificationType } from "@/lib/matrix/notifications";
+import { createWebPushProvider } from "./web-push-provider";
 
 // =============================================================================
 // Types
@@ -82,14 +83,37 @@ export interface PushResult {
 class WebPushProvider implements PushProvider {
   name = "webpush";
   private config: PushServiceConfig;
+  private webpush: any;
 
   constructor(config: PushServiceConfig) {
     this.config = config;
+    
+    // Only import web-push on server side
+    if (typeof window === 'undefined') {
+      try {
+        this.webpush = require('web-push');
+        
+        // Configure web-push with VAPID details
+        if (config.vapidPublicKey && config.vapidPrivateKey && config.vapidSubject) {
+          this.webpush.setVapidDetails(
+            config.vapidSubject,
+            config.vapidPublicKey,
+            config.vapidPrivateKey
+          );
+        }
+      } catch (error) {
+        console.warn('web-push library not available:', error);
+        this.webpush = null;
+      }
+    }
   }
 
   async send(subscriptions: PushSubscription[], data: PushNotificationData): Promise<PushResult[]> {
-    // In a real implementation, this would use web-push library
-    // For now, we'll simulate the API call structure
+    // Check if we're on server side and web-push is available
+    if (!this.webpush) {
+      console.warn('Web push not available, falling back to logging');
+      return this.fallbackLogging(subscriptions, data);
+    }
     
     const results: PushResult[] = [];
     
@@ -111,53 +135,59 @@ class WebPushProvider implements PushProvider {
           }
         });
 
-        // Simulate API call to push service
-        const response = await fetch(this.config.apiEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            subscription: subscription.subscription,
-            payload,
-            options: {
-              TTL: 86400, // 24 hours
-              urgency: 'normal',
-              vapidDetails: {
-                subject: this.config.vapidSubject,
-                publicKey: this.config.vapidPublicKey,
-                privateKey: this.config.vapidPrivateKey
-              }
-            }
-          })
+        // Send actual push notification using web-push library
+        await this.webpush.sendNotification(
+          subscription.subscription,
+          payload,
+          {
+            TTL: 86400, // 24 hours
+            urgency: 'normal'
+          }
+        );
+
+        results.push({
+          subscriptionId: subscription.id,
+          success: true
         });
 
-        if (response.ok) {
-          results.push({
-            subscriptionId: subscription.id,
-            success: true
-          });
-        } else {
-          const errorText = await response.text();
-          const shouldUnsubscribe = response.status === 410; // Gone - subscription expired
-          
-          results.push({
-            subscriptionId: subscription.id,
-            success: false,
-            error: errorText,
-            shouldUnsubscribe
-          });
+      } catch (error: any) {
+        let shouldUnsubscribe = false;
+        let errorMessage = 'Unknown error';
+
+        if (error.statusCode) {
+          // Web-push specific errors
+          shouldUnsubscribe = error.statusCode === 410; // Gone - subscription expired
+          errorMessage = `HTTP ${error.statusCode}: ${error.body || error.message}`;
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
         }
-      } catch (error) {
+
         results.push({
           subscriptionId: subscription.id,
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: errorMessage,
+          shouldUnsubscribe
         });
+
+        console.error(`Push notification failed for ${subscription.id}:`, errorMessage);
       }
     }
 
     return results;
+  }
+
+  private fallbackLogging(subscriptions: PushSubscription[], data: PushNotificationData): PushResult[] {
+    // Fallback when web-push is not available (development/debugging)
+    console.log('🔔 [PUSH NOTIFICATION - SIMULATED]');
+    console.log(`Title: ${data.title}`);
+    console.log(`Body: ${data.body}`);
+    console.log(`Recipients: ${subscriptions.length} subscription(s)`);
+    console.log(`Data:`, data.data);
+    
+    return subscriptions.map(sub => ({
+      subscriptionId: sub.id,
+      success: true
+    }));
   }
 }
 
@@ -359,8 +389,14 @@ export class PushNotificationService {
     this.config = config;
     this.serviceWorkerManager = new ServiceWorkerManager(config);
 
-    // Register default provider
-    this.providers.set('webpush', new WebPushProvider(config));
+    // Register Web Push provider if properly configured
+    const webPushProvider = createWebPushProvider();
+    if (webPushProvider) {
+      this.providers.set('webpush', webPushProvider);
+      console.log('Web Push provider configured successfully');
+    } else {
+      console.warn('Web Push provider not configured - VAPID keys missing');
+    }
   }
 
   /**
@@ -423,15 +459,112 @@ export class PushNotificationService {
   }
 
   /**
+   * Store push subscription in Matrix account data
+   */
+  async storePushSubscription(client: any, subscription: PushSubscription): Promise<void> {
+    if (!client) {
+      console.error('Matrix client not available');
+      return;
+    }
+
+    try {
+      // Get existing subscriptions from account data
+      const existingData = await client.getAccountData('com.haos.push_subscriptions');
+      const existingSubscriptions = existingData?.getContent()?.subscriptions || [];
+
+      // Remove any existing subscription for this device
+      const filteredSubscriptions = existingSubscriptions.filter(
+        (sub: PushSubscription) => sub.deviceId !== subscription.deviceId
+      );
+
+      // Add new subscription
+      filteredSubscriptions.push(subscription);
+
+      // Store updated subscriptions
+      await client.setAccountData('com.haos.push_subscriptions', {
+        subscriptions: filteredSubscriptions,
+        updated_at: new Date().toISOString()
+      });
+
+      console.log(`Push subscription stored for device: ${subscription.deviceId}`);
+    } catch (error) {
+      console.error('Failed to store push subscription:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove push subscription from Matrix account data
+   */
+  async removePushSubscription(client: any, deviceId: string): Promise<void> {
+    if (!client) {
+      console.error('Matrix client not available');
+      return;
+    }
+
+    try {
+      // Get existing subscriptions from account data
+      const existingData = await client.getAccountData('com.haos.push_subscriptions');
+      const existingSubscriptions = existingData?.getContent()?.subscriptions || [];
+
+      // Remove subscription for this device
+      const filteredSubscriptions = existingSubscriptions.filter(
+        (sub: PushSubscription) => sub.deviceId !== deviceId
+      );
+
+      // Store updated subscriptions
+      await client.setAccountData('com.haos.push_subscriptions', {
+        subscriptions: filteredSubscriptions,
+        updated_at: new Date().toISOString()
+      });
+
+      console.log(`Push subscription removed for device: ${deviceId}`);
+    } catch (error) {
+      console.error('Failed to remove push subscription:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all push subscriptions from Matrix account data
+   */
+  async getPushSubscriptions(client: any): Promise<PushSubscription[]> {
+    if (!client) {
+      console.error('Matrix client not available');
+      return [];
+    }
+
+    try {
+      const data = await client.getAccountData('com.haos.push_subscriptions');
+      const content = data?.getContent();
+      return content?.subscriptions || [];
+    } catch (error) {
+      console.error('Failed to get push subscriptions:', error);
+      return [];
+    }
+  }
+
+  /**
    * Send push notification
    */
   async sendPushNotification(
     event: MatrixEvent,
     room: Room,
     notificationType: NotificationType,
-    subscriptions: PushSubscription[]
+    client?: any
   ): Promise<void> {
-    if (!this.config.enabled || subscriptions.length === 0) return;
+    if (!this.config.enabled) return;
+
+    // Get subscriptions from Matrix account data if client provided
+    let subscriptions: PushSubscription[] = [];
+    if (client) {
+      subscriptions = await this.getPushSubscriptions(client);
+    }
+
+    if (subscriptions.length === 0) {
+      console.log('No push subscriptions found');
+      return;
+    }
 
     const notificationData = this.formatPushNotification(event, room, notificationType);
     const provider = this.providers.get('webpush');
@@ -454,7 +587,13 @@ export class PushNotificationService {
 
       if (shouldUnsubscribe.length > 0) {
         console.log(`${shouldUnsubscribe.length} subscriptions should be removed`);
-        // In a real implementation, remove these subscriptions from storage
+        // Remove expired subscriptions from account data
+        for (const result of shouldUnsubscribe) {
+          const subscription = subscriptions.find(s => s.id === result.subscriptionId);
+          if (subscription && client) {
+            await this.removePushSubscription(client, subscription.deviceId);
+          }
+        }
       }
 
       console.log(`Push notifications sent: ${results.length - failed.length}/${results.length}`);
@@ -656,9 +795,12 @@ let pushService: PushNotificationService | null = null;
 export function getPushService(config?: PushServiceConfig): PushNotificationService {
   if (!pushService) {
     if (!config) {
-      // Default configuration - disabled by default
+      // Configuration from environment variables
       config = {
-        enabled: false, // Enable when VAPID keys are configured
+        enabled: process.env.PUSH_NOTIFICATIONS_ENABLED === 'true',
+        vapidPublicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        vapidPrivateKey: process.env.VAPID_PRIVATE_KEY,
+        vapidSubject: process.env.VAPID_SUBJECT || 'mailto:admin@example.com',
         serviceWorkerPath: '/sw.js',
         apiEndpoint: '/api/notifications/push'
       };

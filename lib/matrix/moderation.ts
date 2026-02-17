@@ -869,7 +869,7 @@ export class MatrixModerationService {
       const now = new Date();
 
       // Check each ban for expiry
-      for (const [userId, banState] of banStates.entries()) {
+      for (const [userId, banState] of Array.from(banStates.entries())) {
         result.checkedCount++;
         
         const banData = banState.getContent();

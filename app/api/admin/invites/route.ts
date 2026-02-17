@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionFromCookie } from "@/lib/matrix/cookies";
+import { getSessionCookie } from "@/lib/matrix/cookies";
 import { 
   createAdminInvite, 
   listAdminInvites, 
@@ -96,7 +96,7 @@ import { getAccessControlConfig } from "@/lib/matrix/access-control";
 export async function GET(req: Request) {
   try {
     // Check authentication
-    const session = await getSessionFromCookie();
+    const session = await getSessionCookie();
     if (!session) {
       return NextResponse.json(
         { success: false, error: { code: "M_UNAUTHORIZED", message: "Not authenticated" } },
@@ -161,7 +161,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     // Check authentication
-    const session = await getSessionFromCookie();
+    const session = await getSessionCookie();
     if (!session) {
       return NextResponse.json(
         { success: false, error: { code: "M_UNAUTHORIZED", message: "Not authenticated" } },
@@ -230,7 +230,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   try {
     // Check authentication
-    const session = await getSessionFromCookie();
+    const session = await getSessionCookie();
     if (!session) {
       return NextResponse.json(
         { success: false, error: { code: "M_UNAUTHORIZED", message: "Not authenticated" } },

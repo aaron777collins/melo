@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RefreshCw, Plus, Users, Clock, CheckCircle, XCircle } from "lucide-react";
 import { InviteStats } from "./invite-stats";
 import { InviteList } from "./invite-list";
+import { CreateInviteModal } from "./create-invite-modal";
 
 interface AdminInvite {
   id: string;
@@ -114,10 +115,7 @@ export function AdminInvitesDashboard() {
             Refresh
           </Button>
           
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Invite
-          </Button>
+          <CreateInviteModal onInviteCreated={fetchInvites} />
         </div>
       </div>
       

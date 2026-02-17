@@ -44,7 +44,7 @@ const SENSITIVE_HEADERS = [
  * Request logger implementation
  */
 export class RequestLogger implements IRequestLogger {
-  private config: typeof DEFAULT_REQUEST_CONFIG & Partial<LogConfig>;
+  private config: typeof DEFAULT_REQUEST_CONFIG & Partial<LogConfig> & { service: string; environment: string };
   private requestStore: Map<string, {
     context: RequestContext;
     timing: RequestTiming;
@@ -53,10 +53,8 @@ export class RequestLogger implements IRequestLogger {
   constructor(config: Partial<LogConfig> = {}) {
     this.config = { 
       ...DEFAULT_REQUEST_CONFIG, 
-      service: 'haos-v2-requests',
-      environment: process.env.NODE_ENV || 'development',
       ...config,
-      // Ensure service is always defined
+      // Ensure service and environment are always defined
       service: config.service || 'haos-v2-requests',
       environment: config.environment || process.env.NODE_ENV || 'development',
     };
@@ -285,7 +283,8 @@ export class RequestLogger implements IRequestLogger {
     const { level, message, timing, response, error } = logEntry;
     
     // Color codes
-    const colors = {
+    const colors: Record<string, string> = {
+      debug: '\x1b[34m', // Blue
       info: '\x1b[32m',  // Green
       warn: '\x1b[33m',  // Yellow  
       error: '\x1b[31m', // Red
@@ -321,15 +320,15 @@ export class RequestLogger implements IRequestLogger {
     const now = Date.now();
     const staleKeys: string[] = [];
 
-    for (const [correlationId, { timing }] of this.requestStore.entries()) {
+    Array.from(this.requestStore.entries()).forEach(([correlationId, { timing }]) => {
       if (now - timing.startTime > maxAge) {
         staleKeys.push(correlationId);
       }
-    }
+    });
 
-    for (const key of staleKeys) {
+    staleKeys.forEach(key => {
       this.requestStore.delete(key);
-    }
+    });
   }
 
   /**

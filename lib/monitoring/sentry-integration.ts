@@ -89,7 +89,7 @@ export class SentryErrorReportingService implements ErrorReportingService {
           }),
 
           // Filter and enhance errors before sending
-          beforeSend: (event, hint) => {
+          beforeSend: (event: any, hint: any) => {
             // Apply global beforeSend filter first
             if (this.globalConfig.beforeSend && hint?.originalException instanceof Error) {
               const context = this.extractContextFromEvent(event);

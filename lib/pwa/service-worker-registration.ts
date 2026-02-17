@@ -1,19 +1,20 @@
 import { toast } from "sonner";
 
-export interface ServiceWorkerRegistration {
-  register: () => Promise<void>;
+// Note: Using a different name to avoid collision with global ServiceWorkerRegistration
+export interface ServiceWorkerManagerAPI {
+  register: () => Promise<globalThis.ServiceWorkerRegistration | undefined>;
   unregister: () => Promise<void>;
   checkForUpdates: () => Promise<void>;
   skipWaiting: () => void;
-  onUpdate: (callback: (registration: ServiceWorkerRegistration) => void) => void;
+  onUpdate: (callback: (registration: globalThis.ServiceWorkerRegistration) => void) => void;
   onOffline: (callback: () => void) => void;
   onOnline: (callback: () => void) => void;
 }
 
 class ServiceWorkerRegistrationManager {
-  private registration: ServiceWorkerRegistration | null = null;
+  private registration: globalThis.ServiceWorkerRegistration | null = null;
   private isOnline: boolean = true;
-  private updateCallbacks: Array<(registration: ServiceWorkerRegistration) => void> = [];
+  private updateCallbacks: Array<(registration: globalThis.ServiceWorkerRegistration) => void> = [];
   private offlineCallbacks: Array<() => void> = [];
   private onlineCallbacks: Array<() => void> = [];
 
@@ -24,10 +25,10 @@ class ServiceWorkerRegistrationManager {
     }
   }
 
-  async register(): Promise<void> {
+  async register(): Promise<globalThis.ServiceWorkerRegistration | undefined> {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       console.warn('[SW] Service workers are not supported');
-      return;
+      return undefined;
     }
 
     try {
@@ -101,7 +102,7 @@ class ServiceWorkerRegistrationManager {
     }
   }
 
-  onUpdate(callback: (registration: ServiceWorkerRegistration) => void): void {
+  onUpdate(callback: (registration: globalThis.ServiceWorkerRegistration) => void): void {
     this.updateCallbacks.push(callback);
   }
 
@@ -227,7 +228,7 @@ class ServiceWorkerRegistrationManager {
     return this.isOnline;
   }
 
-  getRegistration(): ServiceWorkerRegistration | null {
+  getRegistration(): globalThis.ServiceWorkerRegistration | null {
     return this.registration;
   }
 }
@@ -236,7 +237,7 @@ class ServiceWorkerRegistrationManager {
 export const serviceWorkerManager = new ServiceWorkerRegistrationManager();
 
 // Utility functions for easier usage
-export async function registerServiceWorker(): Promise<void> {
+export async function registerServiceWorker(): Promise<globalThis.ServiceWorkerRegistration | undefined> {
   return serviceWorkerManager.register();
 }
 

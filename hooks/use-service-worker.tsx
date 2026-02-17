@@ -45,10 +45,10 @@ export function useServiceWorker(): ServiceWorkerState & ServiceWorkerActions {
       updateState({ error: null, isInstalling: true });
       
       const reg = await serviceWorkerManager.register();
-      setRegistration(reg);
+      setRegistration(reg ?? null);
       
       updateState({
-        isRegistered: true,
+        isRegistered: !!reg,
         isInstalling: false,
         isActive: !!reg?.active,
         isWaiting: !!reg?.waiting,

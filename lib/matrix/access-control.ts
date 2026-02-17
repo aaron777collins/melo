@@ -288,15 +288,13 @@ export function isUserAllowed(userId: string): LoginValidationResult {
  * In private mode (DEFAULT), external users can only access the server
  * if they have been invited by an administrator.
  * 
- * TODO: Implement invite system
- * 
  * @param userId - The Matrix user ID to check
  * @returns Whether the user has a valid invite
  */
 export async function hasValidInvite(userId: string): Promise<boolean> {
-  // TODO: Implement invite system
-  // Check against stored invites in Matrix account data or local storage
-  return false;
+  // Dynamic import to avoid circular dependencies
+  const { checkUserHasValidInvite } = await import('./admin-invites');
+  return checkUserHasValidInvite(userId);
 }
 
 /**

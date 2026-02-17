@@ -283,10 +283,13 @@ export function isUserAllowed(userId: string): LoginValidationResult {
 // =============================================================================
 
 /**
- * Check if a user is allowed via an admin invite
+ * Check if a user is allowed via an admin invite (client-side, requires Matrix client)
  * 
  * In private mode (DEFAULT), external users can only access the server
  * if they have been invited by an administrator.
+ * 
+ * NOTE: This requires a logged-in Matrix client to access account data.
+ * For pre-login checks, use hasValidInviteServerSide() instead.
  * 
  * @param userId - The Matrix user ID to check
  * @returns Whether the user has a valid invite
@@ -298,32 +301,74 @@ export async function hasValidInvite(userId: string): Promise<boolean> {
 }
 
 /**
+ * Check if a user has a valid invite (server-side, no Matrix client required)
+ * 
+ * This uses file-based storage and can be called during login flow
+ * BEFORE the user is authenticated.
+ * 
+ * @param userId - The Matrix user ID to check
+ * @returns Whether the user has a valid invite
+ */
+export function hasValidInviteServerSide(userId: string): boolean {
+  // Dynamic import to avoid bundling fs in client code
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { serverCheckHasValidInvite } = require('./server-invites');
+  return serverCheckHasValidInvite(userId);
+}
+
+/**
+ * Mark an invite as used (server-side)
+ * 
+ * Called after successful login with an invite.
+ * 
+ * @param userId - The Matrix user ID that used the invite
+ * @returns Whether the operation succeeded
+ */
+export function markInviteUsedServerSide(userId: string): boolean {
+  // Dynamic import to avoid bundling fs in client code
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { serverMarkInviteUsed } = require('./server-invites');
+  return serverMarkInviteUsed(userId);
+}
+
+/**
  * Validate login with invite check
  * 
  * Combines homeserver check with invite validation for external users.
+ * Uses server-side storage that doesn't require Matrix authentication.
  * 
  * @param homeserverUrl - The homeserver URL
  * @param userId - The user ID (if known)
  * @returns Validation result
  */
-export async function isLoginAllowedWithInvite(
+export function isLoginAllowedWithInvite(
   homeserverUrl: string,
   userId?: string
-): Promise<LoginValidationResult> {
+): LoginValidationResult {
+  const config = getAccessControlConfig();
+  
   // First check homeserver
   const homeserverResult = isLoginAllowed(homeserverUrl);
   
-  // If allowed by homeserver, we're good
+  // If allowed by homeserver (same homeserver), we're good
   if (homeserverResult.allowed) {
     return homeserverResult;
   }
   
-  // If not allowed by homeserver and we have a userId, check for invite
-  if (userId) {
-    const hasInvite = await hasValidInvite(userId);
+  // External user - check if they have an invite
+  if (userId && config.inviteOnly) {
+    const hasInvite = hasValidInviteServerSide(userId);
     if (hasInvite) {
+      console.log(`[AccessControl] External user ${userId} has valid invite`);
       return { allowed: true };
     }
+    
+    // No invite - return invite-specific error
+    return {
+      allowed: false,
+      reason: 'This is a private server. You need an invitation from an administrator to access with an external account.',
+      code: 'INVITE_REQUIRED',
+    };
   }
   
   // Not allowed

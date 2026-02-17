@@ -12,6 +12,7 @@
 
 import { getClient } from "./client";
 import { getAccessControlConfig } from "./access-control";
+import { serverCreateInvite, serverRevokeInvite, serverMarkInviteUsed, syncInvitesFromMatrix, type ServerInvite } from "./server-invites";
 
 // =============================================================================
 // Types
@@ -203,7 +204,7 @@ export async function createAdminInvite(
     notes: options?.notes,
   };
 
-  // Save
+  // Save to Matrix account data
   invites.push(invite);
   const saved = await saveInvitesToAccountData(invites);
   
@@ -211,12 +212,18 @@ export async function createAdminInvite(
     return { success: false, error: "Failed to save invite" };
   }
 
+  // Also save to server-side storage for pre-login checks
+  serverCreateInvite(invite as ServerInvite);
+
   console.log(`[AdminInvites] Created invite for ${userId} by ${currentUserId}`);
   return { success: true, invite };
 }
 
 /**
  * List all admin invites
+ * 
+ * Also syncs invites to server-side storage to ensure they're available
+ * for pre-login checks.
  * 
  * @param options - Filter options
  * @returns Result with list of invites
@@ -228,6 +235,11 @@ export async function listAdminInvites(
   }
 ): Promise<InviteResult> {
   const invites = await getInvitesFromAccountData();
+  
+  // Sync to server-side storage for pre-login checks
+  if (invites.length > 0) {
+    syncInvitesFromMatrix(invites as ServerInvite[]);
+  }
   
   let filtered = invites;
   
@@ -266,6 +278,9 @@ export async function revokeAdminInvite(inviteId: string): Promise<InviteResult>
     return { success: false, error: "Failed to save changes" };
   }
   
+  // Also revoke from server-side storage
+  serverRevokeInvite(inviteId);
+  
   console.log(`[AdminInvites] Revoked invite ${inviteId}`);
   return { success: true };
 }
@@ -298,11 +313,16 @@ export async function checkUserHasValidInvite(userId: string): Promise<boolean> 
  * Mark an invite as used
  * 
  * Called after a user successfully logs in with an invite.
+ * Updates both Matrix account data and server-side storage.
  * 
  * @param userId - The Matrix user ID that used the invite
  * @returns Whether the operation succeeded
  */
 export async function markInviteUsed(userId: string): Promise<boolean> {
+  // First mark in server-side storage (this is the authoritative source during login)
+  serverMarkInviteUsed(userId);
+  
+  // Also update Matrix account data if we have a client
   const invites = await getInvitesFromAccountData();
   
   const invite = invites.find(
@@ -310,7 +330,8 @@ export async function markInviteUsed(userId: string): Promise<boolean> {
   );
   
   if (!invite) {
-    return false;
+    // Server-side already marked, that's fine
+    return true;
   }
   
   invite.used = true;
@@ -318,10 +339,10 @@ export async function markInviteUsed(userId: string): Promise<boolean> {
   
   const saved = await saveInvitesToAccountData(invites);
   if (saved) {
-    console.log(`[AdminInvites] Marked invite for ${userId} as used`);
+    console.log(`[AdminInvites] Marked invite for ${userId} as used in Matrix account data`);
   }
   
-  return saved;
+  return true;
 }
 
 /**

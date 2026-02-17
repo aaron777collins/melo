@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { loginWithPassword, validateSession as matrixValidateSession, MatrixAuthError } from "@/lib/matrix/auth";
 import { setSessionCookie, setTempSessionCookie } from "@/lib/matrix/cookies";
 import { createClient } from "@/lib/matrix/matrix-sdk-exports";
-import { isLoginAllowed, getAccessControlConfig } from "@/lib/matrix/access-control";
+import { isLoginAllowedWithInvite, getAccessControlConfig, markInviteUsedServerSide, extractDomain } from "@/lib/matrix/access-control";
 
 /**
  * Matrix Authentication Login
@@ -109,11 +109,23 @@ export async function POST(req: Request) {
     // Get the target homeserver URL
     const targetHomeserver = homeserverUrl || process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL;
 
+    // Construct the full Matrix user ID for access control check
+    // The username might already be a full user ID (@user:server.com) or just localpart
+    let userId: string;
+    if (username.startsWith('@') && username.includes(':')) {
+      // Already a full Matrix user ID
+      userId = username;
+    } else {
+      // Localpart only - construct full user ID from homeserver
+      const domain = extractDomain(targetHomeserver);
+      userId = `@${username}:${domain}`;
+    }
+
     // Access Control Check - BEFORE Matrix authentication
-    // This prevents unauthorized homeservers from even attempting login
-    const accessCheck = isLoginAllowed(targetHomeserver);
+    // This checks both homeserver AND invite status for external users
+    const accessCheck = isLoginAllowedWithInvite(targetHomeserver, userId);
     if (!accessCheck.allowed) {
-      console.log("[AUTH_LOGIN] Access denied - homeserver not allowed:", targetHomeserver);
+      console.log("[AUTH_LOGIN] Access denied:", accessCheck.code, "for user:", userId, "homeserver:", targetHomeserver);
       const config = getAccessControlConfig();
       return NextResponse.json(
         { 
@@ -123,11 +135,17 @@ export async function POST(req: Request) {
             message: accessCheck.reason || "Access denied",
             privateMode: config.privateMode,
             allowedHomeserver: config.allowedHomeserver,
+            inviteRequired: accessCheck.code === 'INVITE_REQUIRED',
           } 
         },
         { status: 403 }
       );
     }
+    
+    // Track if this is an external user with invite (we'll mark it used after success)
+    const config = getAccessControlConfig();
+    const isExternalUser = config.allowedHomeserver && 
+      extractDomain(targetHomeserver) !== extractDomain(config.allowedHomeserver);
 
     // Perform Matrix login
     console.log("[AUTH_LOGIN] Attempting login for:", username, "to", targetHomeserver);
@@ -189,6 +207,14 @@ export async function POST(req: Request) {
     });
     
     console.log("[AUTH_LOGIN] User validated:", user.userId, user.displayName);
+
+    // Mark invite as used if this was an external user login
+    if (isExternalUser) {
+      const inviteMarked = markInviteUsedServerSide(session.userId);
+      if (inviteMarked) {
+        console.log("[AUTH_LOGIN] Invite marked as used for external user:", session.userId);
+      }
+    }
 
     return NextResponse.json({
       success: true,

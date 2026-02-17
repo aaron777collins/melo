@@ -5,10 +5,20 @@ import { test, expect } from '@playwright/test';
  * 
  * Tests the private mode functionality that restricts logins
  * to users from the configured homeserver only.
+ * 
+ * IMPORTANT: Per Aaron's requirements:
+ * - Private mode is THE DEFAULT (no env var needed)
+ * - Public mode is the EXCEPTION (requires MELO_PUBLIC_MODE=true)
+ * - Invite-only is THE DEFAULT in private mode
+ * 
+ * These tests verify that the secure defaults are working.
  */
 
-test.describe('Private Mode Enforcement', () => {
-  // These tests run with private mode environment variables set
+// Helper to check if we're in public mode (the exception, not the default)
+const isPublicMode = () => process.env.NEXT_PUBLIC_MELO_PUBLIC_MODE === 'true';
+
+test.describe('Private Mode Enforcement (DEFAULT)', () => {
+  // These tests verify private mode is the default behavior
   
   test.beforeEach(async ({ page }) => {
     // Navigate to sign-in page
@@ -17,32 +27,32 @@ test.describe('Private Mode Enforcement', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('should show private server badge when private mode is enabled', async ({ page }) => {
+  test('should show private server badge by DEFAULT (no env var needed)', async ({ page }) => {
     // Look for the private mode badge
     const privateBadge = page.locator('[data-testid="private-mode-badge"]');
     
-    // In private mode, badge should be visible
-    // Note: This test assumes NEXT_PUBLIC_MELO_PRIVATE_MODE=true
-    if (process.env.NEXT_PUBLIC_MELO_PRIVATE_MODE !== 'false') {
+    // Private mode is the DEFAULT - badge should be visible unless PUBLIC mode is explicitly enabled
+    if (!isPublicMode()) {
       await expect(privateBadge).toBeVisible();
       await expect(privateBadge).toContainText('Private Server');
     }
   });
 
-  test('should hide homeserver input when private mode is enabled', async ({ page }) => {
+  test('should hide homeserver input by DEFAULT (private mode)', async ({ page }) => {
     const homeserverInput = page.locator('[data-testid="homeserver-input"]');
     
-    // In private mode, homeserver input should not be visible
-    if (process.env.NEXT_PUBLIC_MELO_PRIVATE_MODE !== 'false') {
+    // Private mode is DEFAULT - homeserver input should be hidden
+    if (!isPublicMode()) {
       await expect(homeserverInput).not.toBeVisible();
     } else {
+      // Public mode is the exception - homeserver input should be visible
       await expect(homeserverInput).toBeVisible();
     }
   });
 
-  test('should display configured homeserver in private mode', async ({ page }) => {
-    // In private mode, should show the configured homeserver
-    if (process.env.NEXT_PUBLIC_MELO_PRIVATE_MODE !== 'false') {
+  test('should display configured homeserver in private mode (DEFAULT)', async ({ page }) => {
+    // Private mode is DEFAULT - should show the configured homeserver
+    if (!isPublicMode()) {
       const homeserverDisplay = page.locator('text=/dev2.aaroncollins.info|matrix/i');
       await expect(homeserverDisplay.first()).toBeVisible();
     }
@@ -87,26 +97,27 @@ test.describe('Private Mode Enforcement', () => {
   });
 });
 
-test.describe('Private Mode API Enforcement', () => {
-  test('should reject login attempts from unauthorized homeservers via API', async ({ request }) => {
+test.describe('Private Mode API Enforcement (DEFAULT)', () => {
+  test('should reject login attempts from unauthorized homeservers by DEFAULT', async ({ request }) => {
+    // Private mode is THE DEFAULT - external homeservers should be rejected
     // Try to login with an external homeserver
     const response = await request.post('/api/auth/login', {
       data: {
         username: 'testuser',
         password: 'testpassword',
-        homeserverUrl: 'https://matrix.org' // External homeserver
+        homeserverUrl: 'https://matrix.org' // External homeserver - should be rejected by default
       }
     });
 
-    // If private mode is enabled, should get 403
-    if (process.env.MELO_PRIVATE_MODE !== 'false') {
-      // Could be 403 (access denied) or 401 (invalid credentials after access check passes)
-      // We can't guarantee the order without knowing the exact config
-      expect(response.status()).toBeGreaterThanOrEqual(400);
+    // Private mode is DEFAULT - should get 403 unless PUBLIC mode explicitly enabled
+    if (!isPublicMode()) {
+      // Should get 403 (access denied) for external homeserver
+      expect(response.status()).toBe(403);
     }
   });
 
-  test('should include access control info in error response', async ({ request }) => {
+  test('should include invite-required message in error response by DEFAULT', async ({ request }) => {
+    // Private mode with invite-only is THE DEFAULT
     const response = await request.post('/api/auth/login', {
       data: {
         username: 'testuser',
@@ -115,11 +126,33 @@ test.describe('Private Mode API Enforcement', () => {
       }
     });
 
-    if (response.status() === 403) {
+    if (!isPublicMode() && response.status() === 403) {
       const body = await response.json();
       expect(body.success).toBe(false);
-      expect(body.error.code).toBe('HOMESERVER_NOT_ALLOWED');
-      expect(body.error.message).toContain('private server');
+      expect(body.error.code).toBe('M_FORBIDDEN');
+      // Should mention invitation requirement (invite-only is default)
+      expect(body.error.message).toMatch(/invitation|private/i);
+    }
+  });
+
+  test('should allow configured homeserver by DEFAULT', async ({ request }) => {
+    // Get the configured homeserver
+    const configuredHomeserver = process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL;
+    
+    if (!isPublicMode() && configuredHomeserver) {
+      // Login with configured homeserver should NOT be rejected for access control
+      // (may still fail for invalid credentials, but not 403)
+      const response = await request.post('/api/auth/login', {
+        data: {
+          username: 'testuser',
+          password: 'invalidpassword',
+          homeserverUrl: configuredHomeserver
+        }
+      });
+
+      // Should NOT be 403 (access denied) - homeserver is allowed
+      // May be 401 (invalid credentials) which is expected
+      expect(response.status()).not.toBe(403);
     }
   });
 });

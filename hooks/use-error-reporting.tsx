@@ -272,7 +272,6 @@ class ErrorReportingService {
   private logToConsole(reports: ErrorReport[]) {
     console.group('🚨 Error Reporting Batch');
     reports.forEach(report => {
-      console.log('Error Report:', report);
     });
     console.groupEnd();
   }
@@ -480,7 +479,6 @@ export function useErrorReportingService(options: UseErrorReportingServiceOption
           serviceRef.current = manager;
           setIsEnabled(manager.isEnabled());
           setIsInitialized(true);
-          console.log('[useErrorReportingService] Service initialized');
         } catch (error) {
           console.error('[useErrorReportingService] Failed to initialize:', error);
           onReportFailed?.(error as Error);

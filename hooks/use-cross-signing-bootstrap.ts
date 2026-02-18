@@ -106,7 +106,6 @@ export function useCrossSigningBootstrap(
     }));
 
     try {
-      console.log("[CrossSigning] Manual bootstrap triggered");
       
       const result = await bootstrapCrossSigning({
         setupSecretStorage,
@@ -164,12 +163,10 @@ export function useCrossSigningBootstrap(
 
     const attemptAutoBootstrap = async () => {
       try {
-        console.log("[CrossSigning] Crypto ready - checking cross-signing status");
         
         // Check if cross-signing is already set up
         const status = await getCrossSigningStatus();
         if (status.isSetUp && status.isMasterKeyTrusted) {
-          console.log("[CrossSigning] Cross-signing already set up and trusted");
           setState(prev => ({
             ...prev,
             attempted: true,
@@ -179,7 +176,6 @@ export function useCrossSigningBootstrap(
           return;
         }
 
-        console.log("[CrossSigning] Cross-signing not set up - attempting bootstrap");
         
         // Mark session as handled before async operation
         cryptoSessionRef.current = sessionKey;
@@ -203,7 +199,6 @@ export function useCrossSigningBootstrap(
         }));
 
         if (result.success) {
-          console.log("[CrossSigning] Auto-bootstrap completed successfully");
           if (onBootstrapComplete) {
             onBootstrapComplete(result);
           }
@@ -267,14 +262,11 @@ export function useAutoCrossSigningBootstrap(
     setupSecretStorage: true,
     onBootstrapComplete: (result) => {
       if (result.success && !result.alreadySetup) {
-        console.log("[CrossSigning] Cross-signing bootstrap completed automatically");
         if (result.recoveryKey) {
-          console.log("[CrossSigning] Recovery key generated - showing notification to user");
           // Show recovery key modal to user
           onOpen("recoveryKey", {
             recoveryKey: result.recoveryKey,
             onRecoveryKeySaved: () => {
-              console.log("[CrossSigning] User confirmed recovery key saved");
             }
           });
         }

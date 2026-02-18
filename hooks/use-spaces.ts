@@ -154,7 +154,6 @@ function roomToSpace(room: Room, allRooms: Room[]): Space {
       name: childRoom.name || "Unnamed Channel",
       topic: childRoom.currentState.getStateEvents("m.room.topic", "")?.getContent()?.topic || null,
       type: getChannelType(childRoom),
-      categoryId: null, // TODO: Implement categories if needed
       order: index,
       hasUnread: hasUnreadMessages(childRoom),
       mentionCount: getRoomMentionCount(childRoom)

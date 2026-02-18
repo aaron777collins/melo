@@ -231,7 +231,6 @@ export function useWebPush(options: UseWebPushOptions = {}): UseWebPushReturn {
         });
       }
       
-      console.log('Service worker registered successfully');
       return registration;
     } catch (error) {
       handleError({
@@ -370,7 +369,6 @@ export function useWebPush(options: UseWebPushOptions = {}): UseWebPushReturn {
       setSubscription(webPushSubscription);
       onSubscriptionChange?.(webPushSubscription);
       
-      console.log('Successfully subscribed to push notifications');
       return true;
       
     } catch (error: any) {
@@ -400,7 +398,6 @@ export function useWebPush(options: UseWebPushOptions = {}): UseWebPushReturn {
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     if (!subscription) {
-      console.log('No active subscription to unsubscribe');
       return true;
     }
     
@@ -428,7 +425,6 @@ export function useWebPush(options: UseWebPushOptions = {}): UseWebPushReturn {
       setSubscription(null);
       onSubscriptionChange?.(null);
       
-      console.log('Successfully unsubscribed from push notifications');
       return true;
       
     } catch (error: any) {
@@ -494,7 +490,6 @@ export function useWebPush(options: UseWebPushOptions = {}): UseWebPushReturn {
         throw new Error('Test notification request failed');
       }
       
-      console.log('Test notification sent');
       return true;
     } catch (error: any) {
       handleError({

@@ -110,12 +110,10 @@ export function useNotificationProvider(): UseNotificationProviderReturn {
       try {
         // Request permission if not already granted
         if (!isPermissionGranted) {
-          console.log('[NotificationProvider] Requesting notification permission...');
           await requestPermission();
           // If permission denied, requestPermission should throw or we'll check status after
         }
 
-        console.log('[NotificationProvider] Notifications initialized successfully');
         setIsInitialized(isNotificationReady);
         
       } catch (error) {

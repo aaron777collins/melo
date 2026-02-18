@@ -54,7 +54,6 @@ export function useServiceWorker(): ServiceWorkerState & ServiceWorkerActions {
         isWaiting: !!reg?.waiting,
       });
       
-      console.log('[SW Hook] Service worker registered successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to register service worker';
       updateState({
@@ -79,7 +78,6 @@ export function useServiceWorker(): ServiceWorkerState & ServiceWorkerActions {
         hasUpdate: false,
       });
       
-      console.log('[SW Hook] Service worker unregistered successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to unregister service worker';
       updateState({ error: errorMessage });
@@ -91,7 +89,6 @@ export function useServiceWorker(): ServiceWorkerState & ServiceWorkerActions {
     try {
       updateState({ error: null });
       await serviceWorkerManager.checkForUpdates();
-      console.log('[SW Hook] Checked for updates');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to check for updates';
       updateState({ error: errorMessage });
@@ -103,7 +100,6 @@ export function useServiceWorker(): ServiceWorkerState & ServiceWorkerActions {
     try {
       serviceWorkerManager.skipWaiting();
       updateState({ hasUpdate: false, isWaiting: false });
-      console.log('[SW Hook] Skip waiting triggered');
     } catch (error) {
       console.error('[SW Hook] Skip waiting failed:', error);
     }
@@ -204,7 +200,6 @@ export function useServiceWorker(): ServiceWorkerState & ServiceWorkerActions {
               updateState({ hasUpdate: true });
               break;
             case 'SW_OFFLINE_READY':
-              console.log('[SW Hook] App ready for offline use');
               break;
             case 'SW_BACKGROUND_SYNC_SUCCESS':
             case 'SW_BACKGROUND_SYNC_FAILED':

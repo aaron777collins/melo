@@ -233,7 +233,6 @@ export function usePins(roomId: string, options: PinOptions = {}) {
       
       // Check if already pinned
       if (currentPins.includes(eventId)) {
-        console.log("Message is already pinned");
         return true;
       }
       

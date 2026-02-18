@@ -230,8 +230,6 @@ export function useVoiceChannelManager() {
       isAudioEnabled: participant.isMicrophoneEnabled,
       isVideoEnabled: participant.isCameraEnabled,
       isLocal: participant instanceof LocalParticipant,
-      connectionQuality: "good", // TODO: Implement connection quality detection
-      joinedAt: Date.now(), // TODO: Track actual join time
     };
   }, []);
 
@@ -326,9 +324,7 @@ export function useVoiceChannelManager() {
         
         addCallToHistory({
           channelId,
-          channelName: "Voice Channel", // TODO: Get real channel name
           spaceId,
-          spaceName: "Space", // TODO: Get real space name
           startTime: Date.now(),
           participants: [userName],
           isVideoCall: video,
@@ -354,8 +350,6 @@ export function useVoiceChannelManager() {
         
         // Show notification if enabled
         if (notifications.participantJoined) {
-          // TODO: Show toast notification
-          console.log(`${participant.name} joined the voice channel`);
         }
       });
 
@@ -364,8 +358,6 @@ export function useVoiceChannelManager() {
         
         // Show notification if enabled
         if (notifications.participantLeft) {
-          // TODO: Show toast notification
-          console.log(`${participant.name} left the voice channel`);
         }
       });
 

@@ -241,11 +241,9 @@ export function useChatMessageSwipe(
       },
       onSwipeRightStart: () => {
         // Optional: Show reply preview/hint
-        console.log('Swipe right started - reply hint');
       },
       onSwipeLeftStart: () => {
         // Optional: Show actions preview/hint
-        console.log('Swipe left started - actions hint');
       }
     },
     {

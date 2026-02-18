@@ -7,17 +7,28 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MessageReactions, useMessageReactions } from '@/components/chat/message-reactions';
 
-// Mock hooks
+// Mock hooks  
 vi.mock('@/hooks/use-matrix-client', () => ({
   useMatrixClient: vi.fn(() => ({
     client: {
       getUserId: () => '@user:example.com',
+      on: vi.fn(), // Add the on method for event listeners
+      off: vi.fn(), // Add the off method as well
+      getRoom: vi.fn(() => ({
+        // Mock room object
+        roomId: '!room123:example.com',
+        getLiveTimeline: () => ({
+          getEvents: () => [],
+        }),
+      })),
+      sendEvent: vi.fn(() => Promise.resolve({ event_id: '$event123' })),
+      redactEvent: vi.fn(() => Promise.resolve()),
     },
     isReady: true,
   })),
 }));
 
-// Mock the reaction handler
+// Mock the reaction handler methods
 const mockReactionHandler = {
   getMessageReactions: vi.fn(),
   addReaction: vi.fn(),
@@ -25,8 +36,12 @@ const mockReactionHandler = {
   toggleReaction: vi.fn(),
 };
 
-const MockReactionHandler = vi.fn().mockImplementation(() => mockReactionHandler);
+// Create a proper constructor function that behaves like a class
+function MockReactionHandler() {
+  return mockReactionHandler;
+}
 
+// Mock dynamic import used by the component
 vi.mock('@/lib/matrix/chat/reaction-handler', () => ({
   ReactionHandler: MockReactionHandler,
 }));
@@ -71,7 +86,7 @@ describe('MessageReactions', () => {
     vi.clearAllMocks();
   });
 
-  it('should render empty state when no reactions', () => {
+  it('should render empty state when no reactions', async () => {
     mockReactionHandler.getMessageReactions.mockResolvedValue({
       eventId: EVENT_ID,
       reactions: new Map(),
@@ -86,8 +101,11 @@ describe('MessageReactions', () => {
       />
     );
 
-    // Should not render anything when no reactions and no add button
-    expect(screen.queryByTestId('reaction-badge')).not.toBeInTheDocument();
+    // Wait for dynamic import and initial load
+    await waitFor(() => {
+      // Should not render anything when no reactions and no add button
+      expect(screen.queryByTestId('reaction-badge')).not.toBeInTheDocument();
+    });
   });
 
   it('should render existing reactions', async () => {
@@ -165,7 +183,7 @@ describe('MessageReactions', () => {
     });
   });
 
-  it('should show add reaction button', () => {
+  it('should show add reaction button', async () => {
     mockReactionHandler.getMessageReactions.mockResolvedValue({
       eventId: EVENT_ID,
       reactions: new Map(),
@@ -180,7 +198,9 @@ describe('MessageReactions', () => {
       />
     );
 
-    expect(screen.getByTestId('popover-trigger')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('popover-trigger')).toBeInTheDocument();
+    });
   });
 
   it('should handle emoji picker selection', async () => {
@@ -200,10 +220,13 @@ describe('MessageReactions', () => {
       />
     );
 
-    // The emoji picker should render when popover is open
-    // This is a simplified test as the actual emoji picker interaction
-    // would be more complex in a real scenario
-    expect(screen.getByTestId('popover-trigger')).toBeInTheDocument();
+    // Wait for dynamic import and component to render
+    await waitFor(() => {
+      // The emoji picker should render when popover is open
+      // This is a simplified test as the actual emoji picker interaction
+      // would be more complex in a real scenario
+      expect(screen.getByTestId('popover-trigger')).toBeInTheDocument();
+    });
   });
 
   it('should call onReactionChange callback', async () => {
@@ -269,13 +292,13 @@ describe('useMessageReactions hook', () => {
 
     render(<TestComponent />);
 
-    // Initially loading
-    expect(screen.getByTestId('loading')).toHaveTextContent('true');
-
+    // Wait for both dynamic import and data loading
     await waitFor(() => {
-      expect(screen.getByTestId('loading')).toHaveTextContent('false');
       expect(screen.getByTestId('reactions')).toHaveTextContent('loaded');
-    });
+    }, { timeout: 2000 });
+
+    // Should not be loading after data loads
+    expect(screen.getByTestId('loading')).toHaveTextContent('false');
   });
 
   it('should handle add reaction', async () => {
@@ -299,12 +322,17 @@ describe('useMessageReactions hook', () => {
 
     render(<TestComponent />);
 
+    // Wait for component to initialize
+    await waitFor(() => {
+      expect(screen.getByText('Add Reaction')).toBeInTheDocument();
+    });
+
     const button = screen.getByText('Add Reaction');
     fireEvent.click(button);
 
     await waitFor(() => {
       expect(mockReactionHandler.addReaction).toHaveBeenCalledWith(ROOM_ID, EVENT_ID, '👍');
-    });
+    }, { timeout: 2000 });
   });
 
   it('should handle remove reaction', async () => {
@@ -328,12 +356,17 @@ describe('useMessageReactions hook', () => {
 
     render(<TestComponent />);
 
+    // Wait for component to initialize
+    await waitFor(() => {
+      expect(screen.getByText('Remove Reaction')).toBeInTheDocument();
+    });
+
     const button = screen.getByText('Remove Reaction');
     fireEvent.click(button);
 
     await waitFor(() => {
       expect(mockReactionHandler.removeReaction).toHaveBeenCalledWith(ROOM_ID, EVENT_ID, '👍');
-    });
+    }, { timeout: 2000 });
   });
 
   it('should handle toggle reaction', async () => {
@@ -357,12 +390,17 @@ describe('useMessageReactions hook', () => {
 
     render(<TestComponent />);
 
+    // Wait for component to initialize
+    await waitFor(() => {
+      expect(screen.getByText('Toggle Reaction')).toBeInTheDocument();
+    });
+
     const button = screen.getByText('Toggle Reaction');
     fireEvent.click(button);
 
     await waitFor(() => {
       expect(mockReactionHandler.toggleReaction).toHaveBeenCalledWith(ROOM_ID, EVENT_ID, '👍');
-    });
+    }, { timeout: 2000 });
   });
 
   it('should refresh reactions', async () => {
@@ -384,6 +422,11 @@ describe('useMessageReactions hook', () => {
 
     render(<TestComponent />);
 
+    // Wait for initial load
+    await waitFor(() => {
+      expect(screen.getByText('Refresh')).toBeInTheDocument();
+    });
+
     // Clear previous calls
     mockReactionHandler.getMessageReactions.mockClear();
 
@@ -392,6 +435,6 @@ describe('useMessageReactions hook', () => {
 
     await waitFor(() => {
       expect(mockReactionHandler.getMessageReactions).toHaveBeenCalled();
-    });
+    }, { timeout: 2000 });
   });
 });

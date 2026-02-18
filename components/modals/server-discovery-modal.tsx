@@ -257,13 +257,13 @@ export function ServerDiscoveryModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-white text-black max-w-4xl max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="bg-[#313338] text-white max-w-4xl max-h-[90vh] overflow-hidden p-0">
         <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-2xl text-center font-bold flex items-center justify-center gap-2">
+          <DialogTitle className="text-2xl text-center font-bold text-white flex items-center justify-center gap-2">
             <Globe className="w-6 h-6" />
             Explore Servers
           </DialogTitle>
-          <DialogDescription className="text-center text-zinc-500">
+          <DialogDescription className="text-center text-zinc-400">
             Discover and join communities around your interests
           </DialogDescription>
         </DialogHeader>

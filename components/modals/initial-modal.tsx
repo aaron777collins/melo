@@ -198,13 +198,13 @@ export function InitialModal() {
   if (!isReady) {
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
-        <DialogContent className="bg-white text-black p-0 overflow-hidden">
+        <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
           <div className="flex flex-col items-center justify-center py-12 px-6">
             <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-white mb-2">
               Connecting to Matrix...
             </h2>
-            <p className="text-sm text-gray-500 text-center">
+            <p className="text-sm text-zinc-400 text-center">
               {cryptoState.status === "initializing" 
                 ? "Setting up end-to-end encryption..."
                 : syncState 
@@ -219,19 +219,19 @@ export function InitialModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="bg-white text-black p-0 overflow-hidden">
+      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
         <button
           onClick={handleClose}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground text-zinc-400 hover:text-white"
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </button>
         <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-2xl text-center font-bold">
+          <DialogTitle className="text-2xl text-center font-bold text-white">
             Create your first server
           </DialogTitle>
-          <DialogDescription className="text-center text-zinc-500">
+          <DialogDescription className="text-center text-zinc-400">
             Create a Matrix space to get started. You can customize it later.
           </DialogDescription>
         </DialogHeader>
@@ -239,7 +239,7 @@ export function InitialModal() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-8 px-6">
               {error && (
-                <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
+                <div className="p-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md">
                   {error}
                 </div>
               )}
@@ -273,14 +273,14 @@ export function InitialModal() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="uppercase text-xs font-bold text-zinc-500 dark:text-secondary/70">
+                    <FormLabel className="uppercase text-xs font-bold text-zinc-400">
                       Server Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
                         placeholder="My Awesome Server"
-                        className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
+                        className="bg-[#1e1f22] border-0 focus-visible:ring-0 text-white placeholder-zinc-500 focus-visible:ring-offset-0"
                         {...field}
                       />
                     </FormControl>
@@ -289,7 +289,7 @@ export function InitialModal() {
                 )}
               />
             </div>
-            <DialogFooter className="bg-gray-100 px-6 py-4">
+            <DialogFooter className="bg-[#2b2d31] px-6 py-4">
               <Button
                 type="button"
                 variant="ghost"

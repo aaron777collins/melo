@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
-import path from 'path'
+import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   test: {
@@ -24,7 +24,7 @@ export default defineConfig({
         'node_modules/**',
         '.next/**',
         'tests/**',
-        '**/*.config.{js,ts}',
+        '**/*.config.{js,ts,mts}',
         '**/*.d.ts',
         'types/**',
         'public/**',
@@ -47,7 +47,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './')
+      '@': fileURLToPath(new URL('./', import.meta.url))
     }
   }
 })

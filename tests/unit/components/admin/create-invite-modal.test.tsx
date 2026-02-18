@@ -191,7 +191,7 @@ describe('CreateInviteModal', () => {
     
     expect(screen.getByTestId('dialog-trigger')).toBeInTheDocument();
     expect(screen.getByTestId('plus-icon')).toBeInTheDocument();
-    expect(screen.getByText('Create Invite')).toBeInTheDocument();
+    expect(screen.getAllByText('Create Invite')[0]).toBeInTheDocument();
   });
 
   it('should render custom trigger when children provided', () => {
@@ -202,7 +202,8 @@ describe('CreateInviteModal', () => {
     );
     
     expect(screen.getByTestId('custom-trigger')).toBeInTheDocument();
-    expect(screen.queryByText('Create Invite')).not.toBeInTheDocument();
+    // Check that the default trigger button with plus icon is not present
+    expect(screen.queryByTestId('plus-icon')).not.toBeInTheDocument();
   });
 
   it('should render modal content when opened', () => {
@@ -258,7 +259,7 @@ describe('CreateInviteModal', () => {
     fireEvent.click(screen.getByTestId('dialog-trigger'));
     
     // Submit form
-    const submitButton = screen.getByText('Create Invite');
+    const submitButton = screen.getAllByText('Create Invite')[1];
     fireEvent.click(submitButton);
     
     await waitFor(() => {
@@ -278,7 +279,7 @@ describe('CreateInviteModal', () => {
     render(<CreateInviteModal />);
     
     fireEvent.click(screen.getByTestId('dialog-trigger'));
-    fireEvent.click(screen.getByText('Create Invite'));
+    fireEvent.click(screen.getAllByText('Create Invite')[1]);
     
     await waitFor(() => {
       expect(screen.getByTestId('check-circle-icon')).toBeInTheDocument();
@@ -308,7 +309,7 @@ describe('CreateInviteModal', () => {
     render(<CreateInviteModal />);
     
     fireEvent.click(screen.getByTestId('dialog-trigger'));
-    fireEvent.click(screen.getByText('Create Invite'));
+    fireEvent.click(screen.getAllByText('Create Invite')[1]);
     
     await waitFor(() => {
       expect(screen.getByText('Invite already exists for this user and is still active!')).toBeInTheDocument();
@@ -328,7 +329,7 @@ describe('CreateInviteModal', () => {
     render(<CreateInviteModal />);
     
     fireEvent.click(screen.getByTestId('dialog-trigger'));
-    fireEvent.click(screen.getByText('Create Invite'));
+    fireEvent.click(screen.getAllByText('Create Invite')[1]);
     
     await waitFor(() => {
       expect(screen.getByTestId('alert-circle-icon')).toBeInTheDocument();
@@ -342,7 +343,7 @@ describe('CreateInviteModal', () => {
     render(<CreateInviteModal />);
     
     fireEvent.click(screen.getByTestId('dialog-trigger'));
-    fireEvent.click(screen.getByText('Create Invite'));
+    fireEvent.click(screen.getAllByText('Create Invite')[1]);
     
     await waitFor(() => {
       expect(screen.getByTestId('alert-circle-icon')).toBeInTheDocument();
@@ -364,7 +365,7 @@ describe('CreateInviteModal', () => {
     render(<CreateInviteModal />);
     
     fireEvent.click(screen.getByTestId('dialog-trigger'));
-    fireEvent.click(screen.getByText('Create Invite'));
+    fireEvent.click(screen.getAllByText('Create Invite')[1]);
     
     // Should show loading state immediately
     expect(screen.getByTestId('loader-icon')).toBeInTheDocument();
@@ -385,7 +386,7 @@ describe('CreateInviteModal', () => {
     render(<CreateInviteModal />);
     
     fireEvent.click(screen.getByTestId('dialog-trigger'));
-    fireEvent.click(screen.getByText('Create Invite'));
+    fireEvent.click(screen.getAllByText('Create Invite')[1]);
     
     // Form elements should be disabled
     await waitFor(() => {
@@ -400,7 +401,7 @@ describe('CreateInviteModal', () => {
     render(<CreateInviteModal onInviteCreated={mockOnInviteCreated} />);
     
     fireEvent.click(screen.getByTestId('dialog-trigger'));
-    fireEvent.click(screen.getByText('Create Invite'));
+    fireEvent.click(screen.getAllByText('Create Invite')[1]);
     
     // Wait for success state
     await waitFor(() => {
@@ -475,7 +476,7 @@ describe('CreateInviteModal', () => {
     render(<CreateInviteModal />);
     
     fireEvent.click(screen.getByTestId('dialog-trigger'));
-    fireEvent.click(screen.getByText('Create Invite'));
+    fireEvent.click(screen.getAllByText('Create Invite')[1]);
     
     await waitFor(() => {
       expect(screen.getByText('Notes:')).toBeInTheDocument();

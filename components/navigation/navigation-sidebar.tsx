@@ -1,30 +1,39 @@
 import React from "react";
 import { redirect } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
 
 import { currentProfile } from "@/lib/current-profile";
-import { db } from "@/lib/db";
+import { getMatrixClient } from "@/lib/matrix-client";
 
 import { NavigationAction } from "@/components/navigation/navigation-action";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NavigationItem } from "@/components/navigation/navigation-item";
 import { ModeToggle } from "@/components/mode-toggle";
+import { MatrixUserButton } from "@/components/matrix-user-button";
 
 export async function NavigationSidebar() {
   const profile = await currentProfile();
 
-  if (!profile) return redirect("/");
+  if (!profile) return redirect("/login");
 
-  const servers = await db.server.findMany({
-    where: {
-      members: {
-        some: {
-          profileId: profile.id
-        }
-      }
-    }
-  });
+  const client = getMatrixClient();
+  const servers: any[] = [];
+
+  // Get Matrix spaces (servers) that the user is a member of
+  if (client) {
+    const rooms = client.getRooms();
+    const spaces = rooms.filter(room => {
+      const createEvent = room.currentState.getStateEvents("m.room.create")[0];
+      return createEvent?.getContent()?.type === "m.space";
+    });
+
+    // Convert Matrix spaces to Discord-like server format
+    servers.push(...spaces.map(space => ({
+      id: space.roomId,
+      name: space.name || "Unnamed Space",
+      imageUrl: space.getAvatarUrl(client.getHomeserverUrl(), 48, 48, "crop") || "",
+    })));
+  }
 
   return (
     <div className="space-y-4 flex flex-col h-full items-center text-primary w-full dark:bg-[#1e1f22] bg-[#e3e5e8] py-3">
@@ -43,14 +52,7 @@ export async function NavigationSidebar() {
       </ScrollArea>
       <div className="pb-3 mt-auto flex items-center flex-col gap-y-4">
         <ModeToggle />
-        <UserButton
-          afterSignOutUrl="/"
-          appearance={{
-            elements: {
-              avatarBox: "h-[48px] w-[48px]"
-            }
-          }}
-        />
+        <MatrixUserButton />
       </div>
     </div>
   );

@@ -1,16 +1,14 @@
-import { getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest } from "next";
 
-import { db } from "@/lib/db";
-
 export const currentProfilePages = async (req: NextApiRequest) => {
-  const { userId } = getAuth(req);
-
-  if (!userId) return null;
-
-  const profile = await db.profile.findUnique({
-    where: { userId }
-  });
-
-  return profile;
+  // For Matrix auth in pages API routes, we would need to check tokens
+  // For now, returning null since we're focusing on App Router
+  // This would need proper implementation based on Matrix auth tokens
+  
+  // TODO: Implement Matrix token validation for Pages API routes
+  // const authHeader = req.headers.authorization;
+  // if (!authHeader) return null;
+  
+  // For now, return null to disable Pages API routes
+  return null;
 };

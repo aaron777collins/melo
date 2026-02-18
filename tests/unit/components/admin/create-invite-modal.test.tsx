@@ -136,28 +136,35 @@ vi.mock('lucide-react', () => ({
 
 // Mock react-hook-form
 vi.mock('react-hook-form', () => ({
-  useForm: () => ({
-    control: {},
-    handleSubmit: (fn: any) => (e: any) => {
-      e.preventDefault();
-      fn({
-        userId: '@testuser:example.com',
-        expirationDays: '30',
-        customExpirationDate: '',
-        notes: 'Test notes',
-      });
-    },
-    formState: {
-      errors: {},
-    },
-    watch: (field: string) => {
-      if (field === 'expirationDays') return '30';
-      return '';
-    },
-    reset: vi.fn(),
-    clearErrors: vi.fn(),
-    setError: vi.fn(),
-  }),
+  useForm: () => {
+    const mockFormState = { errors: {} };
+    return {
+      control: {},
+      handleSubmit: (fn: any) => (e: any) => {
+        e.preventDefault();
+        fn({
+          userId: '@testuser:example.com',
+          expirationDays: '30',
+          customExpirationDate: '',
+          notes: 'Test notes',
+        });
+      },
+      formState: mockFormState,
+      watch: (field: string) => {
+        if (field === 'expirationDays') return '30';
+        return '';
+      },
+      reset: vi.fn(() => {
+        mockFormState.errors = {};
+      }),
+      clearErrors: vi.fn(() => {
+        mockFormState.errors = {};
+      }),
+      setError: vi.fn((field: string, error: any) => {
+        mockFormState.errors[field] = error;
+      }),
+    };
+  },
 }));
 
 // Mock zod resolver

@@ -330,7 +330,7 @@ export function CreateInviteModal({ onInviteCreated, children }: CreateInviteMod
               
               {form.formState.errors.root && (
                 <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
+                  <AlertCircle className="h-4 w-4" data-testid="alert-circle-icon" />
                   <AlertDescription>
                     {form.formState.errors.root.message}
                   </AlertDescription>

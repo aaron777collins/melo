@@ -182,6 +182,13 @@ export function useMessageReactions(
   const [reactions, setReactions] = useState<MessageReactions | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Stabilize options object to prevent infinite re-renders
+  const stableOptions = useMemo(() => options, [
+    options.maxReactions,
+    options.includeRedacted,
+    // Add other option properties as needed
+  ]);
+
   // Initialize reaction handler
   useEffect(() => {
     if (client && isReady) {
@@ -198,14 +205,14 @@ export function useMessageReactions(
 
     setLoading(true);
     try {
-      const messageReactions = await reactionHandler.getMessageReactions(roomId, eventId, options);
+      const messageReactions = await reactionHandler.getMessageReactions(roomId, eventId, stableOptions);
       setReactions(messageReactions);
     } catch (error) {
       console.error('Failed to load reactions:', error);
     } finally {
       setLoading(false);
     }
-  }, [reactionHandler, roomId, eventId, options]);
+  }, [reactionHandler, roomId, eventId, stableOptions]);
 
   // Load reactions when dependencies change
   useEffect(() => {
@@ -218,10 +225,19 @@ export function useMessageReactions(
 
     const result = await reactionHandler.addReaction(roomId, eventId, emoji);
     if (result.success) {
-      loadReactions(); // Refresh reactions
+      // Create a stable reload function to avoid infinite re-renders
+      setLoading(true);
+      try {
+        const messageReactions = await reactionHandler.getMessageReactions(roomId, eventId, stableOptions);
+        setReactions(messageReactions);
+      } catch (error) {
+        console.error('Failed to reload reactions after add:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     return result.success;
-  }, [reactionHandler, roomId, eventId, loadReactions]);
+  }, [reactionHandler, roomId, eventId, stableOptions]);
 
   // Remove reaction
   const removeReaction = useCallback(async (emoji: string) => {
@@ -229,10 +245,19 @@ export function useMessageReactions(
 
     const result = await reactionHandler.removeReaction(roomId, eventId, emoji);
     if (result.success) {
-      loadReactions(); // Refresh reactions
+      // Create a stable reload function to avoid infinite re-renders
+      setLoading(true);
+      try {
+        const messageReactions = await reactionHandler.getMessageReactions(roomId, eventId, stableOptions);
+        setReactions(messageReactions);
+      } catch (error) {
+        console.error('Failed to reload reactions after remove:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     return result.success;
-  }, [reactionHandler, roomId, eventId, loadReactions]);
+  }, [reactionHandler, roomId, eventId, stableOptions]);
 
   // Toggle reaction
   const toggleReaction = useCallback(async (emoji: string) => {
@@ -240,10 +265,19 @@ export function useMessageReactions(
 
     const result = await reactionHandler.toggleReaction(roomId, eventId, emoji);
     if (result.success) {
-      loadReactions(); // Refresh reactions
+      // Create a stable reload function to avoid infinite re-renders
+      setLoading(true);
+      try {
+        const messageReactions = await reactionHandler.getMessageReactions(roomId, eventId, stableOptions);
+        setReactions(messageReactions);
+      } catch (error) {
+        console.error('Failed to reload reactions after toggle:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     return result.success;
-  }, [reactionHandler, roomId, eventId, loadReactions]);
+  }, [reactionHandler, roomId, eventId, stableOptions]);
 
   return {
     reactions,

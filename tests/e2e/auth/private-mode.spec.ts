@@ -23,8 +23,10 @@ test.describe('Private Mode Enforcement (DEFAULT)', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to sign-in page
     await page.goto('/sign-in');
-    // Wait for page to load
-    await page.waitForLoadState('networkidle');
+    // Wait for page to load - use a more reliable load state
+    await page.waitForLoadState('domcontentloaded');
+    // Wait for the main form elements to be visible
+    await page.waitForSelector('h1:has-text("Welcome to Melo")', { timeout: 15000 });
   });
 
   test('should show private server badge by DEFAULT (no env var needed)', async ({ page }) => {

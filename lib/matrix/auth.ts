@@ -17,11 +17,12 @@ import {
 // =============================================================================
 
 /**
- * Default homeserver URL if not specified
+ * Get default homeserver URL if not specified
  * In production, this should come from environment variables or user input
  */
-const DEFAULT_HOMESERVER_URL =
-  process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 'https://matrix.org';
+function getDefaultHomeserverUrl(): string {
+  return process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 'https://matrix.org';
+}
 
 /**
  * Matrix API version prefix
@@ -110,16 +111,30 @@ async function matrixFetch<T>(
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-  if (!response.ok) {
-    throw await parseErrorResponse(response);
+    if (!response.ok) {
+      throw await parseErrorResponse(response);
+    }
+
+    return response.json();
+  } catch (error) {
+    // If it's already a MatrixAuthError, re-throw as-is
+    if (error instanceof MatrixAuthError) {
+      throw error;
+    }
+    
+    // Network/fetch errors - wrap in MatrixAuthError
+    throw new MatrixAuthError({
+      code: 'M_NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Network request failed',
+      details: { originalError: error }
+    });
   }
-
-  return response.json();
 }
 
 // =============================================================================
@@ -168,7 +183,7 @@ export async function loginWithPassword(
   password: string,
   options: LoginOptions = {}
 ): Promise<MatrixSession> {
-  const homeserverUrl = options.homeserverUrl || DEFAULT_HOMESERVER_URL;
+  const homeserverUrl = options.homeserverUrl || getDefaultHomeserverUrl();
 
   // Normalize username to proper identifier format
   const identifier = username.startsWith('@')
@@ -214,7 +229,7 @@ export async function loginWithPassword(
   // Create session object - use snake_case from API response
   const now = new Date().toISOString();
   const session: MatrixSession = {
-    sessionId: `${response.device_id}-${Date.now()}`,
+    sessionId: crypto.randomUUID(),
     userId: response.user_id,
     accessToken: response.access_token,
     deviceId: response.device_id,
@@ -222,10 +237,6 @@ export async function loginWithPassword(
     createdAt: now,
     lastActiveAt: now,
     isValid: true,
-    refreshToken: response.refresh_token,
-    expiresAt: response.expires_in_ms
-      ? new Date(Date.now() + response.expires_in_ms).toISOString()
-      : undefined,
   };
 
   return session;
@@ -274,11 +285,11 @@ export interface ValidateOptions {
  * }
  * ```
  */
-export async function validateSession(
+export async function validateAccessToken(
   accessToken: string,
   options: ValidateOptions = {}
 ): Promise<MatrixUser> {
-  const homeserverUrl = options.homeserverUrl || DEFAULT_HOMESERVER_URL;
+  const homeserverUrl = options.homeserverUrl || getDefaultHomeserverUrl();
   const includeProfile = options.includeProfile ?? true;
 
   // First, check token validity with whoami endpoint
@@ -318,7 +329,6 @@ export async function validateSession(
     } catch (error) {
       // Profile fetch is optional - if it fails, continue with basic info
       // Some users might not have a profile set yet
-      console.warn('Failed to fetch user profile:', error);
     }
   }
 
@@ -392,11 +402,11 @@ export interface LogoutOptions {
  * // Clear local session storage after successful logout
  * ```
  */
-export async function logout(
+export async function logoutWithToken(
   accessToken: string,
   options: LogoutOptions = {}
 ): Promise<void> {
-  const homeserverUrl = options.homeserverUrl || DEFAULT_HOMESERVER_URL;
+  const homeserverUrl = options.homeserverUrl || getDefaultHomeserverUrl();
   const endpoint = options.allDevices ? '/logout/all' : '/logout';
 
   await matrixFetch<Record<string, never>>(
@@ -405,6 +415,72 @@ export async function logout(
     { method: 'POST' },
     accessToken
   );
+}
+
+// =============================================================================
+// Session-based Wrapper Functions
+// =============================================================================
+
+/**
+ * Validate a Matrix session and update its status
+ *
+ * This function accepts a MatrixSession object and validates it by calling
+ * the Matrix /account/whoami endpoint. It returns the session with updated
+ * validation status and timestamp.
+ *
+ * @param session - The MatrixSession to validate
+ * @returns Updated MatrixSession with validation results
+ */
+export async function validateSession(session: MatrixSession): Promise<MatrixSession> {
+  try {
+    // Use the existing validateSession function that accepts access token
+    const user = await matrixFetch<{
+      user_id: string;
+      device_id?: string;
+      is_guest?: boolean;
+    }>(session.homeserverUrl, '/account/whoami', { method: 'GET' }, session.accessToken);
+
+    // Session is valid - update the session object
+    return {
+      ...session,
+      isValid: true,
+      userId: user.user_id,
+      lastActiveAt: new Date().toISOString()
+    };
+  } catch (error) {
+    // Session is invalid - mark it as such
+    return {
+      ...session,
+      isValid: false,
+      lastActiveAt: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Logout from Matrix session using session object
+ *
+ * This wrapper function accepts a MatrixSession object and logs out
+ * by extracting the access token and homeserver URL.
+ *
+ * @param session - The MatrixSession to logout
+ * @param allDevices - Whether to logout all devices
+ */
+export async function logout(session: MatrixSession, allDevices: boolean = false): Promise<void> {
+  const endpoint = allDevices ? '/logout/all' : '/logout';
+
+  try {
+    await matrixFetch<Record<string, never>>(
+      session.homeserverUrl,
+      endpoint,
+      { method: 'POST' },
+      session.accessToken
+    );
+  } catch (error) {
+    // For logout, we want to handle errors gracefully
+    // Even if the server returns an error, we consider the logout attempt complete
+    // Silently continue without logging the error
+  }
 }
 
 // =============================================================================
@@ -421,7 +497,7 @@ export async function logout(
  */
 export async function refreshAccessToken(
   refreshToken: string,
-  homeserverUrl: string = DEFAULT_HOMESERVER_URL
+  homeserverUrl: string = getDefaultHomeserverUrl()
 ): Promise<{
   accessToken: string;
   refreshToken?: string;
@@ -458,40 +534,37 @@ export async function refreshAccessToken(
  * @throws MatrixAuthError if discovery fails
  */
 export async function discoverHomeserver(domain: string): Promise<string> {
-  const wellKnownUrl = `https://${domain}/.well-known/matrix/client`;
+  // Normalize domain to lowercase
+  const normalizedDomain = domain.toLowerCase();
+  const wellKnownUrl = `https://${normalizedDomain}/.well-known/matrix/client`;
+  const fallbackUrl = `https://${normalizedDomain}`;
 
   try {
-    const response = await fetch(wellKnownUrl);
+    const response = await fetch(wellKnownUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
     if (!response.ok) {
-      throw new MatrixAuthError({
-        code: 'M_NOT_FOUND',
-        message: `No .well-known found for ${domain}`,
-        httpStatus: response.status,
-      });
+      // Fallback to direct domain URL
+      return fallbackUrl;
     }
 
     const data = await response.json();
     const baseUrl = data['m.homeserver']?.base_url;
 
     if (!baseUrl) {
-      throw new MatrixAuthError({
-        code: 'M_NOT_FOUND',
-        message: `Invalid .well-known response for ${domain}`,
-      });
+      // Malformed response - fallback to direct domain URL
+      return fallbackUrl;
     }
 
     // Remove trailing slash if present
     return baseUrl.replace(/\/$/, '');
   } catch (error) {
-    if (error instanceof MatrixAuthError) {
-      throw error;
-    }
-
-    throw new MatrixAuthError({
-      code: 'M_NOT_FOUND',
-      message: `Failed to discover homeserver for ${domain}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    });
+    // Network or other errors - fallback to direct domain URL
+    return fallbackUrl;
   }
 }
 
@@ -559,7 +632,7 @@ interface UiaaResponse {
  */
 export async function checkUsernameAvailable(
   username: string,
-  homeserverUrl: string = DEFAULT_HOMESERVER_URL
+  homeserverUrl: string = getDefaultHomeserverUrl()
 ): Promise<boolean> {
   // Strip @ prefix and server suffix if provided
   const localpart = username.startsWith('@')
@@ -593,22 +666,11 @@ export async function checkUsernameAvailable(
       return false;
     }
 
-    // Other errors should be thrown
-    throw new MatrixAuthError({
-      code: errorBody.errcode || 'M_UNKNOWN',
-      message: errorBody.error || `Failed to check username availability`,
-      httpStatus: response.status,
-      details: errorBody,
-    });
+    // For server errors, assume username is not available (safe default)
+    return false;
   } catch (error) {
-    if (error instanceof MatrixAuthError) {
-      throw error;
-    }
-
-    throw new MatrixAuthError({
-      code: 'M_UNKNOWN',
-      message: `Failed to check username availability: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    });
+    // For network errors, assume username is not available (safe default)
+    return false;
   }
 }
 
@@ -663,7 +725,7 @@ export async function register(
   email?: string,
   options: RegisterOptions = {}
 ): Promise<MatrixSession> {
-  const homeserverUrl = options.homeserverUrl || DEFAULT_HOMESERVER_URL;
+  const homeserverUrl = options.homeserverUrl || getDefaultHomeserverUrl();
   const deviceDisplayName = options.deviceDisplayName || 'Melo Web';
 
   // Strip @ prefix and server suffix if provided

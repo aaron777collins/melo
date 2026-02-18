@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function OfflinePageClient() {
   return (
-    <div className="min-h-screen bg-[#313338] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#36393f] flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-8">
         {/* Offline Icon */}
         <div className="flex justify-center">
@@ -29,7 +29,7 @@ export default function OfflinePageClient() {
 
         {/* Status and Actions */}
         <div className="space-y-6">
-          <div className="bg-[#2b2d31] rounded-lg p-4 space-y-3">
+          <div className="bg-[#2f3136] rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-center space-x-2 text-gray-400">
               <WifiOff className="h-4 w-4" />
               <span className="text-sm">Network connection unavailable</span>
@@ -54,7 +54,7 @@ export default function OfflinePageClient() {
             
             <Link
               href="/"
-              className="block w-full bg-[#2b2d31] hover:bg-[#35373c] text-gray-300 font-medium py-3 px-4 rounded-md transition-colors text-center"
+              className="block w-full bg-[#2f3136] hover:bg-[#35373c] text-gray-300 font-medium py-3 px-4 rounded-md transition-colors text-center"
             >
               Return to Home
             </Link>

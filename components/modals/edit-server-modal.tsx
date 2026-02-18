@@ -75,7 +75,7 @@ export function EditServerModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
+      <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold text-white">
             Customize your server
@@ -117,7 +117,7 @@ export function EditServerModal() {
                       <Input
                         disabled={isLoading}
                         placeholder="Enter server name"
-                        className="bg-[#1e1f22] border-0 focus-visible:ring-0 text-white placeholder-zinc-500 focus-visible:ring-offset-0"
+                        className="bg-[#202225] border-0 focus-visible:ring-0 text-white placeholder-zinc-500 focus-visible:ring-offset-0"
                         {...field}
                       />
                     </FormControl>
@@ -126,7 +126,7 @@ export function EditServerModal() {
                 )}
               />
             </div>
-            <DialogFooter className="bg-[#2b2d31] px-6 py-4">
+            <DialogFooter className="bg-[#2f3136] px-6 py-4">
               <Button disabled={isLoading} variant="primary">
                 Save
               </Button>

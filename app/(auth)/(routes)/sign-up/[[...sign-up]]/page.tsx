@@ -279,8 +279,8 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#313338]">
-      <div className="bg-[#1e1f22] p-8 rounded-lg shadow-lg max-w-md w-full">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#36393f]">
+      <div className="bg-[#2f3136] p-8 rounded-lg shadow-lg max-w-md w-full">
         <h1 className="text-2xl font-bold text-white mb-6 text-center">
           Create Account
         </h1>
@@ -381,7 +381,7 @@ export default function SignUpPage() {
                   onChange={handleInputChange("homeserver")}
                   disabled={isLoading || useMatrixOrgHomeserver}
                   data-testid="homeserver-input"
-                  className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+                  className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                     useMatrixOrgHomeserver 
                       ? 'border-indigo-500/50 bg-zinc-700/50 text-zinc-500 cursor-not-allowed'
                       : formData.homeserver 
@@ -427,7 +427,7 @@ export default function SignUpPage() {
                 onChange={handleInputChange("inviteCode")}
                 disabled={isLoading || isValidatingInvite}
                 data-testid="invite-code-input"
-                className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 font-mono text-sm ${
+                className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 font-mono text-sm ${
                   inviteError 
                     ? 'border-red-500 focus:border-red-500' 
                     : inviteValidated 
@@ -476,7 +476,7 @@ export default function SignUpPage() {
               onChange={handleInputChange("username")}
               disabled={isLoading}
               data-testid="username-input"
-              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+              className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 formData.username ? 'border-zinc-600 focus:border-indigo-500' : 'border-red-500 focus:border-red-500'
               }`}
               required
@@ -499,7 +499,7 @@ export default function SignUpPage() {
               value={formData.email}
               onChange={handleInputChange("email")}
               disabled={isLoading}
-              className="w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border border-zinc-600 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+              className="w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border border-zinc-600 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
             />
             <p className="text-zinc-500 text-xs mt-1">
               For account recovery and verification
@@ -517,7 +517,7 @@ export default function SignUpPage() {
               value={formData.password}
               onChange={handleInputChange("password")}
               disabled={isLoading}
-              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+              className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 formData.password ? 'border-zinc-600 focus:border-indigo-500' : 'border-red-500 focus:border-red-500'
               }`}
               required
@@ -536,7 +536,7 @@ export default function SignUpPage() {
               value={formData.confirmPassword}
               onChange={handleInputChange("confirmPassword")}
               disabled={isLoading}
-              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+              className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 formData.confirmPassword ? 'border-zinc-600 focus:border-indigo-500' : 'border-red-500 focus:border-red-500'
               }`}
               required

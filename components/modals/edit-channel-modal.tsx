@@ -93,7 +93,7 @@ export function EditChannelModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
+      <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold text-white">
             Edit Channel
@@ -114,7 +114,7 @@ export function EditChannelModal() {
                       <Input
                         disabled={isLoading}
                         placeholder="Enter channel name"
-                        className="bg-[#1e1f22] border-0 focus-visible:ring-0 text-white placeholder-zinc-500 focus-visible:ring-offset-0"
+                        className="bg-[#202225] border-0 focus-visible:ring-0 text-white placeholder-zinc-500 focus-visible:ring-offset-0"
                         {...field}
                       />
                     </FormControl>
@@ -134,7 +134,7 @@ export function EditChannelModal() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-[#1e1f22] border-0 focus:ring-0 text-white ring-offset-0 focus:ring-offset-0 capitalize outline-none">
+                        <SelectTrigger className="bg-[#202225] border-0 focus:ring-0 text-white ring-offset-0 focus:ring-offset-0 capitalize outline-none">
                           <SelectValue placeholder="Select a channel type" />
                         </SelectTrigger>
                       </FormControl>
@@ -155,7 +155,7 @@ export function EditChannelModal() {
                 )}
               />
             </div>
-            <DialogFooter className="bg-[#2b2d31] px-6 py-4">
+            <DialogFooter className="bg-[#2f3136] px-6 py-4">
               <Button disabled={isLoading} variant="primary">
                 Save
               </Button>

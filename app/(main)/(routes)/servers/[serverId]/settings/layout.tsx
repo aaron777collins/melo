@@ -60,7 +60,7 @@ export default async function ServerSettingsLayout({
       />
 
       {/* Main Content */}
-      <div className="flex-1 bg-white dark:bg-[#313338] overflow-y-auto">
+      <div className="flex-1 bg-white dark:bg-[#36393f] overflow-y-auto">
         {children}
       </div>
     </div>

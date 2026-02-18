@@ -93,7 +93,7 @@ export function RolesPageClient({
   };
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-[#313338]">
+    <div className="h-full flex flex-col bg-white dark:bg-[#36393f]">
       {/* Page Content */}
       <div className="flex-1 p-6 overflow-y-auto">
         <RoleManager 

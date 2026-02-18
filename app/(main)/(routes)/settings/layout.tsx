@@ -36,9 +36,9 @@ export default async function SettingsLayout({
       </SectionErrorBoundary>
 
       {/* Main Content */}
-      <div className="flex-1 bg-white dark:bg-[#313338] overflow-y-auto">
+      <div className="flex-1 bg-white dark:bg-[#36393f] overflow-y-auto">
         {/* Mobile Settings Toggle - Only shown on mobile */}
-        <div className="md:hidden p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#313338]">
+        <div className="md:hidden p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#36393f]">
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">Settings</h1>
             <SectionErrorBoundary name="mobile-settings-toggle">

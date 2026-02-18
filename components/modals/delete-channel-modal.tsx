@@ -50,7 +50,7 @@ export function DeleteChannelModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
+      <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold text-white">
             Delete Channel
@@ -64,7 +64,7 @@ export function DeleteChannelModal() {
             will be permanently deleted.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="bg-[#2b2d31] px-6 py-4">
+        <DialogFooter className="bg-[#2f3136] px-6 py-4">
           <div className="flex items-center justify-between w-full">
             <Button variant="ghost" disabled={isLoading} onClick={onClose}>
               Cancel

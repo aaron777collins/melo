@@ -167,7 +167,7 @@ export default function SignInPage() {
   // Show 2FA prompt if required
   if (showTwoFactorPrompt) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#313338]">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#36393f]">
         <TwoFactorPrompt 
           onVerificationSuccess={handleTwoFactorSuccess}
           onCancel={handleTwoFactorCancel}
@@ -187,8 +187,8 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#313338]">
-      <div className="bg-[#1e1f22] p-8 rounded-lg shadow-lg max-w-md w-full">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#36393f]">
+      <div className="bg-[#2f3136] p-8 rounded-lg shadow-lg max-w-md w-full">
         <h1 className="text-2xl font-bold text-white mb-6 text-center">
           Welcome to Melo
         </h1>
@@ -234,7 +234,7 @@ export default function SignInPage() {
                 onChange={handleInputChange("homeserver")}
                 disabled={isLoading}
                 data-testid="homeserver-input"
-                className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+                className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                   fieldErrors.homeserver ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
                 }`}
               />
@@ -269,7 +269,7 @@ export default function SignInPage() {
               onChange={handleInputChange("username")}
               disabled={isLoading}
               data-testid="username-input"
-              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+              className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 fieldErrors.username ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
               }`}
             />
@@ -290,7 +290,7 @@ export default function SignInPage() {
               onChange={handleInputChange("password")}
               disabled={isLoading}
               data-testid="password-input"
-              className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+              className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 fieldErrors.password ? 'border-red-500 focus:border-red-500' : 'border-zinc-600 focus:border-indigo-500'
               }`}
             />

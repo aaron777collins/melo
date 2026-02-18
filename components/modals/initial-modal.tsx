@@ -172,8 +172,9 @@ export function InitialModal() {
       const encodedSpaceId = encodeURIComponent(createResult.room_id);
       const encodedChannelId = encodeURIComponent(generalChannel.room_id);
       
-      router.push(`/servers/${encodedSpaceId}/channels/${encodedChannelId}`);
-      router.refresh();
+      // Use window.location for a clean navigation that doesn't race with server-side validation
+      // router.push + router.refresh can cause race conditions with session validation
+      window.location.href = `/servers/${encodedSpaceId}/channels/${encodedChannelId}`;
       
     } catch (err) {
       console.error("[InitialModal] Error creating space:", err);
@@ -198,7 +199,7 @@ export function InitialModal() {
   if (!isReady) {
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
-        <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
+        <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
           <div className="flex flex-col items-center justify-center py-12 px-6">
             <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-4" />
             <h2 className="text-xl font-semibold text-white mb-2">
@@ -219,7 +220,7 @@ export function InitialModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
+      <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
         <button
           onClick={handleClose}
           className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground text-zinc-400 hover:text-white"
@@ -280,7 +281,7 @@ export function InitialModal() {
                       <Input
                         disabled={isLoading}
                         placeholder="My Awesome Server"
-                        className="bg-[#1e1f22] border-0 focus-visible:ring-0 text-white placeholder-zinc-500 focus-visible:ring-offset-0"
+                        className="bg-[#202225] border-0 focus-visible:ring-0 text-white placeholder-zinc-500 focus-visible:ring-offset-0"
                         {...field}
                       />
                     </FormControl>
@@ -289,7 +290,7 @@ export function InitialModal() {
                 )}
               />
             </div>
-            <DialogFooter className="bg-[#2b2d31] px-6 py-4">
+            <DialogFooter className="bg-[#2f3136] px-6 py-4">
               <Button
                 type="button"
                 variant="ghost"

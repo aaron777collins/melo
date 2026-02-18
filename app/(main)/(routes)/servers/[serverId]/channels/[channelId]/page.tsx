@@ -162,7 +162,7 @@ export default async function ChannelIdPage({
         }))}
         onlineMembers={onlineMembers}
         showMembersToggle={true}
-        className="bg-white dark:bg-[#313338]"
+        className="bg-white dark:bg-[#36393f]"
       >
         <div className="flex flex-col h-full">
           <SectionErrorBoundary name="chat-header">

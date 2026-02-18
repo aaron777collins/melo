@@ -256,12 +256,16 @@ export const createClientSafe = createClient;
 // CONSTANTS HELPER
 // =============================================================================
 
-export const getMatrixConstants = () => {
-  const sdk = getMatrixSdk();
+export const getMatrixConstants = async () => {
+  // Ensure SDK is loaded before accessing constants
+  const sdk = await loadMatrixSdk();
   if (!sdk) {
     return {
       LOCAL_NOTIFICATION_SETTINGS_PREFIX: 'im.vector.setting.push_rules',
       UNSTABLE_MSC2545_URLS: [],
+      // Provide empty objects for client-side checks
+      ClientEvent: {},
+      SyncState: {},
     };
   }
   return {
@@ -271,6 +275,9 @@ export const getMatrixConstants = () => {
     Preset: sdk.Preset,
     JoinRule: sdk.JoinRule,
     GuestAccess: sdk.GuestAccess,
+    // Critical: Include ClientEvent and SyncState for the Matrix provider
+    ClientEvent: sdk.ClientEvent,
+    SyncState: sdk.SyncState,
   };
 };
 

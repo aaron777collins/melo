@@ -214,7 +214,7 @@ export default async function ConversationPage({
         members={[]} // DMs don't show member sidebar
         onlineMembers={[]}
         showMembersToggle={false}
-        className="bg-white dark:bg-[#313338]"
+        className="bg-white dark:bg-[#36393f]"
       >
         <div className="flex flex-col h-full">
           <SectionErrorBoundary name="dm-chat-header">

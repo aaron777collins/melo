@@ -279,7 +279,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                       title="Attach file"
                       style={{ touchAction: 'manipulation' }}
                     >
-                      <Plus className="h-5 w-5 md:h-4 md:w-4 text-white dark:text-[#313338]" aria-hidden="true" />
+                      <Plus className="h-5 w-5 md:h-4 md:w-4 text-white dark:text-[#36393f]" aria-hidden="true" />
                     </button>
                     
                     {/* Main input - optimized for mobile */}

@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-02-18T14:49:53.901Z",
+  "version": "unknown",
+  "tests": {
+    "bundleAnalysis": {
+      "success": false,
+      "error": "Command failed: cd .. && npm run build 2>&1\n",
+      "timestamp": "2026-02-18T14:49:54.211Z"
+    },
+    "matrixSDK": {
+      "success": true,
+      "metrics": {
+        "initTime": 4,
+        "eventCreationTime": 1,
+        "eventsPerSecond": 1000000
+      },
+      "timestamp": "2026-02-18T14:49:54.758Z"
+    },
+    "memoryProfile": {
+      "success": true,
+      "measurements": [
+        {
+          "stage": "initial",
+          "memory": {
+            "rss": 52379648,
+            "heapUsed": 4263288,
+            "heapTotal": 6688768,
+            "external": 1482185,
+            "heapSizeLimit": 4496293888,
+            "totalHeapSize": 6688768,
+            "usedHeapSize": 4268080
+          }
+        },
+        {
+          "stage": "after_events",
+          "memory": {
+            "rss": 58408960,
+            "heapUsed": 6346192,
+            "heapTotal": 10096640,
+            "external": 1482225,
+            "heapSizeLimit": 4496293888,
+            "totalHeapSize": 10096640,
+            "usedHeapSize": 6346416
+          }
+        },
+        {
+          "stage": "after_processing",
+          "memory": {
+            "rss": 62455808,
+            "heapUsed": 7906760,
+            "heapTotal": 11407360,
+            "external": 1482225,
+            "heapSizeLimit": 4496293888,
+            "totalHeapSize": 11407360,
+            "usedHeapSize": 7906984
+          }
+        },
+        {
+          "stage": "after_cleanup",
+          "memory": {
+            "rss": 62717952,
+            "heapUsed": 3327184,
+            "heapTotal": 10883072,
+            "external": 1461177,
+            "heapSizeLimit": 4496293888,
+            "totalHeapSize": 10883072,
+            "usedHeapSize": 3330576
+          }
+        }
+      ],
+      "analysis": {
+        "initialHeapUsed": 4263288,
+        "peakHeapUsed": 7906760,
+        "finalHeapUsed": 3327184,
+        "heapGrowth": -936104,
+        "peakStage": "after_processing",
+        "memoryLeakIndicator": "normal"
+      },
+      "timestamp": "2026-02-18T14:49:54.925Z"
+    }
+  },
+  "totalDuration": 1019
+}

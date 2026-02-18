@@ -72,5 +72,9 @@ async function simulateMatrixOperations() {
   return measurements;
 }
 
-simulateMatrixOperations().then(console.log).catch(console.error);
+simulateMatrixOperations().then(result => {
+  console.log(JSON.stringify(result));
+}).catch(error => {
+  console.error(JSON.stringify({error: error.message}));
+});
       

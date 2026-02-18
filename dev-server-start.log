@@ -1,0 +1,16 @@
+
+> melo@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env.development, .env
+
+ ✓ Starting...
+ ○ (pwa) PWA support is disabled.
+ ✓ Ready in 11.3s
+ ✓ Compiled /middleware in 351ms (118 modules)
+ ○ Compiling /api/livekit ...
+ ✓ Compiled /api/livekit in 739ms (104 modules)
+ GET /api/livekit?room=test-verification&username=verification-agent 200 in 977ms
+[?25h

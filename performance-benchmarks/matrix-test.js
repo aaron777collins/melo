@@ -33,5 +33,9 @@ async function benchmarkMatrixSDK() {
   };
 }
 
-benchmarkMatrixSDK().then(console.log).catch(console.error);
+benchmarkMatrixSDK().then(result => {
+  console.log(JSON.stringify(result));
+}).catch(error => {
+  console.error(JSON.stringify({error: error.message}));
+});
       

@@ -26,6 +26,13 @@ export const TEST_CONFIG = {
     displayName: 'E2E Test User 2',
   },
   
+  // Fresh test user (to avoid rate limits)
+  freshUser: {
+    username: process.env.TEST_USERNAME_FRESH || `e2etest-${Date.now()}`,
+    password: process.env.TEST_PASSWORD_FRESH || 'FreshTest2026!',
+    displayName: 'Fresh E2E Test User',
+  },
+  
   // Test timeouts
   timeouts: {
     short: 5000,

@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getMatrixClient } from "@/lib/matrix-client";
 import { useMatrix } from "@/components/providers/socket-provider";
+import { MemberRole } from "@/types";
 
 interface ChatQueryProps {
   queryKey: string;
@@ -55,7 +56,7 @@ export const useChatQuery = ({
               profileId: sender || "",
               name: senderUser?.displayName || sender?.replace(/@|:.*/g, '') || "",
               imageUrl: senderUser?.avatarUrl || "",
-              role: "GUEST", // Matrix doesn't have same role system
+              role: MemberRole.GUEST, // Matrix doesn't have same role system
               createdAt: new Date(),
               updatedAt: new Date()
             },

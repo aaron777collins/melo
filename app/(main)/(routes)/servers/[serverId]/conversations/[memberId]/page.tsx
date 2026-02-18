@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { currentProfile } from "@/lib/current-profile";
 import { getMatrixClient } from "@/lib/matrix-client";
+import { MemberRole } from "@/types";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -35,7 +36,7 @@ export default async function MemberIdPage({
   // Create current member object
   const currentMember = {
     id: currentUserId,
-    role: "GUEST",
+    role: MemberRole.GUEST,
     profileId: profile.id,
     profile: profile,
     serverId: serverId,
@@ -57,7 +58,7 @@ export default async function MemberIdPage({
 
   const otherMember = {
     id: memberId,
-    role: "GUEST",
+    role: MemberRole.GUEST,
     profileId: memberId,
     profile: otherMemberProfile,
     serverId: serverId,

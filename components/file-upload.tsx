@@ -15,6 +15,7 @@ export function FileUpload({
   value,
   endpoint
 }: FileUploadProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const fileType = value?.split(".").pop();
 
   if (value && fileType !== "pdf") {
@@ -54,8 +55,6 @@ export function FileUpload({
       </div>
     );
   }
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

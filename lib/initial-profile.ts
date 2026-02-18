@@ -4,14 +4,14 @@ import { redirect } from "next/navigation";
 export const initialProfile = async () => {
   const client = getMatrixClient();
 
-  // If no Matrix client or not logged in, redirect to login
+  // If no Matrix client or not logged in, redirect to sign-in
   if (!client || !client.getUserId()) {
-    return redirect("/login");
+    return redirect("/sign-in");
   }
 
   const userId = client.getUserId();
   if (!userId) {
-    return redirect("/login");
+    return redirect("/sign-in");
   }
 
   // Get user profile from Matrix client

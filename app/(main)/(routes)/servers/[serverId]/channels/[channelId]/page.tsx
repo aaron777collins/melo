@@ -1,6 +1,6 @@
 import React from "react";
 import { redirect } from "next/navigation";
-import { ChannelType } from "@/types";
+import { ChannelType, MemberRole } from "@/types";
 
 import { currentProfile } from "@/lib/current-profile";
 import { getMatrixClient } from "@/lib/matrix-client";
@@ -51,7 +51,7 @@ export default async function ChannelIdPage({
   const userId = client.getUserId();
   const member = {
     id: userId || "",
-    role: "GUEST", // Default role, in Matrix we'd get this from power levels
+    role: MemberRole.GUEST, // Default role, in Matrix we'd get this from power levels
     profileId: profile.id,
     profile: profile,
     serverId: serverId,

@@ -4,6 +4,7 @@ import { MatrixEvent } from "matrix-js-sdk";
 
 import { useMatrix } from "@/components/providers/socket-provider";
 import { getMatrixClient } from "@/lib/matrix-client";
+import { MemberRole } from "@/types";
 
 type ChatSocketProps = {
   addKey: string;
@@ -20,7 +21,7 @@ type MessageWithMemberWithProfile = {
     profileId: string;
     name: string;
     imageUrl: string;
-    role: string;
+    role: MemberRole;
     createdAt: Date;
     updatedAt: Date;
   };
@@ -57,7 +58,7 @@ export const useChatSocket = ({
           profileId: sender || "",
           name: senderUser?.displayName || sender?.replace(/@|:.*/g, '') || "",
           imageUrl: senderUser?.avatarUrl || "",
-          role: "GUEST",
+          role: MemberRole.GUEST,
           createdAt: new Date(),
           updatedAt: new Date()
         },
@@ -108,7 +109,7 @@ export const useChatSocket = ({
           profileId: sender || "",
           name: senderUser?.displayName || sender?.replace(/@|:.*/g, '') || "",
           imageUrl: senderUser?.avatarUrl || "",
-          role: "GUEST",
+          role: MemberRole.GUEST,
           createdAt: new Date(),
           updatedAt: new Date()
         },

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { currentProfile } from "@/lib/current-profile";
 import { getMatrixClient } from "@/lib/matrix-client";
+import { MemberRole } from "@/types";
 
 export async function POST(req: Request) {
   try {
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
       members: [
         {
           id: uuidv4(),
-          role: "ADMIN",
+          role: MemberRole.ADMIN,
           profileId: profile.id,
           serverId: spaceId,
           createdAt: new Date(),

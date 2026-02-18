@@ -19,10 +19,8 @@ const nextConfig = {
   // Add verbose logging
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
-      console.log('=== CLIENT BUILD WEBPACK CONFIG ===');
     }
     if (!dev && isServer) {
-      console.log('=== SERVER BUILD WEBPACK CONFIG ===');
     }
     
     // Completely externalize matrix-js-sdk

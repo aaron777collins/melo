@@ -1,11 +1,8 @@
 "use client";
 
-import React from "react";
-import "@uploadthing/react/styles.css";
-import { FileIcon, X } from "lucide-react";
+import React, { useRef } from "react";
+import { FileIcon, X, Upload } from "lucide-react";
 import Image from "next/image";
-
-import { UploadDropzone } from "@/lib/uploadthing";
 
 interface FileUploadProps {
   onChange: (url?: string) => void;
@@ -58,13 +55,37 @@ export function FileUpload({
     );
   }
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // For now, we'll create a placeholder URL
+      // In a real implementation, you'd upload to Matrix media repository
+      const placeholderUrl = `https://via.placeholder.com/150?text=${encodeURIComponent(file.name)}`;
+      onChange(placeholderUrl);
+    }
+  };
+
   return (
-    <UploadDropzone
-      endpoint={endpoint}
-      onClientUploadComplete={(res) => {
-        onChange(res?.[0].url);
-      }}
-      onUploadError={(error: Error) => console.error(error.message)}
-    />
+    <div 
+      className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-gray-400 transition-colors"
+      onClick={() => fileInputRef.current?.click()}
+    >
+      <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+      <p className="text-sm text-gray-500">
+        Click to upload or drag and drop
+      </p>
+      <p className="text-xs text-gray-400 mt-1">
+        {endpoint === "serverImage" ? "PNG, JPG up to 4MB" : "Any file up to 4MB"}
+      </p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileSelect}
+        accept={endpoint === "serverImage" ? "image/*" : "*"}
+      />
+    </div>
   );
 }

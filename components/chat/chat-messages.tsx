@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Fragment, useRef, ElementRef } from "react";
-import { Member, Message, Profile } from "@prisma/client";
+import { Member, Message, Profile } from "@/types";
 import { Loader2, ServerCrash } from "lucide-react";
 import { format } from "date-fns";
 

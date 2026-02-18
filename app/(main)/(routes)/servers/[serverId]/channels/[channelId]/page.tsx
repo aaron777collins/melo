@@ -1,10 +1,9 @@
 import React from "react";
-import { redirectToSignIn } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import { ChannelType } from "@prisma/client";
+import { ChannelType } from "@/types";
 
 import { currentProfile } from "@/lib/current-profile";
-import { db } from "@/lib/db";
+import { getMatrixClient } from "@/lib/matrix-client";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatMessages } from "@/components/chat/chat-messages";
@@ -22,17 +21,43 @@ export default async function ChannelIdPage({
 }: ChannelIdPageProps) {
   const profile = await currentProfile();
 
-  if (!profile) return redirectToSignIn();
+  if (!profile) {
+    redirect("/sign-in");
+    return;
+  }
 
-  const channel = await db.channel.findUnique({
-    where: { id: channelId }
-  });
+  const client = getMatrixClient();
+  if (!client) {
+    redirect("/sign-in");
+    return;
+  }
 
-  const member = await db.member.findFirst({
-    where: { serverId: serverId, profileId: profile.id }
-  });
+  // Get the Matrix room (channel)
+  const room = client.getRoom(channelId);
+  if (!room || !room.hasMembershipState(client.getUserId() || "", "join")) {
+    redirect("/");
+    return;
+  }
 
-  if (!channel || !member) return redirect("/");
+  // Create a channel object that matches the expected interface
+  const channel = {
+    id: room.roomId,
+    name: room.name || "Unnamed Channel",
+    type: ChannelType.TEXT, // Default to TEXT, in Matrix we'd determine this from room type
+    serverId: serverId,
+  };
+
+  // Create a member object representing the current user
+  const userId = client.getUserId();
+  const member = {
+    id: userId || "",
+    role: "GUEST", // Default role, in Matrix we'd get this from power levels
+    profileId: profile.id,
+    profile: profile,
+    serverId: serverId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   return (
     <div className="bg-white dark:bg-[#313338] flex flex-col h-full">

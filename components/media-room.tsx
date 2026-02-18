@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import "@livekit/components-styles";
 import { LiveKitRoom, VideoConference } from "@livekit/components-react";
-import { useUser } from "@clerk/nextjs";
+import { getMatrixClient } from "@/lib/matrix-client";
 import { Loader2 } from "lucide-react";
 
 interface MediaRoomProps {
@@ -13,8 +13,19 @@ interface MediaRoomProps {
 }
 
 export function MediaRoom({ chatId, video, audio }: MediaRoomProps) {
-  const { user } = useUser();
   const [token, setToken] = useState("");
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const client = getMatrixClient();
+    if (client && client.getUserId()) {
+      const userId = client.getUserId();
+      const matrixUser = client.getUser(userId || "");
+      setUser({
+        firstName: matrixUser?.displayName || userId?.replace(/@|:.*/g, '') || "User"
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!user?.firstName) return;

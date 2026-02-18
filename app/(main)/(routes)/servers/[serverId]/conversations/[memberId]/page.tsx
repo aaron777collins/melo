@@ -1,10 +1,8 @@
 import React from "react";
-import { redirectToSignIn } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 
 import { currentProfile } from "@/lib/current-profile";
-import { db } from "@/lib/db";
-import { getOrCreateConversation } from "@/lib/conversation";
+import { getMatrixClient } from "@/lib/matrix-client";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -26,31 +24,69 @@ export default async function MemberIdPage({
 }: MemberIdPageProps) {
   const profile = await currentProfile();
 
-  if (!profile) return redirectToSignIn();
+  if (!profile) return redirect("/sign-in");
 
-  const currentMember = await db.member.findFirst({
-    where: {
-      serverId,
-      profileId: profile.id
-    },
-    include: {
-      profile: true
-    }
+  const client = getMatrixClient();
+  if (!client) return redirect("/sign-in");
+
+  const currentUserId = client.getUserId();
+  if (!currentUserId) return redirect("/sign-in");
+
+  // Create current member object
+  const currentMember = {
+    id: currentUserId,
+    role: "GUEST",
+    profileId: profile.id,
+    profile: profile,
+    serverId: serverId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  // Get the other member's information
+  const otherUser = client.getUser(memberId);
+  const otherMemberProfile = {
+    id: memberId,
+    userId: memberId,
+    name: otherUser?.displayName || memberId.replace(/@|:.*/g, ''),
+    imageUrl: otherUser?.avatarUrl || "",
+    email: "",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  const otherMember = {
+    id: memberId,
+    role: "GUEST",
+    profileId: memberId,
+    profile: otherMemberProfile,
+    serverId: serverId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  // Find or create a direct message room between these users
+  const dmRooms = client.getRooms().filter(room => {
+    const members = room.getJoinedMembers();
+    return members.length === 2 && 
+           members.some(m => m.userId === currentUserId) &&
+           members.some(m => m.userId === memberId);
   });
 
-  if (!currentMember) return redirect("/");
+  let conversationRoomId = dmRooms[0]?.roomId;
+  
+  // If no DM room exists, use a constructed ID
+  if (!conversationRoomId) {
+    conversationRoomId = `dm:${[currentUserId, memberId].sort().join(':')}`;
+  }
 
-  const conversation = await getOrCreateConversation(
-    currentMember.id,
-    memberId
-  );
-
-  if (!conversation) return redirect(`/servers/${serverId}`);
-
-  const { memberOne, memberTwo } = conversation;
-
-  const otherMember =
-    memberOne.profileId === profile.id ? memberTwo : memberOne;
+  const conversation = {
+    id: conversationRoomId,
+    memberOneId: currentUserId,
+    memberTwoId: memberId,
+    memberOne: currentMember,
+    memberTwo: otherMember,
+  };
 
   return (
     <div className="bg-white dark:bg-[#313338] flex flex-col h-full">

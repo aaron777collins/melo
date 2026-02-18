@@ -1,9 +1,8 @@
 import React from "react";
-import { redirectToSignIn } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 
 import { currentProfile } from "@/lib/current-profile";
-import { db } from "@/lib/db";
+import { getMatrixClient } from "@/lib/matrix-client";
 import { ServerSidebar } from "@/components/server/server-sidebar";
 
 export default async function ServerIdLayout({
@@ -15,20 +14,24 @@ export default async function ServerIdLayout({
 }) {
   const profile = await currentProfile();
 
-  if (!profile) return redirectToSignIn();
+  if (!profile) {
+    redirect("/sign-in");
+    return;
+  }
 
-  const server = await db.server.findUnique({
-    where: {
-      id: params.serverId,
-      members: {
-        some: {
-          profileId: profile.id
-        }
-      }
-    }
-  });
+  // In Matrix, serverId is a space ID - check if user is a member
+  const client = getMatrixClient();
+  if (!client) {
+    redirect("/sign-in");
+    return;
+  }
 
-  if (!server) return redirect("/");
+  // Check if the space/server exists and user is a member
+  const space = client.getRoom(params.serverId);
+  if (!space || !space.hasMembershipState(client.getUserId() || "", "join")) {
+    redirect("/");
+    return;
+  }
 
   return (
     <div className="h-full">

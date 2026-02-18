@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { MatrixEvent } from "matrix-js-sdk";
 
-import { useMatrix } from "@/components/providers/matrix-provider";
+import { useMatrix } from "@/components/providers/socket-provider";
 import { getMatrixClient } from "@/lib/matrix-client";
 
 type ChatSocketProps = {

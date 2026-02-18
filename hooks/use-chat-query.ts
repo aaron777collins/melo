@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getMatrixClient } from "@/lib/matrix-client";
-import { useMatrix } from "@/components/providers/matrix-provider";
+import { useMatrix } from "@/components/providers/socket-provider";
 
 interface ChatQueryProps {
   queryKey: string;

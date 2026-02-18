@@ -5,7 +5,7 @@
   - generic [ref=e4]:
     - heading "Welcome to Melo" [level=1] [ref=e5]
     - paragraph [ref=e6]: Sign in to your Matrix account
-    - paragraph [ref=e8]: Rate limit exceeded. Maximum 5 requests per 900 seconds.
+    - paragraph [ref=e8]: Invalid username/password
     - generic [ref=e9]:
       - generic [ref=e10]:
         - generic [ref=e11]: Homeserver

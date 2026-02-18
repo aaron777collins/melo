@@ -22,15 +22,16 @@ export class AuthPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.homeserverInput = page.locator('input[type="url"], input[placeholder*="homeserver" i], input[placeholder*="server" i]').first();
-    this.usernameInput = page.locator('input[type="text"]').first();
+    // Use test IDs first, fall back to generic selectors
+    this.homeserverInput = page.locator('[data-testid="homeserver-input"], input[type="url"], input[placeholder*="homeserver" i], input[placeholder*="server" i]').first();
+    this.usernameInput = page.locator('[data-testid="username-input"], input[type="text"]').first();
     // For sign-in page (single password field)
-    this.passwordInput = page.locator('input[type="password"]').first();
+    this.passwordInput = page.locator('[data-testid="password-input"], input[type="password"]').first();
     // For sign-up page (confirm password field)
     this.confirmPasswordInput = page.locator('input[placeholder*="confirm" i], input[type="password"]').last();
-    this.submitButton = page.locator('button[type="submit"]');
+    this.submitButton = page.locator('[data-testid="login-button"], button[type="submit"]');
     this.signUpLink = page.locator('a:has-text("Sign up"), a:has-text("Register"), a:has-text("Create account")');
-    this.errorMessage = page.locator('.text-red-400, .text-red-500, .bg-red-100').first();
+    this.errorMessage = page.locator('[data-testid="error-message"], .text-red-400, .text-red-500, .bg-red-100').first();
   }
 
   async goto(type: 'sign-in' | 'sign-up' = 'sign-in') {
@@ -39,19 +40,16 @@ export class AuthPage {
   }
 
   async waitForHydration() {
-    // Wait for React hydration
-    await this.page.waitForTimeout(2000);
-    let tries = 0;
-    while (tries < 10) {
-      try {
-        const isDisabled = await this.usernameInput.isDisabled();
-        if (!isDisabled) break;
-      } catch {
-        // Element might not exist yet
-      }
-      await this.page.waitForTimeout(500);
-      tries++;
-    }
+    // Wait for React hydration - look for specific test IDs to be ready
+    await this.page.waitForLoadState('networkidle');
+    
+    // Wait for core form elements to be visible and interactable
+    await expect(this.usernameInput).toBeVisible({ timeout: 10000 });
+    await expect(this.passwordInput).toBeVisible({ timeout: 10000 });
+    await expect(this.submitButton).toBeVisible({ timeout: 10000 });
+    
+    // Additional wait to ensure form is fully interactive
+    await this.page.waitForTimeout(1000);
   }
 
   async login(username: string, password: string, homeserver?: string) {

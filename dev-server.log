@@ -1,0 +1,70 @@
+
+> melo@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env.development, .env
+
+ ✓ Starting...
+ ○ (pwa) PWA support is disabled.
+ ✓ Ready in 9.9s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 736ms (118 modules)
+ ○ Compiling /test-voice-channels ...
+ ⚠ ./components/video-call/enhanced-video-grid.tsx
+Attempted import error: 'Grid3X3' is not exported from '__barrel_optimize__?names=Grid3X3,Maximize2,Minimize2,Users,VideoOff!=!lucide-react' (imported as 'Grid3X3').
+
+Import trace for requested module:
+./components/video-call/enhanced-video-grid.tsx
+./app/test-voice-channels/page.tsx
+
+./components/video-call/enhanced-video-grid.tsx
+Attempted import error: 'Grid3X3' is not exported from '__barrel_optimize__?names=Grid3X3,Maximize2,Minimize2,Users,VideoOff!=!lucide-react' (imported as 'Grid3X3').
+
+Import trace for requested module:
+./components/video-call/enhanced-video-grid.tsx
+./app/test-voice-channels/page.tsx
+
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+node@10.39.0/node_modules/@sentry/node/build/cjs/integrations/tracing/postgresjs.js
+./node_modules/.pnpm/@sentry+node@10.39.0/node_modules/@sentry/node/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@10.39.0_@opentelemetry+context-async-hooks@2.5.1_@opentelemetry+api@1.9._d349416c8af52d128ffe7c2b56883d56/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/monitoring/sentry-integration.ts
+./lib/monitoring/error-reporter.ts
+./hooks/use-error-reporting.tsx
+ ⚠ ./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+node@10.39.0/node_modules/@sentry/node/build/cjs/integrations/tracing/postgresjs.js
+./node_modules/.pnpm/@sentry+node@10.39.0/node_modules/@sentry/node/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@10.39.0_@opentelemetry+context-async-hooks@2.5.1_@opentelemetry+api@1.9._d349416c8af52d128ffe7c2b56883d56/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/monitoring/sentry-integration.ts
+./lib/monitoring/error-reporter.ts
+./components/error/error-boundary.tsx
+ ⚠ ./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+node@10.39.0/node_modules/@sentry/node/build/cjs/integrations/tracing/postgresjs.js
+./node_modules/.pnpm/@sentry+node@10.39.0/node_modules/@sentry/node/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@10.39.0_@opentelemetry+context-async-hooks@2.5.1_@opentelemetry+api@1.9._d349416c8af52d128ffe7c2b56883d56/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/monitoring/sentry-integration.ts
+./lib/monitoring/error-reporter.ts
+./components/error/error-boundary.tsx

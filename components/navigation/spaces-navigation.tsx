@@ -173,7 +173,7 @@ export function SpacesNavigation() {
 
   if (isLoading) {
     return (
-      <div className="fixed left-0 top-0 h-full w-[72px] bg-gray-900 flex flex-col items-center justify-center" data-testid="spaces-loading">
+      <div className="h-full w-full bg-[#1e1f22] flex flex-col items-center justify-center" data-testid="spaces-loading">
         <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
       </div>
     );
@@ -181,7 +181,7 @@ export function SpacesNavigation() {
 
   if (error) {
     return (
-      <div className="fixed left-0 top-0 h-full w-[72px] bg-gray-900 flex flex-col items-center justify-center" data-testid="spaces-error">
+      <div className="h-full w-full bg-[#1e1f22] flex flex-col items-center justify-center" data-testid="spaces-error">
         <ActionTooltip label={`Error loading spaces: ${error.message}`} side="right">
           <div className="text-red-400 p-2 rounded">
             <AlertCircle className="h-6 w-6" />
@@ -199,7 +199,7 @@ export function SpacesNavigation() {
   }
 
   return (
-    <div className="fixed left-0 top-0 h-full w-[72px] bg-gray-900 flex flex-col items-center py-3 space-y-2 overflow-y-auto" data-testid="spaces-list">
+    <div className="space-y-4 flex flex-col h-full items-center text-primary w-full dark:bg-[#1e1f22] bg-[#e3e5e8] py-3" data-testid="spaces-list">
       {/* Direct Messages */}
       <DirectMessagesButton isActive={isDMActive} />
 

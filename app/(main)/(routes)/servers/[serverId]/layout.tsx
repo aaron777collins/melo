@@ -23,10 +23,12 @@ export default async function ServerIdLayout({
 
   return (
     <div className="h-full">
-      <div className="hidden md:flex h-full w-60 z-10 flex-col fixed inset-y-0 left-[312px]">
+      {/* Server sidebar positioned after the 72px spaces nav */}
+      <div className="hidden md:flex h-full w-60 z-20 flex-col fixed inset-y-0 left-[72px]">
         <ServerSidebar serverId={spaceId} />
       </div>
-      <main className="h-full md:pl-[552px]">{children}</main>
+      {/* Main content offset by the 240px server sidebar */}
+      <main className="h-full md:pl-60">{children}</main>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { ChannelType, MemberRole } from "@/types";
 import { Hash, Mic, ShieldAlert, ShieldCheck, Video } from "lucide-react";
 
 import { currentProfile } from "@/lib/current-profile";
-import { db } from "@/lib/db";
+import { getMatrixClient } from "@/lib/matrix-client";
 
 import { ServerHeader } from "@/components/server/server-header";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,48 +31,83 @@ const roleIconMap = {
 export async function ServerSidebar({ serverId }: { serverId: string }) {
   const profile = await currentProfile();
 
-  if (!profile) return redirect("/");
+  if (!profile) return redirect("/sign-in");
 
-  const server = await db.server.findUnique({
-    where: {
-      id: serverId
-    },
-    include: {
-      channels: {
-        orderBy: {
-          createdAt: "asc"
-        }
-      },
-      members: {
-        include: {
-          profile: true
-        },
-        orderBy: {
-          role: "asc"
-        }
-      }
-    }
-  });
+  const client = getMatrixClient();
+  if (!client) return redirect("/sign-in");
 
-  const textChannels = server?.channels.filter(
+  // Get the Matrix space (server)
+  const space = client.getRoom(serverId);
+  if (!space || !space.hasMembershipState(client.getUserId() || "", "join")) {
+    return redirect("/");
+  }
+
+  // Create server object
+  const server = {
+    id: space.roomId,
+    name: space.name || "Unnamed Server",
+    imageUrl: space.getAvatarUrl(client.baseUrl, 96, 96, "crop") || "",
+    inviteCode: "", // Would need to be generated/retrieved
+    profileId: space.getCreator() || "",
+    createdAt: new Date(space.getTs() || Date.now()),
+    updatedAt: new Date(),
+  };
+
+  // Get child rooms (channels) - in a real implementation we'd query space children
+  const allRooms = client.getRooms();
+  const channels = allRooms
+    .filter(room => room.roomId !== serverId) // Exclude the space itself
+    .slice(0, 10) // Limit for demo
+    .map(room => ({
+      id: room.roomId,
+      name: room.name || "Unnamed Channel",
+      type: ChannelType.TEXT, // Default, in Matrix we'd determine from room type
+      profileId: room.getCreator() || "",
+      serverId: serverId,
+      createdAt: new Date(room.getTs() || Date.now()),
+      updatedAt: new Date(),
+    }));
+
+  const textChannels = channels.filter(
     (channel) => channel.type === ChannelType.TEXT
   );
-  const audioChannels = server?.channels.filter(
+  const audioChannels = channels.filter(
     (channel) => channel.type === ChannelType.AUDIO
   );
-  const videoChannels = server?.channels.filter(
+  const videoChannels = channels.filter(
     (channel) => channel.type === ChannelType.VIDEO
   );
 
-  const members = server?.members.filter(
-    (member) => member.profileId !== profile.id
-  );
+  // Get space members
+  const spaceMembers = space.getJoinedMembers();
+  const currentUserId = client.getUserId();
+  
+  const members = spaceMembers
+    .filter(member => member.userId !== currentUserId)
+    .map(member => {
+      const user = client.getUser(member.userId);
+      return {
+        id: member.userId,
+        role: MemberRole.GUEST, // Default, would get from power levels in real impl
+        profileId: member.userId,
+        serverId: serverId,
+        profile: {
+          id: member.userId,
+          userId: member.userId,
+          name: user?.displayName || member.userId.replace(/@|:.*/g, ''),
+          imageUrl: user?.avatarUrl || "",
+          email: "",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    });
 
-  if (!server) return redirect("/");
-
-  const role = server.members.find(
-    (member) => member.profileId === profile.id
-  )?.role;
+  // Get current user's role in the space
+  const currentMember = spaceMembers.find(m => m.userId === currentUserId);
+  const role = currentMember ? MemberRole.GUEST : undefined; // Would get from power levels
 
   return (
     <div className="flex flex-col h-full text-primary w-full dark:bg-[#2b2d31] bg-[#f2f3f5]">

@@ -161,10 +161,26 @@ export function VoiceChannelControls({
   }
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`
+      flex items-center gap-2 
+      ${className}
+      /* Mobile responsiveness */
+      flex-wrap sm:flex-nowrap
+      justify-center sm:justify-start
+      w-full sm:w-auto
+    `}>
       <JoinLeaveButton />
       <AudioButton />
       <VideoButton />
+      
+      {/* Mobile-specific connection status */}
+      {actualError && (
+        <div className="flex sm:hidden w-full mt-2 justify-center">
+          <span className="text-xs text-red-400 text-center">
+            Connection failed
+          </span>
+        </div>
+      )}
     </div>
   );
 }

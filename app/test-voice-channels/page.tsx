@@ -1,11 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { VoiceChannelList } from "@/components/voice/voice-channel-list";
 import { VoiceCallHistory } from "@/components/voice/voice-call-history";
+import { CameraPreview } from "@/components/voice/camera-preview";
+import { EnhancedVideoGrid } from "@/components/video-call/enhanced-video-grid";
+import { EnhancedVideoTile } from "@/components/video-call/enhanced-video-tile";
 import { useVoiceChannelManager } from "@/hooks/use-voice-channel-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function TestVoiceChannelsPage() {
   const {
@@ -17,6 +22,11 @@ export default function TestVoiceChannelsPage() {
     leaveVoiceChannel,
     showIncomingCall,
   } = useVoiceChannelManager();
+
+  // UI State
+  const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [showVideoGrid, setShowVideoGrid] = useState(false);
+  const [videoGridMode, setVideoGridMode] = useState<"demo" | "real">("demo");
 
   // Mock data for testing
   const mockChannels = [
@@ -148,9 +158,11 @@ export default function TestVoiceChannelsPage() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="channels" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="channels">Voice Channels</TabsTrigger>
           <TabsTrigger value="history">Call History</TabsTrigger>
+          <TabsTrigger value="camera">Camera Preview</TabsTrigger>
+          <TabsTrigger value="video">Video Grid</TabsTrigger>
         </TabsList>
 
         <TabsContent value="channels" className="mt-6">
@@ -182,6 +194,142 @@ export default function TestVoiceChannelsPage() {
             </CardHeader>
             <CardContent>
               <VoiceCallHistory className="max-w-2xl" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="camera" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Camera Preview</CardTitle>
+              <CardDescription>
+                Pre-call camera and microphone setup with device selection
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  The camera preview component allows users to test their camera and microphone before joining a call.
+                  It includes device selection, permission handling, and responsive design.
+                </p>
+                
+                <Dialog open={showCameraPreview} onOpenChange={setShowCameraPreview}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full max-w-sm">
+                      Open Camera Preview
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+                    <div className="h-[80vh]">
+                      <CameraPreview
+                        onJoinCall={() => {
+                          setShowCameraPreview(false);
+                          // In a real app, this would join the call
+                          alert("Joining call with selected settings...");
+                        }}
+                        onCancel={() => setShowCameraPreview(false)}
+                        defaultAudioEnabled={true}
+                        defaultVideoEnabled={true}
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <div className="text-xs text-zinc-500 space-y-1">
+                  <p>Features demonstrated:</p>
+                  <ul className="list-disc list-inside ml-4 space-y-0.5">
+                    <li>Camera and microphone preview</li>
+                    <li>Device selection (camera, microphone, speakers)</li>
+                    <li>Permission handling and error states</li>
+                    <li>Audio/video toggle controls</li>
+                    <li>Responsive design for mobile and desktop</li>
+                    <li>Real-time status indicators</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="video" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Enhanced Video Grid</CardTitle>
+              <CardDescription>
+                Adaptive video grid with participant tiles, speaking indicators, and responsive layouts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant={videoGridMode === "demo" ? "default" : "outline"}
+                    onClick={() => {
+                      setVideoGridMode("demo");
+                      setShowVideoGrid(true);
+                    }}
+                  >
+                    Demo Mode (Mock Data)
+                  </Button>
+                  <Button
+                    variant={videoGridMode === "real" ? "default" : "outline"}
+                    onClick={() => {
+                      setVideoGridMode("real");
+                      setShowVideoGrid(true);
+                    }}
+                    disabled={!isConnected}
+                  >
+                    Real Mode (Current Call)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowVideoGrid(false)}
+                  >
+                    Hide Grid
+                  </Button>
+                </div>
+
+                {showVideoGrid && (
+                  <div className="border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-hidden">
+                    <div className="h-96 bg-zinc-900">
+                      {videoGridMode === "real" ? (
+                        <EnhancedVideoGrid
+                          showControls={true}
+                          canModerate={true}
+                          onParticipantAction={(action, participantId) => {
+                            console.log(`Action: ${action} for participant: ${participantId}`);
+                          }}
+                        />
+                      ) : (
+                        <div className="h-full p-4 bg-zinc-900 text-white flex items-center justify-center">
+                          <div className="text-center">
+                            <p className="text-lg font-medium mb-2">Demo Mode</p>
+                            <p className="text-sm text-zinc-400 max-w-md">
+                              In demo mode, you would see mock participants with video tiles, 
+                              speaking indicators, and responsive grid layouts. Connect to a real 
+                              call to see live participants.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs text-zinc-500 space-y-1">
+                  <p>Enhanced Video Grid Features:</p>
+                  <ul className="list-disc list-inside ml-4 space-y-0.5">
+                    <li>Adaptive grid layouts (1x1, 2x2, 3x3, 4x4)</li>
+                    <li>Presenter mode with screen sharing</li>
+                    <li>Video tiles with speaking indicators</li>
+                    <li>Participant controls (pin, mute, kick)</li>
+                    <li>Connection quality indicators</li>
+                    <li>Responsive design for all screen sizes</li>
+                    <li>Fullscreen mode support</li>
+                    <li>Audio level visualization</li>
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

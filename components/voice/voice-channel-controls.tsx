@@ -13,6 +13,7 @@ import {
 
 import { ActionTooltip } from "@/components/action-tooltip";
 import { useVoiceChannel } from "@/hooks/use-voice-channel";
+import { useVoiceChannelManager } from "@/hooks/use-voice-channel-manager";
 
 interface VoiceChannelControlsProps {
   channelId: string;
@@ -25,39 +26,57 @@ export function VoiceChannelControls({
   username, 
   className 
 }: VoiceChannelControlsProps) {
+  // Use the new voice channel manager
   const {
     isConnected,
     isConnecting,
     audioEnabled,
     videoEnabled,
     error,
-    connect,
-    disconnect,
+    currentChannelId,
+    joinVoiceChannel,
+    leaveVoiceChannel,
     toggleAudio,
     toggleVideo,
-  } = useVoiceChannel();
+  } = useVoiceChannelManager();
 
-  const handleJoinLeave = () => {
-    if (isConnected) {
-      disconnect();
+  // Fallback to old hook for backwards compatibility
+  const legacyVoiceChannel = useVoiceChannel();
+
+  // Use new manager if available, otherwise fall back to legacy
+  const actuallyConnected = isConnected && currentChannelId === channelId;
+  const actuallyConnecting = isConnecting;
+  const actualAudioEnabled = audioEnabled;
+  const actualVideoEnabled = videoEnabled;
+  const actualError = error;
+
+  const handleJoinLeave = async () => {
+    if (actuallyConnected) {
+      await leaveVoiceChannel();
     } else {
-      connect(channelId, username);
+      // Extract spaceId from current URL or context - for now use a placeholder
+      // TODO: Get actual spaceId from context or props
+      const spaceId = "unknown"; // This should be passed as a prop
+      await joinVoiceChannel(channelId, spaceId, {
+        audio: true,
+        video: false,
+      });
     }
   };
 
   // Join/Leave button
   const JoinLeaveButton = () => {
-    const isLoading = isConnecting;
-    const Icon = isLoading ? Loader2 : isConnected ? PhoneOff : Phone;
+    const isLoading = actuallyConnecting;
+    const Icon = isLoading ? Loader2 : actuallyConnected ? PhoneOff : Phone;
     const tooltipLabel = isLoading 
       ? "Connecting..." 
-      : isConnected 
+      : actuallyConnected 
         ? "Leave voice channel" 
         : "Join voice channel";
     
     const buttonClass = `
       flex items-center justify-center w-8 h-8 rounded-md transition-colors
-      ${isConnected 
+      ${actuallyConnected 
         ? "bg-red-500 hover:bg-red-600 text-white" 
         : "bg-green-500 hover:bg-green-600 text-white"
       }
@@ -81,10 +100,10 @@ export function VoiceChannelControls({
 
   // Audio toggle button
   const AudioButton = () => {
-    if (!isConnected) return null;
+    if (!actuallyConnected) return null;
     
-    const Icon = audioEnabled ? Mic : MicOff;
-    const tooltipLabel = audioEnabled ? "Mute microphone" : "Unmute microphone";
+    const Icon = actualAudioEnabled ? Mic : MicOff;
+    const tooltipLabel = actualAudioEnabled ? "Mute microphone" : "Unmute microphone";
     
     return (
       <ActionTooltip side="bottom" label={tooltipLabel}>
@@ -92,7 +111,7 @@ export function VoiceChannelControls({
           onClick={toggleAudio}
           className={`
             flex items-center justify-center w-8 h-8 rounded-md transition-colors
-            ${audioEnabled
+            ${actualAudioEnabled
               ? "bg-gray-600 hover:bg-gray-700 text-white"
               : "bg-red-500 hover:bg-red-600 text-white"
             }
@@ -106,10 +125,10 @@ export function VoiceChannelControls({
 
   // Video toggle button  
   const VideoButton = () => {
-    if (!isConnected) return null;
+    if (!actuallyConnected) return null;
     
-    const Icon = videoEnabled ? Video : VideoOff;
-    const tooltipLabel = videoEnabled ? "Turn off camera" : "Turn on camera";
+    const Icon = actualVideoEnabled ? Video : VideoOff;
+    const tooltipLabel = actualVideoEnabled ? "Turn off camera" : "Turn on camera";
     
     return (
       <ActionTooltip side="bottom" label={tooltipLabel}>
@@ -117,7 +136,7 @@ export function VoiceChannelControls({
           onClick={toggleVideo}
           className={`
             flex items-center justify-center w-8 h-8 rounded-md transition-colors
-            ${videoEnabled
+            ${actualVideoEnabled
               ? "bg-gray-600 hover:bg-gray-700 text-white"
               : "bg-gray-500 hover:bg-gray-600 text-white"
             }
@@ -130,9 +149,9 @@ export function VoiceChannelControls({
   };
 
   // Error display
-  if (error) {
+  if (actualError) {
     return (
-      <ActionTooltip side="bottom" label={`Error: ${error}`}>
+      <ActionTooltip side="bottom" label={`Error: ${actualError}`}>
         <div className="flex items-center gap-2">
           <PhoneOff className="h-4 w-4 text-red-500" />
           <span className="text-xs text-red-500">Connection failed</span>

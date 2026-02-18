@@ -222,13 +222,34 @@ export async function waitForMessage(page: Page, messageText: string, timeout: n
 export async function clearBrowserState(page: Page): Promise<void> {
   try {
     await page.evaluate(() => {
-      if (typeof localStorage !== 'undefined') localStorage.clear();
-      if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
-      if (typeof indexedDB !== 'undefined') indexedDB.deleteDatabase('matrix-js-sdk');
+      // Defensive storage clearing with individual try-catch blocks
+      try {
+        if (typeof localStorage !== 'undefined' && localStorage) {
+          localStorage.clear();
+        }
+      } catch (e) {
+        // localStorage access denied - ignore
+      }
+
+      try {
+        if (typeof sessionStorage !== 'undefined' && sessionStorage) {
+          sessionStorage.clear();
+        }
+      } catch (e) {
+        // sessionStorage access denied - ignore
+      }
+
+      try {
+        if (typeof indexedDB !== 'undefined' && indexedDB) {
+          indexedDB.deleteDatabase('matrix-js-sdk');
+        }
+      } catch (e) {
+        // indexedDB access denied - ignore
+      }
     });
   } catch (error) {
-    console.warn('Could not clear browser state:', error);
-    // Continue without clearing - this is not critical
+    // Silently continue - browser state clearing is not critical for test success
+    // This can happen in cross-origin scenarios or with strict security policies
   }
 }
 

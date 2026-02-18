@@ -64,7 +64,10 @@ export type ModalType =
   // Feature Coming Soon
   | "featureComingSoon"
   // DM Options
-  | "dmOptions";
+  | "dmOptions"
+  // Voice Channel Management
+  | "incomingCall"
+  | "voiceChannelSettings";
 
 interface ModalData {
   // Legacy Prisma types (for transition period)
@@ -169,6 +172,15 @@ interface ModalData {
   recoveryKey?: string;
   /** Callback when user confirms they have saved the recovery key */
   onRecoveryKeySaved?: () => void;
+  // Voice channel management
+  /** Incoming call data for incoming call modal */
+  incomingCallData?: import("@/hooks/use-voice-channel-manager").IncomingCallData;
+  /** Voice channel settings data */
+  voiceChannelSettings?: {
+    channelId: string;
+    spaceId: string;
+    currentSettings: any;
+  };
 }
 
 interface ModalStore {

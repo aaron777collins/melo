@@ -212,9 +212,25 @@ export async function getRateLimitConfig(req: NextRequest): Promise<RateLimitCon
   const isAuth = await isAuthenticated(req);
   
   // Check if we're in test mode - disable rate limiting for E2E tests
+  const userAgent = req.headers.get('user-agent') || '';
+  const testModeHeader = req.headers.get('x-test-mode') === 'true';
+  const playwrightHeader = req.headers.get('x-playwright-test') === 'true';
   const isTestMode = process.env.NODE_ENV === 'test' || 
-                    req.headers.get('user-agent')?.includes('Playwright') ||
-                    req.headers.get('x-test-mode') === 'true';
+                    userAgent.toLowerCase().includes('playwright') ||
+                    userAgent.includes('Playwright') ||
+                    testModeHeader ||
+                    playwrightHeader;
+  
+  // Debug logging for test detection
+  if (isTestMode) {
+    console.log('[RATE_LIMIT] Test mode detected:', {
+      userAgent,
+      testModeHeader,
+      playwrightHeader,
+      nodeEnv: process.env.NODE_ENV
+    });
+    console.log('[RATE_LIMIT] Skipping rate limiting for test request');
+  }
   
   if (isTestMode) {
     return {

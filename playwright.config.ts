@@ -53,6 +53,12 @@ export default defineConfig({
     
     // Navigation timeout - increased for Next.js dev server compilation
     navigationTimeout: 60000,
+    
+    // Add custom headers to identify test requests
+    extraHTTPHeaders: {
+      'X-Test-Mode': 'true',
+      'X-Playwright-Test': 'true',
+    },
   },
   
   // Global timeout per test - increased for Next.js dev server compilation

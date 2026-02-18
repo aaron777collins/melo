@@ -220,7 +220,18 @@ export function isLoginAllowed(homeserverUrl: string): LoginValidationResult {
   }
   
   // Check if the homeserver matches the allowed one
-  if (!homeserversMatch(homeserverUrl, config.allowedHomeserver)) {
+  const matches = homeserversMatch(homeserverUrl, config.allowedHomeserver);
+  
+  // Debug logging for access control
+  console.log('[ACCESS_CONTROL] Homeserver comparison:', {
+    requestedHomeserver: homeserverUrl,
+    configuredHomeserver: config.allowedHomeserver,
+    matches,
+    privateMode: config.privateMode,
+    publicMode: config.publicMode
+  });
+  
+  if (!matches) {
     return {
       allowed: false,
       reason: 'This is a private server. External accounts require an invitation from a server administrator.',

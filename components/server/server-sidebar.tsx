@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ServerHeader } from "@/components/server/server-header";
 import { ServerSection } from "@/components/server/server-section";
 import { ServerChannel } from "@/components/server/server-channel";
+import { VoiceChannelList } from "@/components/voice/voice-channel-list";
 
 interface ServerSidebarProps {
   serverId: string;
@@ -90,51 +91,19 @@ export function ServerSidebar({ serverId }: ServerSidebarProps) {
             </ServerSection>
           )}
           
-          {/* Voice Channels */}
-          {audioChannels.length > 0 && (
-            <ServerSection
-              sectionType="channels"
-              channelType={"AUDIO" as any}
-              role={role as any}
-              label="Voice Channels"
-              serverId={currentSpace.id}
-            >
-              {audioChannels.map((channel) => (
-                <ServerChannel
-                  key={channel.id}
-                  channel={channel}
-                  server={{
-                    id: currentSpace.id,
-                    name: currentSpace.name,
-                  }}
-                  role={role}
-                />
-              ))}
-            </ServerSection>
-          )}
-          
-          {/* Video Channels */}
-          {videoChannels.length > 0 && (
-            <ServerSection
-              sectionType="channels"
-              channelType={"VIDEO" as any}
-              role={role as any}
-              label="Video Channels"
-              serverId={currentSpace.id}
-            >
-              {videoChannels.map((channel) => (
-                <ServerChannel
-                  key={channel.id}
-                  channel={channel}
-                  server={{
-                    id: currentSpace.id,
-                    name: currentSpace.name,
-                  }}
-                  role={role}
-                />
-              ))}
-            </ServerSection>
-          )}
+          {/* Voice Channels with Enhanced Management */}
+          <VoiceChannelList
+            spaceId={currentSpace.id}
+            channels={[...audioChannels, ...videoChannels].map(ch => ({
+              id: ch.id,
+              name: ch.name,
+              type: ch.type as "voice" | "video" | "audio",
+              participantCount: 0, // TODO: Get real-time participant count
+              hasActivity: false, // TODO: Detect channel activity
+            }))}
+            userRole={role as any}
+            className="mt-2"
+          />
 
           {/* Show member count */}
           <div className="mt-4 px-2 text-xs text-zinc-500 dark:text-zinc-400" data-testid="space-member-count">

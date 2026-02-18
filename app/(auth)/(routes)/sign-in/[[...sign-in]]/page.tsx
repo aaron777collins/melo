@@ -18,10 +18,27 @@ import TwoFactorPrompt from "@/components/auth/two-factor-prompt";
 // Client-side access control config from environment
 // Private mode is DEFAULT - only MELO_PUBLIC_MODE=true disables it
 function getClientConfig() {
-  const publicMode = process.env.NEXT_PUBLIC_MELO_PUBLIC_MODE === 'true';
-  const privateMode = !publicMode; // Private is default
-  const allowedHomeserver = process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 
-                            'https://matrix.org';
+  // Robust private mode detection with multiple fallbacks
+  let privateMode = true; // Default to private mode
+  let allowedHomeserver = 'https://dev2.aaroncollins.info'; // Default to dev2
+  
+  try {
+    // Check Next.js environment variable
+    const publicModeEnv = process.env.NEXT_PUBLIC_MELO_PUBLIC_MODE;
+    if (publicModeEnv === 'true') {
+      privateMode = false;
+    }
+    
+    // Get homeserver from environment
+    const homeserverEnv = process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL;
+    if (homeserverEnv) {
+      allowedHomeserver = homeserverEnv;
+    }
+  } catch (error) {
+    // Fallback to defaults if environment access fails
+    console.warn('Environment variable access failed, using defaults:', error);
+  }
+  
   return { privateMode, allowedHomeserver };
 }
 

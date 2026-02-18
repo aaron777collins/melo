@@ -29,6 +29,8 @@ import { PinnedMessages } from "@/components/pinned-messages";
 import { SecurityPromptModal } from "@/components/modals/security-prompt-modal";
 import { ServerDiscoveryModal } from "@/components/modals/server-discovery-modal";
 import { RecoveryKeyModal } from "@/components/modals/recovery-key-modal";
+import { IncomingCallModal } from "@/components/modals/incoming-call-modal";
+import { VoiceChannelSettingsModal } from "@/components/modals/voice-channel-settings-modal";
 
 export function ModalProvider() {
   const [isMounted, setIsMounted] = useState(false);
@@ -69,6 +71,8 @@ export function ModalProvider() {
       <SecurityPromptModal />
       <ServerDiscoveryModal />
       <RecoveryKeyModal />
+      <IncomingCallModal />
+      <VoiceChannelSettingsModal />
       {/* TODO: Add more modals as they're created */}
     </>
   );

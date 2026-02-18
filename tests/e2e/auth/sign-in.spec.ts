@@ -39,7 +39,10 @@ test.describe('Sign In', () => {
     // Try to submit with empty username
     await authPage.waitForHydration();
     await authPage.passwordInput.fill('somepassword');
-    await authPage.submitButton.click();
+    
+    // Wait for button to be enabled or use force click
+    await expect(authPage.submitButton).toBeDisabled();
+    await authPage.submitButton.click({ force: true });
     
     // Should stay on sign-in page (form validation)
     await expect(page).toHaveURL(/sign-in/);
@@ -51,7 +54,10 @@ test.describe('Sign In', () => {
     // Try to submit with empty password
     await authPage.waitForHydration();
     await authPage.usernameInput.fill('someuser');
-    await authPage.submitButton.click();
+    
+    // Wait for button to be enabled or use force click
+    await expect(authPage.submitButton).toBeDisabled();
+    await authPage.submitButton.click({ force: true });
     
     // Should stay on sign-in page (form validation)
     await expect(page).toHaveURL(/sign-in/);

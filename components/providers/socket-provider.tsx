@@ -6,55 +6,80 @@ import React, {
   useEffect,
   useState
 } from "react";
-import { io as ClientIO } from "socket.io-client";
+import { MatrixClient } from "matrix-js-sdk";
+import { getMatrixClient } from "@/lib/matrix-client";
 
-type SocketContextType = {
-  socket: any | null;
+type MatrixContextType = {
+  client: MatrixClient | null;
   isConnected: boolean;
 };
 
-const SocketContext = createContext<SocketContextType>({
-  socket: null,
+const MatrixContext = createContext<MatrixContextType>({
+  client: null,
   isConnected: false
 });
 
-export const useSocket = () => {
-  return useContext(SocketContext);
+export const useMatrix = () => {
+  return useContext(MatrixContext);
 };
 
-export function SocketProvider({
+// Backward compatibility - some components might still use useSocket
+export const useSocket = () => {
+  const { client, isConnected } = useMatrix();
+  return { 
+    socket: client, 
+    isConnected 
+  };
+};
+
+export function MatrixProvider({
   children
 }: {
   children: React.ReactNode;
 }) {
-  const [socket, setSocket] = useState(null);
+  const [client, setClient] = useState<MatrixClient | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socketInstance = new (ClientIO as any)(
-      process.env.NEXT_PUBLIC_SITE_URL!,
-      {
-        path: "/api/socket/io",
-        addTrailingSlash: false
+    const matrixClient = getMatrixClient();
+    
+    if (matrixClient) {
+      setClient(matrixClient);
+      
+      // Set up event handlers for connection status
+      const handleSync = (state: string) => {
+        if (state === "PREPARED" || state === "SYNCING") {
+          setIsConnected(true);
+        } else if (state === "ERROR" || state === "STOPPED") {
+          setIsConnected(false);
+        }
+      };
+
+      const handleClientError = () => {
+        setIsConnected(false);
+      };
+
+      matrixClient.on("sync", handleSync);
+      matrixClient.on("error", handleClientError);
+
+      // Check if client is already synced
+      if (matrixClient.getSyncState() === "SYNCING" || matrixClient.getSyncState() === "PREPARED") {
+        setIsConnected(true);
       }
-    );
 
-    socketInstance.on("connect", () => {
-      setIsConnected(true);
-    });
-
-    socketInstance.on("disconnect", () => {
-      setIsConnected(false);
-    });
-
-    setSocket(socketInstance);
-
-    return () => socketInstance.disconnect();
+      return () => {
+        matrixClient.off("sync", handleSync);
+        matrixClient.off("error", handleClientError);
+      };
+    }
   }, []);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
+    <MatrixContext.Provider value={{ client, isConnected }}>
       {children}
-    </SocketContext.Provider>
+    </MatrixContext.Provider>
   );
 }
+
+// For backward compatibility, export SocketProvider as MatrixProvider
+export const SocketProvider = MatrixProvider;

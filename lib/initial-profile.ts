@@ -1,32 +1,32 @@
-import { currentUser, redirectToSignIn } from "@clerk/nextjs";
-
-import { db } from "@/lib/db";
+import { getMatrixClient } from "@/lib/matrix-client";
+import { redirect } from "next/navigation";
 
 export const initialProfile = async () => {
-  const user = await currentUser();
+  const client = getMatrixClient();
 
-  if (!user) return redirectToSignIn();
+  // If no Matrix client or not logged in, redirect to login
+  if (!client || !client.getUserId()) {
+    return redirect("/login");
+  }
 
-  const profile = await db.profile.findUnique({
-    where: {
-      userId: user.id
-    }
-  });
+  const userId = client.getUserId();
+  if (!userId) {
+    return redirect("/login");
+  }
 
-  if (profile) return profile;
+  // Get user profile from Matrix client
+  const user = client.getUser(userId);
+  
+  // In Matrix, we don't need to create a profile in database - it exists in Matrix
+  const profile = {
+    id: userId,
+    userId: userId,
+    name: user?.displayName || userId.replace(/@|:.*/g, ''), // Extract username from Matrix ID
+    imageUrl: user?.avatarUrl || "",
+    email: "", // Matrix doesn't store email in profile
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
 
-  const name = user.firstName
-    ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
-    : user.id;
-
-  const newProfile = await db.profile.create({
-    data: {
-      userId: user.id,
-      name,
-      imageUrl: user.imageUrl,
-      email: user.emailAddresses[0].emailAddress
-    }
-  });
-
-  return newProfile;
+  return profile;
 };

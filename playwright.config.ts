@@ -31,7 +31,7 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: process.env.TEST_BASE_URL || 'https://dev2.aaroncollins.info',
+    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3000',
     
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -51,12 +51,12 @@ export default defineConfig({
     // Default timeout for actions
     actionTimeout: 15000,
     
-    // Navigation timeout
-    navigationTimeout: 30000,
+    // Navigation timeout - increased for Next.js dev server compilation
+    navigationTimeout: 60000,
   },
   
-  // Global timeout per test
-  timeout: 60000,
+  // Global timeout per test - increased for Next.js dev server compilation
+  timeout: 120000,
   
   // Expect timeout
   expect: {

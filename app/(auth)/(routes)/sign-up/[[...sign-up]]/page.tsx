@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Shield, Lock, Ticket, AlertCircle, Loader2 } from "lucide-react";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
+import { HomeserverToggle } from "@/components/auth/homeserver-toggle";
 
 /**
  * Matrix Registration Page
@@ -20,8 +21,17 @@ import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 function getClientConfig() {
   const publicMode = process.env.NEXT_PUBLIC_MELO_PUBLIC_MODE === 'true';
   const privateMode = !publicMode; // Private is default
-  const allowedHomeserver = process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 
-                            'https://matrix.org';
+  let allowedHomeserver = process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 
+                         'https://matrix.org';
+  
+  // Add validation for homeserver URL
+  try {
+    new URL(allowedHomeserver);
+  } catch {
+    console.warn(`[SignUpPage] Invalid homeserver URL: ${allowedHomeserver}. Falling back to default.`);
+    allowedHomeserver = 'https://matrix.org';
+  }
+  
   return { privateMode, allowedHomeserver, publicMode };
 }
 
@@ -46,6 +56,9 @@ export default function SignUpPage() {
   // Get private mode config
   const config = getClientConfig();
   
+  // Add state for matrix.org toggle 
+  const [useMatrixOrgHomeserver, setUseMatrixOrgHomeserver] = useState(false);
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -61,12 +74,41 @@ export default function SignUpPage() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteValidated, setInviteValidated] = useState(false);
 
+  // Update homeserver and invite fields when toggle is used
+  useEffect(() => {
+    // If toggle is on, switch to matrix.org and reset invite code
+    if (useMatrixOrgHomeserver) {
+      setFormData(prev => ({
+        ...prev,
+        homeserver: "https://matrix.org",
+        inviteCode: "" // Clear invite code when switching
+      }));
+    } else {
+      // If in private mode, use the configured homeserver
+      // Otherwise, reset to previous non-matrix.org homeserver 
+      setFormData(prev => ({
+        ...prev,
+        homeserver: config.privateMode ? config.allowedHomeserver : prev.homeserver === "https://matrix.org" ? "" : prev.homeserver,
+        inviteCode: "" // Clear invite code to be safe
+      }));
+    }
+    // Reset invite validation when toggle changes
+    setInviteValidated(false);
+    setInviteError(null);
+  }, [useMatrixOrgHomeserver, config.privateMode, config.allowedHomeserver]);
+
   // Determine if invite is required based on homeserver
   const isExternalHomeserver = useMemo(() => {
     if (config.publicMode) return false; // No invites needed in public mode
     if (!config.allowedHomeserver) return false;
-    return !homeserversMatch(formData.homeserver, config.allowedHomeserver);
-  }, [config.publicMode, config.allowedHomeserver, formData.homeserver]);
+    
+    // If using matrix.org, it's considered external if configured homeserver is different
+    const homeserverToCheck = useMatrixOrgHomeserver 
+      ? "https://matrix.org"
+      : formData.homeserver;
+    
+    return !homeserversMatch(homeserverToCheck, config.allowedHomeserver);
+  }, [config.publicMode, config.allowedHomeserver, formData.homeserver, useMatrixOrgHomeserver]);
 
   // Show invite field when:
   // - NOT in private mode (private mode locks to configured homeserver)
@@ -283,31 +325,79 @@ export default function SignUpPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Homeserver Input - Hidden in Private Mode */}
+          {/* Homeserver Toggle & Input - Hidden in Private Mode */}
           {!config.privateMode && (
-            <div>
-              <label className="block text-zinc-300 text-sm font-medium mb-2">
-                Homeserver
-              </label>
-              <input
-                type="url"
-                placeholder="https://matrix.org"
-                value={formData.homeserver}
-                onChange={handleInputChange("homeserver")}
-                disabled={isLoading}
-                data-testid="homeserver-input"
-                className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                  formData.homeserver ? 'border-zinc-600 focus:border-indigo-500' : 'border-red-500 focus:border-red-500'
-                }`}
-                required
+            <div className="space-y-3">
+              {/* Matrix.org Quick Toggle */}
+              <div className="flex items-center justify-between p-3 bg-zinc-700/30 rounded border border-zinc-600/50">
+                <label className="text-zinc-300 text-sm font-medium flex items-center gap-2">
+                  <span>Use matrix.org instead</span>
+                </label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox"
+                    checked={useMatrixOrgHomeserver}
+                    onChange={(e) => setUseMatrixOrgHomeserver(e.target.checked)}
+                    disabled={isLoading}
+                    data-testid="matrix-org-toggle"
+                    className="sr-only peer"
+                  />
+                  <div className={`w-11 h-6 rounded-full transition-colors
+                    ${useMatrixOrgHomeserver 
+                      ? 'bg-indigo-500 peer-focus:ring-2 peer-focus:ring-indigo-300' 
+                      : 'bg-zinc-600 peer-focus:ring-2 peer-focus:ring-zinc-500'}
+                    after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                    after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+                    ${useMatrixOrgHomeserver ? 'after:translate-x-full' : ''}`}>
+                  </div>
+                </label>
+              </div>
+
+              {/* Homeserver Toggle */}
+              <HomeserverToggle 
+                configuredHomeserver={config.allowedHomeserver} 
+                onHomeserverChange={(homeserver) => {
+                  // Only allow changing if matrix.org toggle is off
+                  if (!useMatrixOrgHomeserver) {
+                    setFormData(prev => ({
+                      ...prev,
+                      homeserver,
+                      inviteCode: "" // Reset invite code when homeserver changes
+                    }));
+                  }
+                }}
+                disabled={isLoading || useMatrixOrgHomeserver}
               />
-              {/* External homeserver notice */}
-              {isExternalHomeserver && (
-                <p className="text-amber-400 text-xs mt-1 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  External homeserver - invite code required
-                </p>
-              )}
+
+              {/* Homeserver Input */}
+              <div>
+                <label className="block text-zinc-300 text-sm font-medium mb-2">
+                  Homeserver
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://matrix.org"
+                  value={formData.homeserver}
+                  onChange={handleInputChange("homeserver")}
+                  disabled={isLoading || useMatrixOrgHomeserver}
+                  data-testid="homeserver-input"
+                  className={`w-full p-3 rounded bg-[#383a40] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+                    useMatrixOrgHomeserver 
+                      ? 'border-indigo-500/50 bg-zinc-700/50 text-zinc-500 cursor-not-allowed'
+                      : formData.homeserver 
+                        ? 'border-zinc-600 focus:border-indigo-500' 
+                        : 'border-red-500 focus:border-red-500'
+                  }`}
+                  required
+                />
+                {/* External homeserver notice */}
+                {isExternalHomeserver && (
+                  <p className="text-amber-400 text-xs mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    External homeserver - invite code required
+                  </p>
+                )}
+              </div>
             </div>
           )}
 

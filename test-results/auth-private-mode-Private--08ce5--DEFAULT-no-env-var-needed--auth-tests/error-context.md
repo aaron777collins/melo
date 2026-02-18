@@ -4,25 +4,22 @@
 - generic [active] [ref=e1]:
   - generic [ref=e4]:
     - heading "Welcome to Melo" [level=1] [ref=e5]
-    - generic [ref=e6]:
-      - img [ref=e7]
-      - generic [ref=e9]: Private Server
-    - paragraph [ref=e10]: Sign in to dev2.aaroncollins.info
-    - generic [ref=e11]:
-      - generic [ref=e12]:
-        - img [ref=e13]
-        - generic [ref=e16]: dev2.aaroncollins.info
-      - generic [ref=e17]:
-        - generic [ref=e18]: Username
-        - textbox "username" [ref=e19]
-      - generic [ref=e20]:
-        - generic [ref=e21]: Password
-        - textbox "Your password" [ref=e22]
-      - button "Sign In" [ref=e23] [cursor=pointer]
-    - paragraph [ref=e25]:
+    - paragraph [ref=e6]: Sign in to your Matrix account
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: Homeserver
+        - textbox "https://matrix.org" [ref=e10]
+      - generic [ref=e11]:
+        - generic [ref=e12]: Username
+        - textbox "@user:matrix.org or just username" [ref=e13]
+      - generic [ref=e14]:
+        - generic [ref=e15]: Password
+        - textbox "Your password" [ref=e16]
+      - button "Sign In" [disabled] [ref=e17]
+    - paragraph [ref=e19]:
       - text: Don't have an account?
-      - link "Create one here" [ref=e26] [cursor=pointer]:
+      - link "Create one here" [ref=e20] [cursor=pointer]:
         - /url: /sign-up
-    - paragraph [ref=e28]: This is a private Melo instance. Only accounts from the configured homeserver can sign in.
-  - alert [ref=e29]
+    - paragraph [ref=e22]: Melo uses the Matrix protocol for secure, decentralized communication. Use your existing Matrix account or register on any Matrix homeserver.
+  - alert [ref=e23]
 ```

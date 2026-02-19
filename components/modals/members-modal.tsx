@@ -236,35 +236,35 @@ export function MembersModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white text-black overflow-hidden">
+      <DialogContent className="bg-[#313338] text-white overflow-hidden">
         <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-2xl text-center font-bold">
+          <DialogTitle className="text-2xl text-center font-bold text-white">
             Manage Members
           </DialogTitle>
-          <DialogDescription className="text-center text-zinc-500">
+          <DialogDescription className="text-center text-zinc-400">
             {members.length} Members
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="mt-8 max-h-[420px] pr-6">
           {isLoadingMembers ? (
             <div className="flex justify-center py-6">
-              <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+              <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
             </div>
           ) : (
             members.map((member) => (
               <div key={member.id} className="flex items-center gap-x-2 mb-6">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={member.avatarUrl} />
-                  <AvatarFallback className="bg-indigo-500 text-white text-xs">
+                  <AvatarFallback className="bg-[#5865F2] text-white text-xs">
                     {member.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-y-1">
-                  <div className="text-xs font-semibold flex items-center">
+                  <div className="text-xs font-semibold flex items-center text-white">
                     {member.name}
                     {roleIconMap[member.role]}
                   </div>
-                  <p className="text-xs text-zinc-500">{member.id}</p>
+                  <p className="text-xs text-zinc-400">{member.id}</p>
                 </div>
                 {currentUserId !== member.id &&
                   loadingId !== member.id &&
@@ -272,56 +272,62 @@ export function MembersModal() {
                     <div className="ml-auto">
                       <DropdownMenu>
                         <DropdownMenuTrigger>
-                          <MoreVertical className="h-4 w-4 text-zinc-500" />
+                          <MoreVertical className="h-4 w-4 text-zinc-400 hover:text-white" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent side="left">
+                        <DropdownMenuContent side="left" className="bg-[#2B2D31] border-zinc-600">
                           <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="flex items-center">
+                            <DropdownMenuSubTrigger className="flex items-center text-white hover:bg-[#313338] focus:bg-[#313338]">
                               <ShieldQuestion className="w-4 h-4 mr-2" />
                               <span>Role</span>
                             </DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
-                              <DropdownMenuSubContent>
+                              <DropdownMenuSubContent className="bg-[#2B2D31] border-zinc-600">
                                 <DropdownMenuItem
                                   onClick={() => onRoleChange(member.id, "GUEST")}
+                                  className="text-white hover:bg-[#313338] focus:bg-[#313338]"
                                 >
                                   <Shield className="h-4 w-4 mr-2" />
                                   Guest
                                   {member.role === "GUEST" && (
-                                    <Check className="h-4 w-4 ml-auto" />
+                                    <Check className="h-4 w-4 ml-auto text-green-400" />
                                   )}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => onRoleChange(member.id, "MODERATOR")}
+                                  className="text-white hover:bg-[#313338] focus:bg-[#313338]"
                                 >
                                   <ShieldCheck className="h-4 w-4 mr-2" />
                                   Moderator
                                   {member.role === "MODERATOR" && (
-                                    <Check className="h-4 w-4 ml-auto" />
+                                    <Check className="h-4 w-4 ml-auto text-green-400" />
                                   )}
                                 </DropdownMenuItem>
                                 {currentUserPowerLevel >= 100 && (
                                   <DropdownMenuItem
                                     onClick={() => onRoleChange(member.id, "ADMIN")}
+                                    className="text-white hover:bg-[#313338] focus:bg-[#313338]"
                                   >
                                     <ShieldAlert className="h-4 w-4 mr-2" />
                                     Admin
                                     {member.role === "ADMIN" && (
-                                      <Check className="h-4 w-4 ml-auto" />
+                                      <Check className="h-4 w-4 ml-auto text-green-400" />
                                     )}
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                           </DropdownMenuSub>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onKick(member.id)}>
+                          <DropdownMenuSeparator className="bg-zinc-600" />
+                          <DropdownMenuItem 
+                            onClick={() => onKick(member.id)}
+                            className="text-white hover:bg-[#313338] focus:bg-[#313338]"
+                          >
                             <Gavel className="h-4 w-4 mr-2" />
                             Kick
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => onBan(member.id)}
-                            className="text-rose-500"
+                            className="text-red-400 hover:bg-[#313338] focus:bg-[#313338] hover:text-red-300"
                           >
                             <Ban className="h-4 w-4 mr-2" />
                             Ban
@@ -331,7 +337,7 @@ export function MembersModal() {
                     </div>
                   )}
                 {loadingId === member.id && (
-                  <Loader2 className="animate-spin text-zinc-500 ml-auto w-4 h-4" />
+                  <Loader2 className="animate-spin text-zinc-400 ml-auto w-4 h-4" />
                 )}
               </div>
             ))

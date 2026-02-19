@@ -79,14 +79,14 @@ export function InviteModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white text-black p-0 overflow-hidden">
+      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-2xl text-center font-bold">
+          <DialogTitle className="text-2xl text-center font-bold text-white">
             Invite Friends
           </DialogTitle>
         </DialogHeader>
         <div className="p-6">
-          <Label className="uppercase text-xs font-bold text-zinc-500 dark:text-secondary/70">
+          <Label className="uppercase text-xs font-bold text-zinc-300">
             Server invite link
           </Label>
           <div className="flex items-center mt-2 gap-x-2">
@@ -94,9 +94,9 @@ export function InviteModal() {
               readOnly
               disabled={isLoading}
               value={inviteUrl}
-              className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
+              className="bg-[#2B2D31] border-0 focus-visible:ring-0 text-white focus-visible:ring-offset-0"
             />
-            <Button disabled={isLoading} onClick={onCopy} size="icon">
+            <Button disabled={isLoading} onClick={onCopy} size="icon" className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
               {copied ? (
                 <Check className="w-4 h-4" />
               ) : (
@@ -109,7 +109,7 @@ export function InviteModal() {
             onClick={onNew}
             variant="link"
             size="sm"
-            className="text-xs text-zinc-500 mt-4"
+            className="text-xs text-zinc-400 mt-4 hover:text-zinc-300"
           >
             Generate a new link
             <RefreshCw className="w-4 h-4 ml-2" />

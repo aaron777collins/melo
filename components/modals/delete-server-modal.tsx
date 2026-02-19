@@ -97,26 +97,26 @@ export function DeleteServerModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white text-black p-0 overflow-hidden">
+      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-2xl text-center font-bold">
+          <DialogTitle className="text-2xl text-center font-bold text-white">
             Delete Server
           </DialogTitle>
-          <DialogDescription className="text-center text-zinc-500">
+          <DialogDescription className="text-center text-zinc-400">
             Are you sure you want to do this?
             <br />
-            <span className="font-semibold text-indigo-500">
+            <span className="font-semibold text-red-400">
               {serverName}
             </span>{" "}
             will be permanently deleted.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="bg-gray-100 px-6 py-4">
+        <DialogFooter className="bg-[#2B2D31] px-6 py-4">
           <div className="flex items-center justify-between w-full">
-            <Button variant="ghost" disabled={isLoading} onClick={onClose}>
+            <Button variant="ghost" disabled={isLoading} onClick={onClose} className="text-white hover:bg-zinc-700">
               Cancel
             </Button>
-            <Button variant="primary" disabled={isLoading} onClick={onClick}>
+            <Button disabled={isLoading} onClick={onClick} className="bg-red-600 hover:bg-red-700 text-white">
               Confirm
             </Button>
           </div>

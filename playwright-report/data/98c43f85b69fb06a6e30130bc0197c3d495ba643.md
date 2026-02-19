@@ -1,0 +1,124 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic: "404"
+            - generic:
+              - img
+          - generic:
+            - heading [level=1]: Page Not Found
+            - paragraph: The page you're looking for doesn't exist or may have been moved.
+            - generic:
+              - paragraph:
+                - text: "Looking for:"
+                - code: /servers/test-space-id/settings/overview
+          - generic:
+            - generic:
+              - img
+              - textbox:
+                - /placeholder: Search for pages, settings, or features...
+          - generic:
+            - heading [level=2]: Quick Actions
+            - generic:
+              - button:
+                - img
+                - generic:
+                  - generic: Go Home
+                  - generic: Return to the main dashboard
+              - button:
+                - img
+                - generic:
+                  - generic: Browse Chats
+                  - generic: View your direct messages and channels
+              - button:
+                - img
+                - generic:
+                  - generic: Find Servers
+                  - generic: Explore and join Matrix servers
+              - button:
+                - img
+                - generic:
+                  - generic: Settings
+                  - generic: Manage your account and preferences
+          - generic:
+            - button:
+              - img
+              - text: Go Back
+            - button:
+              - img
+              - text: Home
+      - generic:
+        - generic:
+          - heading [level=3]: Helpful Links
+          - generic:
+            - button:
+              - img
+              - generic:
+                - paragraph: Create a Server
+                - paragraph: Start your own Matrix space
+            - button:
+              - img
+              - generic:
+                - paragraph: Join Server with Invite
+                - paragraph: Enter an invite code to join a server
+            - button:
+              - img
+              - generic:
+                - paragraph: Privacy Settings
+                - paragraph: Control your privacy and security
+            - button:
+              - img
+              - generic:
+                - paragraph: Appearance
+                - paragraph: Customize themes and display options
+            - button:
+              - img
+              - generic:
+                - paragraph: Help Center
+                - paragraph: Get help using Melo
+            - button:
+              - img
+              - generic:
+                - paragraph: Keyboard Shortcuts
+                - paragraph: Learn useful keyboard shortcuts
+      - generic:
+        - paragraph:
+          - text: If you believe this is an error, please
+          - button: report it
+          - text: or contact support.
+  - alert
+  - dialog "Welcome to Melo" [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - heading "Welcome to Melo" [level=2] [ref=e5]:
+          - img [ref=e6]
+          - generic [ref=e8]: Welcome to Melo
+        - button [active] [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+      - paragraph [ref=e13]: Let's get you started with a quick tour
+      - generic [ref=e17]:
+        - generic [ref=e18]: Step 1 of 5
+        - generic [ref=e19]: 20% complete
+    - generic [ref=e21]:
+      - img [ref=e23]
+      - generic [ref=e25]:
+        - heading "Welcome to Melo, friend! 🎉" [level=3] [ref=e26]
+        - paragraph [ref=e27]: Melo is your decentralized chat platform powered by Matrix. Let's take a quick tour of the essential features to get you started.
+      - paragraph [ref=e29]:
+        - text: 💡
+        - strong [ref=e30]: "Pro tip:"
+        - text: You can skip this tutorial anytime, but we recommend going through it to make the most of Melo!
+    - generic [ref=e31]:
+      - button "Skip Tutorial" [ref=e33] [cursor=pointer]
+      - button "Next" [ref=e35] [cursor=pointer]:
+        - text: Next
+        - img [ref=e36]
+    - button "Close" [ref=e38] [cursor=pointer]:
+      - img [ref=e39]
+      - generic [ref=e42]: Close
+```

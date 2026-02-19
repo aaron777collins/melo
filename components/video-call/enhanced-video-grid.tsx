@@ -9,7 +9,7 @@ import {
   useConnectionState,
 } from "@livekit/components-react";
 import { Track as LKTrack, Participant } from "livekit-client";
-import { Maximize2, Minimize2, Grid3x3, Users, VideoOff } from "lucide-react";
+import { Maximize2, Minimize2, Grid3X3, Users, VideoOff } from "lucide-react";
 
 import { ActionTooltip } from "@/components/action-tooltip";
 import { EnhancedVideoTile } from "./enhanced-video-tile";
@@ -285,7 +285,7 @@ export function EnhancedVideoGrid({
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
-                <Grid3x3 className="w-4 h-4" />
+                <Grid3X3 className="w-4 h-4" />
               </button>
             </ActionTooltip>
 

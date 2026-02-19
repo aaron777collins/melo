@@ -25,6 +25,7 @@ import {
   ServerPage,
   ChatPage 
 } from '../fixtures';
+import { bypassAuthenticationDirectly, isAuthBypassActive } from '../helpers/auth-bypass';
 
 /**
  * Responsive breakpoint definitions matching Discord patterns
@@ -101,10 +102,15 @@ test.describe('Responsive Behavior Tests', () => {
 
       // Test authenticated state responsive behavior
       try {
-        // Sign in to test authenticated layouts
-        await page.goto('/sign-in');
-        await authPage.signIn(TEST_CONFIG.testUser.username, TEST_CONFIG.testUser.password);
-        await waitForMatrixSync(page);
+        // Use authentication bypass due to Matrix backend 502 errors
+        console.log('   🔧 Setting up authentication bypass for responsive testing...');
+        await bypassAuthenticationDirectly(page);
+        
+        // Verify authentication bypass is active
+        const bypassActive = await isAuthBypassActive(page);
+        if (!bypassActive) {
+          throw new Error('Authentication bypass failed to activate');
+        }
         
         // Navigate to main app interface
         await page.goto('/channels/@me', { waitUntil: 'networkidle' });

@@ -1,27 +1,36 @@
 {
-  "cookies": [
-    {
-      "name": "matrix_session",
-      "value": "eyJ1c2VySWQiOiJAc29waGlldGVzdDpkZXYyLmFhcm9uY29sbGlucy5pbmZvIiwiYWNjZXNzVG9rZW4iOiJzeXRfYzI5d2FHbGxkR1Z6ZEFfQ2FidlB6RGdvdm16VWRIWkpndlNfMkZyVkJEIiwiZGV2aWNlSWQiOiJaRE5XWURQTlRaIiwiaG9tZXNlcnZlclVybCI6Imh0dHBzOi8vZGV2Mi5hYXJvbmNvbGxpbnMuaW5mby8iLCJjcmVhdGVkQXQiOiIyMDI2LTAyLTE5VDE2OjQwOjM5Ljg5OVoiLCJzZXNzaW9uSWQiOiI2NTZjMWZlYy04YTI0LTQ3ZjAtODQ2YS1lZTk1Nzk4YzNjZDYifQ%3D%3D",
-      "domain": "dev2.aaroncollins.info",
-      "path": "/",
-      "expires": 1774111239.969509,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Strict"
-    }
-  ],
+  "cookies": [],
   "origins": [
     {
       "origin": "https://dev2.aaroncollins.info",
       "localStorage": [
         {
-          "name": "mxjssdk_memory_filter_FILTER_SYNC_@sophietest:dev2.aaroncollins.info",
-          "value": "0"
+          "name": "mx_device_id",
+          "value": "E2E_MOCK_DEVICE_F17D6"
         },
         {
-          "name": "melo-onboarding-wizard-state",
-          "value": "{\"version\":\"1.0\",\"state\":{\"currentStep\":0,\"isCompleted\":false,\"profileData\":{\"displayName\":\"\"},\"hasCompletedFirstChat\":false,\"steps\":[{\"id\":\"welcome\",\"title\":\"Welcome to Melo\",\"description\":\"Learn about Melo and Matrix\",\"isComplete\":false},{\"id\":\"profile-setup\",\"title\":\"Set up your profile\",\"description\":\"Add your name and avatar\",\"isComplete\":false},{\"id\":\"server-join\",\"title\":\"Join a server\",\"description\":\"Find and join your first community\",\"isComplete\":false,\"isOptional\":true},{\"id\":\"first-chat\",\"title\":\"Send your first message\",\"description\":\"Learn the basics of chatting\",\"isComplete\":false}]},\"savedAt\":\"2026-02-19T16:40:39.979Z\"}"
+          "name": "mx_hs_url",
+          "value": "https://dev2.aaroncollins.info"
+        },
+        {
+          "name": "melo-accessibility-settings",
+          "value": "{\"reducedMotion\":false,\"highContrast\":false,\"screenReaderOptimizations\":false,\"enhancedFocus\":true,\"announceNavigation\":true,\"announceMessages\":false}"
+        },
+        {
+          "name": "mx_display_name",
+          "value": "E2E Test User"
+        },
+        {
+          "name": "mx_access_token",
+          "value": "e2e_mock_access_token_1771535950166"
+        },
+        {
+          "name": "e2e_auth_bypass",
+          "value": "true"
+        },
+        {
+          "name": "mx_user_id",
+          "value": "@sophietest:dev2.aaroncollins.info"
         }
       ]
     }

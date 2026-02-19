@@ -18,6 +18,7 @@ import {
   waitForAppReady,
   waitForMatrixSync
 } from '../fixtures';
+import { bypassAuthenticationDirectly, isAuthBypassActive } from '../helpers/auth-bypass';
 
 // =============================================================================
 // Test Configuration & Setup
@@ -31,18 +32,21 @@ test.describe('Theme Toggle Verification', () => {
     authPage = new AuthPage(page);
     navigationPage = new NavigationPage(page);
 
-    // Navigate to the application and ensure it's ready
+    // Set up authentication bypass for theme testing
+    console.log('🎨 Setting up authentication bypass for theme testing...');
+    await bypassAuthenticationDirectly(page);
+    
+    // Verify authentication bypass is active
+    const bypassActive = await isAuthBypassActive(page);
+    if (bypassActive) {
+      console.log('✅ Authentication bypass active - theme tests can proceed');
+    } else {
+      console.log('⚠️ Authentication bypass not active - tests may fail');
+    }
+    
+    // Navigate to the main application
     await page.goto('/');
     await waitForAppReady(page);
-    
-    // Authenticate if needed (sign-in page should redirect)
-    const currentUrl = page.url();
-    if (currentUrl.includes('/sign-in') || currentUrl.includes('/setup')) {
-      // Navigate directly to main app or handle authentication
-      // For theme testing, we can work with public areas or authentication flow
-      await page.goto('/sign-in');
-      await waitForAppReady(page);
-    }
   });
 
   // =============================================================================

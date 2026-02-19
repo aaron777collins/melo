@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth Test</title>
+</head>
+<body>
+    <h1>MELO Auth Debug Test</h1>
+    <div id="status">Testing...</div>
+    <script>
+        async function testAuth() {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                statusDiv.innerHTML += '<br>Testing session validation...';
+                
+                // Test the session validation directly
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'sophietest',
+                        password: 'SophieTest2026!',
+                        homeserverUrl: 'https://dev2.aaroncollins.info'
+                    })
+                });
+                
+                const result = await response.json();
+                statusDiv.innerHTML += '<br>Login result: ' + JSON.stringify(result, null, 2);
+                
+                if (result.success) {
+                    statusDiv.innerHTML += '<br>✅ Login successful!';
+                } else {
+                    statusDiv.innerHTML += '<br>❌ Login failed: ' + result.error?.message;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML += '<br>❌ Error: ' + error.message;
+            }
+        }
+        
+        testAuth();
+    </script>
+</body>
+</html>

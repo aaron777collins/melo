@@ -12,7 +12,7 @@ import {
   loginWithPassword,
   logout as matrixLogout,
   register as matrixRegister,
-  validateSession as matrixValidateSession,
+  validateAccessToken as matrixValidateAccessToken,
   MatrixAuthError,
 } from "@/lib/matrix/auth";
 import {
@@ -64,7 +64,7 @@ export async function validateCurrentSession(): Promise<
     }
 
     // Validate the access token with the homeserver
-    const user = await matrixValidateSession(session.accessToken, {
+    const user = await matrixValidateAccessToken(session.accessToken, {
       homeserverUrl: session.homeserverUrl,
       includeProfile: true,
     });
@@ -129,7 +129,7 @@ export async function loginAction(
     await setSessionCookie(session);
 
     // Get user profile
-    const user = await matrixValidateSession(session.accessToken, {
+    const user = await matrixValidateAccessToken(session.accessToken, {
       homeserverUrl: session.homeserverUrl,
       includeProfile: true,
     });
@@ -182,7 +182,7 @@ export async function registerAction(
     await setSessionCookie(session);
 
     // Get user profile (may be empty for new users)
-    const user = await matrixValidateSession(session.accessToken, {
+    const user = await matrixValidateAccessToken(session.accessToken, {
       homeserverUrl: session.homeserverUrl,
       includeProfile: true,
     });

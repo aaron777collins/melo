@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { loginWithPassword, validateSession as matrixValidateSession, MatrixAuthError } from "@/lib/matrix/auth";
+import { loginWithPassword, validateAccessToken as matrixValidateAccessToken, MatrixAuthError } from "@/lib/matrix/auth";
 import { setSessionCookie, setTempSessionCookie } from "@/lib/matrix/cookies";
 import { createClient } from "@/lib/matrix/matrix-sdk-exports";
 import { isLoginAllowedWithInvite, getAccessControlConfig, markInviteUsedServerSide, extractDomain } from "@/lib/matrix/access-control";
@@ -201,7 +201,7 @@ export async function POST(req: Request) {
 
     // Get user profile
     console.log("[AUTH_LOGIN] Validating session with homeserver:", session.homeserverUrl);
-    const user = await matrixValidateSession(session.accessToken, {
+    const user = await matrixValidateAccessToken(session.accessToken, {
       homeserverUrl: session.homeserverUrl,
       includeProfile: true,
     });

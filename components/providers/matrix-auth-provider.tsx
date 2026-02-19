@@ -242,39 +242,60 @@ export function MatrixAuthProvider({
    */
   useEffect(() => {
     let isMounted = true;
+    let timeoutId: NodeJS.Timeout;
 
     async function validateSession() {
+      console.log('[MatrixAuthProvider] Starting session validation...');
+      setIsLoading(true);
+      
       try {
-        const result = await validateCurrentSession();
+        // Add timeout to prevent hanging forever
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error('Session validation timed out after 10 seconds'));
+          }, 10000);
+        });
+
+        const validationPromise = validateCurrentSession();
+        const result = await Promise.race([validationPromise, timeoutPromise]);
+        
+        clearTimeout(timeoutId);
+        console.log('[MatrixAuthProvider] Session validation result:', result);
 
         if (!isMounted) return;
 
         if (result.success) {
           if (result.data) {
+            console.log('[MatrixAuthProvider] Valid session found, setting user:', result.data.user.userId);
             setUser(result.data.user);
             setSession(result.data.session);
             onAuthChange?.(result.data.user);
           } else {
+            console.log('[MatrixAuthProvider] No session found, user not authenticated');
             setUser(null);
             setSession(null);
             onAuthChange?.(null);
           }
         } else {
-          setError(result.error.message);
+          console.log('[MatrixAuthProvider] Session validation failed:', result.error);
           setUser(null);
           setSession(null);
           onAuthChange?.(null);
         }
       } catch (err) {
+        console.error('[MatrixAuthProvider] Session validation error:', err);
         if (!isMounted) return;
-        setError(
-          err instanceof Error ? err.message : "Failed to validate session"
-        );
+        if (err instanceof Error && err.message.includes('timed out')) {
+          console.log('[MatrixAuthProvider] Session validation timed out, proceeding without session');
+          // Don't set error for timeout, just proceed without session
+        }
         setUser(null);
         setSession(null);
         onAuthChange?.(null);
       } finally {
+        if (timeoutId) clearTimeout(timeoutId);
         if (isMounted) {
+          console.log('[MatrixAuthProvider] Session validation complete, setting loading to false');
           setIsLoading(false);
         }
       }
@@ -284,6 +305,7 @@ export function MatrixAuthProvider({
 
     return () => {
       isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [onAuthChange]);
 

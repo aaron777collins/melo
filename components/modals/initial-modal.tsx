@@ -240,7 +240,7 @@ export function InitialModal() {
       // Show error state with retry/skip options
       return (
         <Dialog open={isOpen} onOpenChange={() => {}}>
-          <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
+          <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
             <div className="flex flex-col items-center justify-center py-12 px-6">
               <div className="h-8 w-8 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mb-4">
                 <X className="h-4 w-4" />
@@ -254,7 +254,7 @@ export function InitialModal() {
               <div className="flex gap-3">
                 <Button
                   onClick={handleRetryConnection}
-                  className="bg-indigo-500 hover:bg-indigo-600 text-white"
+                  className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
                 >
                   Retry Connection
                 </Button>
@@ -275,9 +275,9 @@ export function InitialModal() {
     // Normal loading state
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
-        <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
+        <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
           <div className="flex flex-col items-center justify-center py-12 px-6">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-4" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#5865F2] mb-4" />
             <h2 className="text-xl font-semibold text-white mb-2">
               Connecting to Matrix...
             </h2>
@@ -299,7 +299,7 @@ export function InitialModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
+      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
         <button
           onClick={handleClose}
           className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground text-zinc-400 hover:text-white"
@@ -325,7 +325,7 @@ export function InitialModal() {
               )}
               
               {/* Server Icon Upload */}
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center text-center">
                 <FormField
                   control={form.control}
                   name="imageUrl"
@@ -353,23 +353,23 @@ export function InitialModal() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="uppercase text-xs font-bold text-zinc-400">
+                    <FormLabel className="uppercase text-xs font-bold text-zinc-300">
                       Server Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         disabled={isLoading}
-                        placeholder="My Awesome Server"
-                        className="bg-[#202225] border-0 focus-visible:ring-0 text-white placeholder-zinc-500 focus-visible:ring-offset-0"
+                        placeholder="Enter server name"
+                        className="bg-[#2B2D31] border-0 focus-visible:ring-0 text-white focus-visible:ring-offset-0 placeholder:text-zinc-500"
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
             </div>
-            <DialogFooter className="bg-[#2f3136] px-6 py-4">
+            <DialogFooter className="bg-[#2B2D31] px-6 py-4">
               <Button
                 type="button"
                 variant="ghost"
@@ -378,7 +378,10 @@ export function InitialModal() {
               >
                 Skip for now
               </Button>
-              <Button disabled={isLoading} variant="primary">
+              <Button 
+                disabled={isLoading} 
+                className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+              >
                 {isLoading ? "Creating..." : "Create"}
               </Button>
             </DialogFooter>

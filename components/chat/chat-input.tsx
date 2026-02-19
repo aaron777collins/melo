@@ -259,7 +259,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
               <FormItem>
                 <FormControl>
                   <div className={`relative p-4 pb-6 ${effectivePreferences.enhancedFocus ? 'keyboard-navigable' : ''}`}>
-                    {/* File attachment button - optimized for mobile touch */}
+                    {/* File attachment button - Discord-clone exact styling on desktop, mobile-optimized touch targets */}
                     <button
                       id={attachmentButtonId}
                       type="button"
@@ -274,21 +274,21 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         announce("File attachment dialog opened", 'polite');
                       }}
                       disabled={isLoading}
-                      className="absolute top-5 left-5 md:top-7 md:left-8 h-[44px] w-[44px] md:h-[32px] md:w-[32px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 active:bg-zinc-700 dark:active:bg-zinc-200 transition-colors rounded-full p-2 md:p-1 flex items-center justify-center focus-enhanced"
+                      className="absolute top-5 left-5 md:top-7 md:left-8 h-[44px] w-[44px] md:h-[24px] md:w-[24px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 active:bg-zinc-700 dark:active:bg-zinc-200 transition rounded-full p-2 md:p-1 flex items-center justify-center focus-enhanced"
                       aria-label="Attach file to message"
                       title="Attach file"
                       style={{ touchAction: 'manipulation' }}
                     >
-                      <Plus className="h-5 w-5 md:h-4 md:w-4 text-white dark:text-[#36393f]" aria-hidden="true" />
+                      <Plus className="h-5 w-5 md:h-4 md:w-4 text-white dark:text-[#313338]" aria-hidden="true" />
                     </button>
                     
-                    {/* Main input - optimized for mobile */}
+                    {/* Main input - Discord-clone exact styling on desktop (px-14 py-6), mobile-optimized */}
                     <Input
                       id={inputId}
                       ref={inputRef}
                       placeholder={placeholder}
                       disabled={isLoading || (isMatrixMode && !isReady)}
-                      className={`pl-[60px] pr-[140px] md:pl-14 md:pr-20 py-4 md:py-6 text-base md:text-sm bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200 rounded-lg ${effectivePreferences.highContrast ? 'high-contrast-input' : ''}`}
+                      className={`px-14 py-6 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200 ${effectivePreferences.highContrast ? 'high-contrast-input' : ''}`}
                       value={field.value}
                       onChange={handleInputChange}
                       onKeyPress={handleKeyPress}
@@ -309,8 +309,8 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                       Press Enter to send message. Use @ for mentions, : for emojis. Use Tab to navigate to other controls.
                     </div>
                     
-                    {/* Right side controls - mobile optimized */}
-                    <div className="absolute top-4 right-3 md:top-7 md:right-8 flex items-center gap-2 md:gap-2" role="toolbar" aria-label="Message formatting tools">
+                    {/* Right side controls - Discord-clone exact positioning (top-7 right-8) */}
+                    <div className="absolute top-7 right-8 flex items-center gap-2" role="toolbar" aria-label="Message formatting tools">
                       {/* GIF picker button */}
                       <Button
                         id={gifButtonId}

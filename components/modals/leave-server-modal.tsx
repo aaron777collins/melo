@@ -1,44 +1,102 @@
 "use client";
 
-import React, { useCallback, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
-import { useSecurityPrompt } from "@/hooks/use-security-prompt";
+import { getClient } from "@/lib/matrix/client";
 
 export function LeaveServerModal() {
   const { isOpen, onClose, type, data } = useModal();
   const router = useRouter();
-  const { prompts } = useSecurityPrompt();
 
   const isModalOpen = isOpen && type === "leaveServer";
-  const { server } = data;
+  const { server, space } = data;
 
-  const handleLeaveServer = useCallback(async () => {
-    if (!server) return false;
+  // Get name from either server or space
+  const serverName = server?.name || space?.name || "this server";
+  const serverId = server?.id || space?.id;
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onClick = async () => {
+    if (!serverId) return;
+    
     try {
-      await axios.patch(`/api/servers/${server.id}/leave`);
+      setIsLoading(true);
+
+      const client = getClient();
+      if (!client) {
+        throw new Error("Matrix client not initialized");
+      }
+
+      const decodedServerId = decodeURIComponent(serverId);
       
+      // Leave the Matrix space/room
+      await client.leave(decodedServerId);
+
+      // Also leave all child rooms if this is a space
+      const room = client.getRoom(decodedServerId);
+      if (room) {
+        const spaceChildEvents = room.currentState.getStateEvents("m.space.child");
+        for (const event of spaceChildEvents) {
+          const childRoomId = event.getStateKey();
+          if (childRoomId) {
+            try {
+              await client.leave(childRoomId);
+            } catch (e) {
+              // Ignore errors leaving child rooms
+              console.warn("Failed to leave child room:", childRoomId, e);
+            }
+          }
+        }
+      }
+
       onClose();
       router.refresh();
       router.push("/");
-      return true;
     } catch (error) {
-      console.error("Failed to leave server:", error);
-      return false;
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [server, onClose, router]);
+  };
 
-  // Trigger security prompt when modal should open
-  useEffect(() => {
-    if (isModalOpen && server) {
-      prompts.leaveServer(server.name, handleLeaveServer);
-      onClose(); // Close the old modal immediately
-    }
-  }, [isModalOpen, server, prompts, handleLeaveServer, onClose]);
-
-  // Return empty component as security prompt handles the UI
-  return null;
+  return (
+    <Dialog open={isModalOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-white text-black p-0 overflow-hidden">
+        <DialogHeader className="pt-8 px-6">
+          <DialogTitle className="text-2xl text-center font-bold">
+            Leave Server
+          </DialogTitle>
+          <DialogDescription className="text-center text-zinc-500">
+            Are you sure? You want to leave{" "}
+            <span className="font-semibold text-indigo-500">
+              {serverName}
+            </span>
+            ?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="bg-gray-100 px-6 py-4">
+          <div className="flex items-center justify-between w-full">
+            <Button variant="ghost" disabled={isLoading} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" disabled={isLoading} onClick={onClick}>
+              Confirm
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

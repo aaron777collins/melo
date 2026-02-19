@@ -1,182 +1,119 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Copy, QrCode, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
+import React, { useState, useEffect } from "react";
+import { Check, Copy, RefreshCw } from "lucide-react";
 
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 import { useModal } from "@/hooks/use-modal-store";
-import { useMatrix } from "@/components/providers/matrix-provider";
+import { getClient } from "@/lib/matrix/client";
 import { createInviteService, InviteLink } from "@/lib/matrix/invites";
 
 export function InviteModal() {
-  const { isOpen, onClose, type, data } = useModal();
-  const { client } = useMatrix();
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const { isOpen, onOpen, onClose, type, data } = useModal();
+  const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [inviteLink, setInviteLink] = useState<InviteLink | null>(null);
 
   const isModalOpen = isOpen && type === "invite";
-  const { space, inviteUrl } = data;
+  const { server, space, inviteUrl: existingInviteUrl } = data;
 
-  // Generate a quick invite when modal opens if no invite URL provided
+  // Get name and ID from either server or space
+  const serverName = server?.name || space?.name || "this server";
+  const serverId = server?.id || space?.id;
+
+  // Generate invite when modal opens
   useEffect(() => {
-    if (isModalOpen && client && space && !inviteUrl) {
-      generateQuickInvite();
+    if (isModalOpen && serverId && !existingInviteUrl) {
+      generateInvite();
     }
-  }, [isModalOpen, client, space, inviteUrl]);
+  }, [isModalOpen, serverId, existingInviteUrl]);
 
-  const generateQuickInvite = async () => {
-    if (!client || !space) return;
+  const generateInvite = async () => {
+    if (!serverId) return;
+    
+    const client = getClient();
+    if (!client) return;
 
+    setIsLoading(true);
     try {
       const inviteService = createInviteService(client);
-      const result = await inviteService.createInvite(space.id);
+      const decodedServerId = decodeURIComponent(serverId);
+      const result = await inviteService.createInvite(decodedServerId);
       
       if (result.success && result.invite) {
-        // Generate QR code for the invite
-        await generateQRCode(result.invite);
+        setInviteLink(result.invite);
       }
     } catch (error) {
-      console.error("Failed to generate quick invite:", error);
-    }
-  };
-
-  const generateQRCode = async (invite: InviteLink) => {
-    if (!client) return;
-    
-    setIsGeneratingQR(true);
-    try {
-      const inviteService = createInviteService(client);
-      const qrResult = await inviteService.generateQRCode(invite);
-      
-      if (qrResult.success) {
-        setQrCodeUrl(qrResult.dataUrl || null);
-      }
-    } catch (error) {
-      console.error("Failed to generate QR code:", error);
+      console.error("Failed to generate invite:", error);
     } finally {
-      setIsGeneratingQR(false);
+      setIsLoading(false);
     }
   };
 
-  const handleCopy = async () => {
-    const url = inviteUrl || (space ? `${window.location.origin}/rooms/${space.id}` : "");
-    if (!url) return;
+  // Compute the invite URL
+  const inviteUrl = existingInviteUrl || 
+    (inviteLink?.url) || 
+    (serverId ? `${typeof window !== 'undefined' ? window.location.origin : ''}/invite/${encodeURIComponent(serverId)}` : "");
 
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Invite link copied to clipboard!");
-    } catch {
-      toast.error("Failed to copy invite link");
-    }
+  const onCopy = () => {
+    navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 1000);
   };
 
-  const handleExternalLink = () => {
-    const url = inviteUrl || (space ? `${window.location.origin}/rooms/${space.id}` : "");
-    if (url) {
-      window.open(url, '_blank');
-    }
+  const onNew = async () => {
+    await generateInvite();
   };
-
-  const handleClose = () => {
-    setQrCodeUrl(null);
-    onClose();
-  };
-
-  const displayUrl = inviteUrl || (space ? `${window.location.origin}/rooms/${space.id}` : "");
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Invite to {space?.name}</DialogTitle>
-          <DialogDescription>
-            Share this link to let people join your space.
-          </DialogDescription>
+    <Dialog open={isModalOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-white text-black p-0 overflow-hidden">
+        <DialogHeader className="pt-8 px-6">
+          <DialogTitle className="text-2xl text-center font-bold">
+            Invite Friends
+          </DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Invite Link</Label>
-            <div className="flex gap-2">
-              <Input
-                value={displayUrl}
-                readOnly
-                className="font-mono text-sm"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopy}
-                className="shrink-0"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExternalLink}
-                className="shrink-0"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {qrCodeUrl && (
-            <>
-              <Separator />
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <QrCode className="h-4 w-4" />
-                  QR Code
-                </Label>
-                <div className="flex justify-center p-4 bg-white rounded-lg">
-                  <img
-                    src={qrCodeUrl}
-                    alt="Invite QR Code"
-                    className="w-48 h-48"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  Scan with a phone to join {space?.name}
-                </p>
-              </div>
-            </>
-          )}
-
-          {!qrCodeUrl && !isGeneratingQR && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (space) {
-                  generateQuickInvite();
-                }
-              }}
-              className="w-full"
-            >
-              <QrCode className="h-4 w-4 mr-2" />
-              Generate QR Code
+        <div className="p-6">
+          <Label className="uppercase text-xs font-bold text-zinc-500 dark:text-secondary/70">
+            Server invite link
+          </Label>
+          <div className="flex items-center mt-2 gap-x-2">
+            <Input
+              readOnly
+              disabled={isLoading}
+              value={inviteUrl}
+              className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
+            />
+            <Button disabled={isLoading} onClick={onCopy} size="icon">
+              {copied ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </Button>
-          )}
-
-          {isGeneratingQR && (
-            <div className="text-center text-sm text-muted-foreground">
-              Generating QR code...
-            </div>
-          )}
+          </div>
+          <Button
+            disabled={isLoading}
+            onClick={onNew}
+            variant="link"
+            size="sm"
+            className="text-xs text-zinc-500 mt-4"
+          >
+            Generate a new link
+            <RefreshCw className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

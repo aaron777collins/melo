@@ -1,44 +1,127 @@
 "use client";
 
-import React, { useCallback, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
-import { useSecurityPrompt } from "@/hooks/use-security-prompt";
+import { getClient } from "@/lib/matrix/client";
 
 export function DeleteServerModal() {
   const { isOpen, onClose, type, data } = useModal();
   const router = useRouter();
-  const { prompts } = useSecurityPrompt();
 
   const isModalOpen = isOpen && type === "deleteServer";
-  const { server } = data;
+  const { server, space } = data;
 
-  const handleDeleteServer = useCallback(async () => {
-    if (!server) return false;
+  // Get name from either server or space
+  const serverName = server?.name || space?.name || "this server";
+  const serverId = server?.id || space?.id;
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onClick = async () => {
+    if (!serverId) return;
+    
     try {
-      await axios.delete(`/api/servers/${server.id}`);
+      setIsLoading(true);
+
+      const client = getClient();
+      if (!client) {
+        throw new Error("Matrix client not initialized");
+      }
+
+      const decodedServerId = decodeURIComponent(serverId);
       
+      // For Matrix, we need to remove all users and mark the room as "dead"
+      // Since we can't truly delete a Matrix room, we'll leave it
+      // First, kick all other members if we have permission
+      const room = client.getRoom(decodedServerId);
+      if (room) {
+        const userId = client.getUserId();
+        
+        // Get all child rooms and leave/delete them too
+        const spaceChildEvents = room.currentState.getStateEvents("m.space.child");
+        for (const event of spaceChildEvents) {
+          const childRoomId = event.getStateKey();
+          if (childRoomId) {
+            try {
+              // Remove child from space first
+              await client.sendStateEvent(
+                decodedServerId,
+                "m.space.child" as any,
+                {},
+                childRoomId
+              );
+              // Then leave the child room
+              await client.leave(childRoomId);
+            } catch (e) {
+              console.warn("Failed to remove child room:", childRoomId, e);
+            }
+          }
+        }
+
+        // Try to kick all other members (requires admin power level)
+        const members = room.getJoinedMembers();
+        for (const member of members) {
+          if (member.userId !== userId) {
+            try {
+              await client.kick(decodedServerId, member.userId, "Server deleted");
+            } catch (e) {
+              // Ignore if we can't kick
+            }
+          }
+        }
+      }
+
+      // Finally leave the space ourselves
+      await client.leave(decodedServerId);
+
       onClose();
       router.refresh();
       router.push("/");
-      return true;
     } catch (error) {
-      console.error("Failed to delete server:", error);
-      return false;
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [server, onClose, router]);
+  };
 
-  // Trigger security prompt when modal should open
-  useEffect(() => {
-    if (isModalOpen && server) {
-      prompts.deleteServer(server.name, handleDeleteServer);
-      onClose(); // Close the old modal immediately
-    }
-  }, [isModalOpen, server, prompts, handleDeleteServer, onClose]);
-
-  // Return empty component as security prompt handles the UI
-  return null;
+  return (
+    <Dialog open={isModalOpen} onOpenChange={onClose}>
+      <DialogContent className="bg-white text-black p-0 overflow-hidden">
+        <DialogHeader className="pt-8 px-6">
+          <DialogTitle className="text-2xl text-center font-bold">
+            Delete Server
+          </DialogTitle>
+          <DialogDescription className="text-center text-zinc-500">
+            Are you sure you want to do this?
+            <br />
+            <span className="font-semibold text-indigo-500">
+              {serverName}
+            </span>{" "}
+            will be permanently deleted.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="bg-gray-100 px-6 py-4">
+          <div className="flex items-center justify-between w-full">
+            <Button variant="ghost" disabled={isLoading} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" disabled={isLoading} onClick={onClick}>
+              Confirm
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

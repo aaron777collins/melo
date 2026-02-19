@@ -35,6 +35,7 @@ import { ServerDiscoveryModal } from "@/components/modals/server-discovery-modal
 import { RecoveryKeyModal } from "@/components/modals/recovery-key-modal";
 import { IncomingCallModal } from "@/components/modals/incoming-call-modal";
 import { VoiceChannelSettingsModal } from "@/components/modals/voice-channel-settings-modal";
+import { MessageFileModal } from "@/components/modals/message-file-modal";
 
 export function ModalProvider() {
   const [isMounted, setIsMounted] = useState(false);
@@ -97,6 +98,9 @@ export function ModalProvider() {
       <RecoveryKeyModal />
       <IncomingCallModal />
       <VoiceChannelSettingsModal />
+      
+      {/* File upload modal */}
+      <MessageFileModal />
     </>
   );
 }

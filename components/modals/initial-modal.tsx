@@ -40,6 +40,8 @@ export function InitialModal() {
   const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(true); // Open by default when this component is rendered
   const [error, setError] = useState<string | null>(null);
+  const [connectionTimedOut, setConnectionTimedOut] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const router = useRouter();
   const { session } = useMatrixAuth();
   const { isReady, syncState, cryptoState } = useMatrix();
@@ -192,11 +194,85 @@ export function InitialModal() {
     setIsMounted(true);
   }, []);
 
+  // Add timeout for Matrix connection
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    if (!isReady && !connectionTimedOut) {
+      // Set a 30-second timeout for Matrix connection
+      const id = setTimeout(() => {
+        setConnectionTimedOut(true);
+      }, 30000);
+      
+      setTimeoutId(id);
+      
+      return () => {
+        clearTimeout(id);
+        setTimeoutId(null);
+      };
+    } else if (isReady && timeoutId) {
+      // Clear timeout if connection succeeds
+      clearTimeout(timeoutId);
+      setTimeoutId(null);
+      setConnectionTimedOut(false);
+    }
+  }, [isMounted, isReady, connectionTimedOut, timeoutId]);
+
   if (!isMounted) return null;
+
+  const handleRetryConnection = () => {
+    setConnectionTimedOut(false);
+    setError(null);
+    // The Matrix provider will automatically retry when the component re-mounts
+    window.location.reload();
+  };
+
+  const handleSkipConnection = () => {
+    setIsOpen(false);
+    // Navigate to DMs without creating a server
+    router.push("/channels/@me");
+  };
 
   // Show loading state while Matrix client initializes
   // This prevents "breaks after login" by ensuring the client is ready
   if (!isReady) {
+    if (connectionTimedOut) {
+      // Show error state with retry/skip options
+      return (
+        <Dialog open={isOpen} onOpenChange={() => {}}>
+          <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
+            <div className="flex flex-col items-center justify-center py-12 px-6">
+              <div className="h-8 w-8 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mb-4">
+                <X className="h-4 w-4" />
+              </div>
+              <h2 className="text-xl font-semibold text-white mb-2">
+                Connection Timed Out
+              </h2>
+              <p className="text-sm text-zinc-400 text-center mb-6">
+                Unable to connect to the Matrix server. This might be due to network issues or server maintenance.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleRetryConnection}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white"
+                >
+                  Retry Connection
+                </Button>
+                <Button
+                  onClick={handleSkipConnection}
+                  variant="ghost"
+                  className="text-zinc-400 hover:text-white"
+                >
+                  Skip Setup
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
+    }
+
+    // Normal loading state
     return (
       <Dialog open={isOpen} onOpenChange={() => {}}>
         <DialogContent className="bg-[#36393f] text-white p-0 overflow-hidden">
@@ -211,6 +287,9 @@ export function InitialModal() {
                 : syncState 
                   ? `Syncing: ${syncState}`
                   : "Initializing secure connection..."}
+            </p>
+            <p className="text-xs text-zinc-500 mt-2">
+              This should take just a few seconds...
             </p>
           </div>
         </DialogContent>

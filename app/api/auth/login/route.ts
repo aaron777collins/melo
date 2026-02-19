@@ -125,7 +125,7 @@ export async function POST(req: Request) {
     // This checks both homeserver AND invite status for external users
     const accessCheck = isLoginAllowedWithInvite(targetHomeserver, userId);
     if (!accessCheck.allowed) {
-      console.log("[AUTH_LOGIN] Access denied:", accessCheck.code, "for user:", userId, "homeserver:", targetHomeserver);
+      // Log access control rejection for security monitoring
       const config = getAccessControlConfig();
       return NextResponse.json(
         { 
@@ -148,16 +148,11 @@ export async function POST(req: Request) {
       extractDomain(targetHomeserver) !== extractDomain(config.allowedHomeserver);
 
     // Perform Matrix login
-    console.log("[AUTH_LOGIN] Attempting login for:", username, "to", targetHomeserver);
-    
     const session = await loginWithPassword(username, password, {
       homeserverUrl: homeserverUrl || process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL,
       deviceDisplayName: "Melo Web",
       requestRefreshToken: true,
     });
-
-    console.log("[AUTH_LOGIN] Login successful, userId:", session.userId, "deviceId:", session.deviceId);
-    console.log("[AUTH_LOGIN] Access token prefix:", session.accessToken?.substring(0, 20) + "...");
 
     // Check if user has 2FA enabled
     let twoFactorEnabled = false;
@@ -179,7 +174,7 @@ export async function POST(req: Request) {
       
       client.stopClient();
       
-      console.log("[AUTH_LOGIN] 2FA status:", twoFactorEnabled ? "enabled" : "disabled");
+      // 2FA status checked
     } catch (error) {
       console.warn("[AUTH_LOGIN] Failed to check 2FA status:", error);
       // Continue with regular login flow if we can't check 2FA
@@ -211,9 +206,7 @@ export async function POST(req: Request) {
     // Mark invite as used if this was an external user login
     if (isExternalUser) {
       const inviteMarked = markInviteUsedServerSide(session.userId);
-      if (inviteMarked) {
-        console.log("[AUTH_LOGIN] Invite marked as used for external user:", session.userId);
-      }
+      // Invite marked as used for external user if applicable
     }
 
     return NextResponse.json({

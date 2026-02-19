@@ -245,7 +245,6 @@ export function MatrixAuthProvider({
     let timeoutId: NodeJS.Timeout;
 
     async function validateSession() {
-      console.log('[MatrixAuthProvider] Starting session validation...');
       setIsLoading(true);
       
       try {
@@ -260,34 +259,30 @@ export function MatrixAuthProvider({
         const result = await Promise.race([validationPromise, timeoutPromise]);
         
         clearTimeout(timeoutId);
-        console.log('[MatrixAuthProvider] Session validation result:', result);
 
         if (!isMounted) return;
 
         if (result.success) {
           if (result.data) {
-            console.log('[MatrixAuthProvider] Valid session found, setting user:', result.data.user.userId);
             setUser(result.data.user);
             setSession(result.data.session);
             onAuthChange?.(result.data.user);
           } else {
-            console.log('[MatrixAuthProvider] No session found, user not authenticated');
             setUser(null);
             setSession(null);
             onAuthChange?.(null);
           }
         } else {
-          console.log('[MatrixAuthProvider] Session validation failed:', result.error);
           setUser(null);
           setSession(null);
           onAuthChange?.(null);
         }
       } catch (err) {
-        console.error('[MatrixAuthProvider] Session validation error:', err);
         if (!isMounted) return;
         if (err instanceof Error && err.message.includes('timed out')) {
-          console.log('[MatrixAuthProvider] Session validation timed out, proceeding without session');
           // Don't set error for timeout, just proceed without session
+        } else {
+          console.error('[MatrixAuthProvider] Session validation error:', err);
         }
         setUser(null);
         setSession(null);
@@ -295,7 +290,6 @@ export function MatrixAuthProvider({
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
         if (isMounted) {
-          console.log('[MatrixAuthProvider] Session validation complete, setting loading to false');
           setIsLoading(false);
         }
       }

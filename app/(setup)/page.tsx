@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { InitialModal } from "@/components/modals/initial-modal";
 import { validateCurrentSession } from "@/lib/matrix/actions/auth";
 
+// Force dynamic rendering - this page accesses session data
+export const dynamic = 'force-dynamic';
+
 export default async function SetupPage() {
   // Validate Matrix session
   const result = await validateCurrentSession();

@@ -1,0 +1,43 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - alert
+  - dialog:
+    - generic:
+      - img
+      - heading [level=2]: Connecting to Matrix...
+      - paragraph: Setting up end-to-end encryption...
+    - button:
+      - img
+      - generic: Close
+  - dialog "Welcome to Melo" [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Welcome to Melo" [level=2] [ref=e6]:
+          - img [ref=e7]
+          - generic [ref=e9]: Welcome to Melo
+        - button [active] [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+      - paragraph [ref=e14]: Let's get you started with a quick tour
+      - generic [ref=e18]:
+        - generic [ref=e19]: Step 1 of 5
+        - generic [ref=e20]: 20% complete
+    - generic [ref=e22]:
+      - img [ref=e24]
+      - generic [ref=e26]:
+        - heading "Welcome to Melo, friend! 🎉" [level=3] [ref=e27]
+        - paragraph [ref=e28]: Melo is your decentralized chat platform powered by Matrix. Let's take a quick tour of the essential features to get you started.
+      - paragraph [ref=e30]:
+        - text: 💡
+        - strong [ref=e31]: "Pro tip:"
+        - text: You can skip this tutorial anytime, but we recommend going through it to make the most of Melo!
+    - generic [ref=e32]:
+      - button "Skip Tutorial" [ref=e34] [cursor=pointer]
+      - button "Next" [ref=e36] [cursor=pointer]:
+        - text: Next
+        - img [ref=e37]
+    - button "Close" [ref=e39] [cursor=pointer]:
+      - img [ref=e40]
+      - generic [ref=e43]: Close
+```

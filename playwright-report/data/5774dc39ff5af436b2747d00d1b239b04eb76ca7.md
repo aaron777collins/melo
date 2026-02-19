@@ -1,0 +1,100 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - navigation:
+    - link:
+      - /url: "#main-content"
+      - text: Skip to main content
+    - link:
+      - /url: "#navigation-sidebar"
+      - text: Skip to navigation
+    - link:
+      - /url: "#chat-input"
+      - text: Skip to message input
+    - link:
+      - /url: "#member-list"
+      - text: Skip to member list
+  - region:
+    - heading [level=2]: Keyboard Navigation
+    - list:
+      - listitem: "Tab: Navigate between interactive elements"
+      - listitem: "Shift + Tab: Navigate backwards"
+      - listitem: "Enter or Space: Activate buttons and links"
+      - listitem: "Arrow keys: Navigate within lists and menus"
+      - listitem: "Escape: Close dialogs and menus"
+      - listitem: "Alt + Up/Down: Navigate between channels"
+      - listitem: "Ctrl + K: Open search (when implemented)"
+  - application:
+    - navigation:
+      - generic:
+        - generic:
+          - button:
+            - generic:
+              - img
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - button:
+                  - generic:
+                    - generic: T
+              - generic:
+                - button:
+                  - generic:
+                    - generic: T
+              - generic:
+                - button:
+                  - generic:
+                    - generic: T
+              - generic:
+                - button:
+                  - generic:
+                    - generic: T
+        - generic:
+          - button:
+            - img
+            - generic: Toggle theme
+    - generic:
+      - main:
+        - generic:
+          - generic:
+            - img
+            - heading [level=2]: Page Error
+            - paragraph: This page failed to load properly.
+            - generic:
+              - button:
+                - img
+                - text: Try Again
+              - button: Go Back
+  - alert
+  - dialog "Welcome to Melo" [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - heading "Welcome to Melo" [level=2] [ref=e5]:
+          - img [ref=e6]
+          - generic [ref=e8]: Welcome to Melo
+        - button [active] [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+      - paragraph [ref=e13]: Let's get you started with a quick tour
+      - generic [ref=e17]:
+        - generic [ref=e18]: Step 1 of 5
+        - generic [ref=e19]: 20% complete
+    - generic [ref=e21]:
+      - img [ref=e23]
+      - generic [ref=e25]:
+        - heading "Welcome to Melo, friend! 🎉" [level=3] [ref=e26]
+        - paragraph [ref=e27]: Melo is your decentralized chat platform powered by Matrix. Let's take a quick tour of the essential features to get you started.
+      - paragraph [ref=e29]:
+        - text: 💡
+        - strong [ref=e30]: "Pro tip:"
+        - text: You can skip this tutorial anytime, but we recommend going through it to make the most of Melo!
+    - generic [ref=e31]:
+      - button "Skip Tutorial" [ref=e33] [cursor=pointer]
+      - button "Next" [ref=e35] [cursor=pointer]:
+        - text: Next
+        - img [ref=e36]
+    - button "Close" [ref=e38] [cursor=pointer]:
+      - img [ref=e39]
+      - generic [ref=e42]: Close
+```

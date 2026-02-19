@@ -140,12 +140,6 @@ setup('authenticate', async ({ page }) => {
   
   console.log('   🔄 Need fresh authentication...');
   
-  // TEMPORARY: Force minimal auth state due to repeated rate limiting
-  // This allows E2E tests to proceed while authentication issues are being resolved
-  console.log('   🔧 Creating minimal auth state to bypass rate limiting...');
-  await createMinimalAuthState(page);
-  return;
-  
   try {
     // Go to sign-in page
     await page.goto('/sign-in');

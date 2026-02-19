@@ -93,8 +93,8 @@ export function ChatMessages({
 
   if (status === "loading")
     return (
-      <div className="flex flex-col flex-1 justify-center items-center">
-        <Loader2 className="h-7 w-7 text-zinc-500 animate-spin my-4" />
+      <div data-testid="loading-messages" className="flex flex-col flex-1 justify-center items-center">
+        <Loader2 data-testid="loader" className="h-7 w-7 text-zinc-500 animate-spin my-4" />
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           Loading messages...
         </p>
@@ -103,8 +103,8 @@ export function ChatMessages({
 
   if (status === "error")
     return (
-      <div className="flex flex-col flex-1 justify-center items-center">
-        <ServerCrash className="h-7 w-7 text-zinc-500 my-4" />
+      <div data-testid="error-messages" className="flex flex-col flex-1 justify-center items-center">
+        <ServerCrash data-testid="server-crash" className="h-7 w-7 text-zinc-500 my-4" />
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           Something went wrong!
         </p>
@@ -113,6 +113,7 @@ export function ChatMessages({
 
   return (
     <div
+      data-testid="chat-messages-container"
       className="flex-1 flex flex-col py-4 overflow-y-auto"
       ref={chatRef}
     >
@@ -121,7 +122,7 @@ export function ChatMessages({
       {hasNextPage && (
         <div className="flex justify-center">
           {isFetchingNextPage ? (
-            <Loader2 className="h-6 w-6 text-zinc-500 animate-spin my-4" />
+            <Loader2 data-testid="pagination-loader" className="h-6 w-6 text-zinc-500 animate-spin my-4" />
           ) : (
             <button
               onClick={() => fetchNextPage()}
@@ -132,7 +133,7 @@ export function ChatMessages({
           )}
         </div>
       )}
-      <div className="flex flex-col-reverse mt-auto">
+      <div data-testid="messages-container" className="flex flex-col-reverse mt-auto">
         {data?.pages.map((group, index) => (
           <Fragment key={index}>
             {group?.items.map((message: MessagesWithMemberWithProfile) => (
@@ -156,7 +157,7 @@ export function ChatMessages({
           </Fragment>
         ))}
       </div>
-      <div ref={bottomRef} />
+      <div data-testid="bottom-ref" ref={bottomRef} />
     </div>
   );
 }

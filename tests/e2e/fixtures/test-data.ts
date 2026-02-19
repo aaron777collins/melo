@@ -12,25 +12,27 @@ export const TEST_CONFIG = {
   // Matrix homeserver
   homeserver: process.env.TEST_HOMESERVER || 'https://dev2.aaroncollins.info',
   
-  // Primary test user
+  // Primary test user - STABLE CREDENTIALS (pre-registered)
   testUser: {
     username: process.env.TEST_USERNAME || 'sophietest',
     password: process.env.TEST_PASSWORD || 'SophieTest2026!',
     displayName: 'E2E Test User',
   },
   
-  // Secondary test user (for DM tests, etc.)
+  // Secondary test user (for DM tests, etc.) - STABLE CREDENTIALS (pre-registered)
   secondUser: {
     username: process.env.TEST_USERNAME_2 || 'e2etest2',
     password: process.env.TEST_PASSWORD_2 || 'E2ETest2026!',
     displayName: 'E2E Test User 2',
   },
   
-  // Fresh test user (to avoid rate limits)
+  // Fresh test user - USE STABLE CREDENTIALS INSTEAD OF DYNAMIC
+  // Note: Registration requires CAPTCHA/email verification that Melo doesn't support
+  // Using pre-registered stable user instead
   freshUser: {
-    username: process.env.TEST_USERNAME_FRESH || `e2etest-${Date.now()}`,
-    password: process.env.TEST_PASSWORD_FRESH || 'FreshTest2026!',
-    displayName: 'Fresh E2E Test User',
+    username: process.env.TEST_USERNAME_FRESH || 'stabletest',
+    password: process.env.TEST_PASSWORD_FRESH || 'StableTest2026!',
+    displayName: 'Stable E2E Test User',
   },
   
   // Test timeouts

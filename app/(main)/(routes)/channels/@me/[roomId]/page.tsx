@@ -1,7 +1,7 @@
 import React from "react";
 import { redirect } from "next/navigation";
 
-import { currentProfile } from "@/lib/current-profile";
+import { getSessionCookie } from "@/lib/matrix/cookies";
 import { DMChatHeader } from "@/components/chat/dm-chat-header";
 import { ChatMessages } from "@/components/chat/chat-messages";
 import { DMChatInput } from "@/components/chat/dm-chat-input";
@@ -9,6 +9,7 @@ import { MediaRoom } from "@/components/media-room";
 import { DMList } from "@/components/navigation/dm-list";
 import { SectionErrorBoundary } from "@/components/error-boundary";
 import { Separator } from "@/components/ui/separator";
+import { MessageCircle } from "lucide-react";
 
 interface DMRoomPageProps {
   params: {
@@ -22,32 +23,33 @@ interface DMRoomPageProps {
 /**
  * Individual DM conversation page
  * 
- * Layout:
- * - Left sidebar: DM list (same as /channels/@me)
- * - Right content: Selected DM chat interface
+ * Works with UserSidebar layout - shows DM list and chat interface
+ * Layout: [UserSidebar] [DM List] [Chat Content]
  */
 export default async function DMRoomPage({
   params: { roomId },
   searchParams: { video }
 }: DMRoomPageProps) {
-  const profile = await currentProfile();
-
-  if (!profile) {
-    return redirect("/");
+  // Get session from cookies
+  const session = await getSessionCookie();
+  
+  if (!session?.accessToken || !session?.userId) {
+    return redirect("/sign-in");
   }
 
-  // Validate room ID format
+  // Validate room ID format (Matrix room IDs start with !)
   if (!roomId || !roomId.startsWith("!")) {
     return redirect("/channels/@me");
   }
 
   return (
     <div className="flex h-full">
-      {/* Left sidebar - DM list */}
-      <div className="flex flex-col h-full w-60 bg-[#2f3136] dark:bg-[#2f3136]">
+      {/* DM List sidebar - shows conversations */}
+      <div className="flex flex-col h-full w-60 bg-[#2f3136] dark:bg-[#2f3136] border-r border-zinc-200 dark:border-zinc-800">
         {/* Header */}
         <div className="flex items-center px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
-          <h1 className="text-lg font-semibold text-zinc-700 dark:text-zinc-200">
+          <h1 className="text-lg font-semibold text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
             Direct Messages
           </h1>
         </div>
@@ -55,14 +57,12 @@ export default async function DMRoomPage({
         {/* DM List */}
         <div className="flex-1">
           <SectionErrorBoundary name="dm-list">
-            <DMList />
+            <DMList activeRoomId={roomId} />
           </SectionErrorBoundary>
         </div>
       </div>
 
-      <Separator orientation="vertical" className="bg-zinc-200 dark:bg-zinc-700" />
-
-      {/* Right content - Chat interface */}
+      {/* Chat interface - main content */}
       <div className="flex-1 bg-white dark:bg-[#36393f] flex flex-col">
         <SectionErrorBoundary name="dm-chat-header">
           <DMChatHeader roomId={roomId} />
@@ -85,7 +85,7 @@ export default async function DMRoomPage({
                 roomId={roomId}
                 roomName="Direct Message"
                 type="conversation"
-                currentUserId={profile.userId}
+                currentUserId={session.userId}
               />
             </SectionErrorBoundary>
             

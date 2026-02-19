@@ -1,103 +1,66 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { useUnreadCounts } from '@/hooks/use-unread-counts';
-import { NotificationBadge } from '@/components/notification/notification-badge';
-import { 
-  MessageCircle, 
-  Settings, 
-  Users, 
-  Bell, 
-  HelpCircle 
-} from 'lucide-react';
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-interface NavigationItem {
-  name: string;
-  href: string;
-  icon: React.ElementType;
-  requiresNotification?: boolean;
-}
+import { NavigationAction } from "@/components/navigation/navigation-action";
+import { NavigationItem } from "@/components/navigation/navigation-item";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ModeToggle } from "@/components/mode-toggle";
+import { UserPanel } from "@/components/navigation/user-panel";
+import { useSpaces } from "@/hooks/use-spaces";
+import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 
-export const NavigationSidebar = () => {
-  const pathname = usePathname();
-  const { unreadCounts } = useUnreadCounts();
+export function NavigationSidebar() {
+  const { user, isLoading } = useMatrixAuth();
+  const { spaces, isLoading: spacesLoading } = useSpaces();
+  const router = useRouter();
 
-  const navigationItems: NavigationItem[] = [
-    { 
-      name: 'Direct Messages', 
-      href: '/channels/dms', 
-      icon: MessageCircle,
-      requiresNotification: true 
-    },
-    { 
-      name: 'Notifications', 
-      href: '/notifications', 
-      icon: Bell,
-      requiresNotification: true 
-    },
-    { 
-      name: 'Friends', 
-      href: '/friends', 
-      icon: Users 
-    },
-    { 
-      name: 'Settings', 
-      href: '/settings', 
-      icon: Settings 
-    },
-    { 
-      name: 'Help', 
-      href: '/help', 
-      icon: HelpCircle 
+  // Redirect if not authenticated (matches Discord clone pattern)
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/");
     }
-  ];
+  }, [isLoading, user, router]);
 
-  const getNotificationCount = (item: NavigationItem) => {
-    switch (item.name) {
-      case 'Direct Messages':
-        return Object.values(unreadCounts.directMessages).reduce((total, dm) => total + dm.totalUnread, 0);
-      case 'Notifications':
-        return unreadCounts.totalUnread;
-      default:
-        return 0;
-    }
-  };
+  // Don't render if not authenticated
+  if (!isLoading && !user) {
+    return null;
+  }
+
+  // Show loading state while data loads
+  if (isLoading || spacesLoading) {
+    return (
+      <div className="space-y-4 flex flex-col h-full items-center text-primary w-full dark:bg-[#1e1f22] bg-[#e3e5e8] py-3">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-pulse bg-zinc-700 dark:bg-zinc-700 h-[48px] w-[48px] rounded-[24px]" />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed left-[72px] top-0 w-[240px] h-full bg-gray-800 p-4 border-r border-gray-700 flex flex-col">
-      <nav className="space-y-2">
-        {navigationItems.map((item) => {
-          const isActive = pathname?.startsWith(item.href) ?? false;
-          const notificationCount = getNotificationCount(item);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "relative flex items-center p-2 rounded-md transition-colors duration-200 group",
-                isActive 
-                  ? "bg-gray-700 text-white" 
-                  : "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
-              )}
-            >
-              <item.icon className="w-5 h-5 mr-3" />
-              <span className="flex-grow">{item.name}</span>
-              
-              {item.requiresNotification && notificationCount > 0 && (
-                <NotificationBadge 
-                  count={notificationCount}
-                  type={item.name === 'Notifications' ? 'highlight' : 'default'}
-                  className="absolute right-1"
-                />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
+    <div className="space-y-4 flex flex-col h-full items-center text-primary w-full dark:bg-[#1e1f22] bg-[#e3e5e8] py-3">
+      <NavigationAction />
+      <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mx-auto" />
+      <ScrollArea className="flex-1 w-full">
+        {spaces.map((space) => (
+          <div key={space.id} className="mb-4">
+            <NavigationItem
+              id={space.id}
+              imageUrl={space.avatarUrl}
+              name={space.name}
+              hasUnread={space.hasUnread}
+              mentionCount={space.mentionCount}
+            />
+          </div>
+        ))}
+      </ScrollArea>
+      <div className="pb-3 mt-auto flex items-center flex-col gap-y-4">
+        <ModeToggle />
+        <UserPanel />
+      </div>
     </div>
   );
-};
+}

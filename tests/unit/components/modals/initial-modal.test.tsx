@@ -1,7 +1,7 @@
 /**
- * Create Server Modal Component Tests
+ * Initial Modal Component Tests
  * 
- * Tests for the CreateServerModal component which handles server/space creation.
+ * Tests for the InitialModal component which handles first-time server setup.
  * Validates Discord-clone visual parity and Matrix integration.
  */
 
@@ -9,21 +9,11 @@ import React from 'react';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { CreateServerModal } from '@/components/modals/create-server-modal';
+import { InitialModal } from '@/components/modals/initial-modal';
 
 // Mock hooks
-const mockOnClose = vi.fn();
 const mockPush = vi.fn();
 const mockRefresh = vi.fn();
-
-vi.mock('@/hooks/use-modal-store', () => ({
-  useModal: () => ({
-    isOpen: true,
-    type: 'createServer',
-    onClose: mockOnClose,
-    data: {},
-  }),
-}));
 
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(() => ({
@@ -33,11 +23,19 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/components/providers/matrix-auth-provider', () => ({
-  useMatrixAuth: () => ({
+  useMatrixAuth: vi.fn(() => ({
     session: {
       userId: '@testuser:matrix.org',
     },
-  }),
+  })),
+}));
+
+vi.mock('@/components/providers/matrix-provider', () => ({
+  useMatrix: vi.fn(() => ({
+    isReady: true,
+    syncState: 'PREPARED',
+    cryptoState: { status: 'ready' },
+  })),
 }));
 
 const mockCreateRoom = vi.fn(() => Promise.resolve({ room_id: '!newroom:matrix.org' }));
@@ -109,9 +107,14 @@ vi.mock('@/components/ui/button', () => ({
   ),
 }));
 
-describe('CreateServerModal', () => {
+describe('InitialModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock window.location for navigation
+    Object.defineProperty(window, 'location', {
+      value: { href: '' },
+      writable: true
+    });
   });
 
   afterEach(() => {
@@ -119,55 +122,61 @@ describe('CreateServerModal', () => {
   });
 
   describe('Rendering', () => {
-    it('renders the modal when open', () => {
-      render(<CreateServerModal />);
+    it('renders the modal when Matrix is ready', () => {
+      render(<InitialModal />);
       
       expect(screen.getByTestId('dialog')).toBeInTheDocument();
-      expect(screen.getByText('Customize your server')).toBeInTheDocument();
+      expect(screen.getByText('Create your first server')).toBeInTheDocument();
     });
 
     it('displays the correct description text', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
-      expect(screen.getByText(/Give your server a personality/)).toBeInTheDocument();
+      expect(screen.getByText(/Create a Matrix space to get started/)).toBeInTheDocument();
     });
 
     it('renders server name input field', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       expect(screen.getByTestId('server-name-input')).toBeInTheDocument();
     });
 
     it('renders file upload component', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       expect(screen.getByTestId('file-upload')).toBeInTheDocument();
     });
 
     it('renders Create button', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       expect(screen.getByText('Create')).toBeInTheDocument();
+    });
+
+    it('renders Skip for now button', () => {
+      render(<InitialModal />);
+      
+      expect(screen.getByText('Skip for now')).toBeInTheDocument();
     });
   });
 
   describe('Discord Dark Theme Visual Parity', () => {
     it('uses Discord main background color (#313338)', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const content = screen.getByTestId('dialog').querySelector('[class*="bg-[#313338]"]');
       expect(content).toBeInTheDocument();
     });
 
     it('uses white text on dark background', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const content = screen.getByTestId('dialog').querySelector('[class*="text-white"]');
       expect(content).toBeInTheDocument();
     });
 
     it('uses correct styling for form labels', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const label = screen.getByText('Server Name');
       expect(label.className).toContain('uppercase');
@@ -177,14 +186,14 @@ describe('CreateServerModal', () => {
     });
 
     it('uses Discord secondary background (#2B2D31) for footer', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const footer = screen.getByTestId('dialog').querySelector('footer');
       expect(footer?.className).toContain('bg-[#2B2D31]');
     });
 
-    it('uses Discord blurple button colors', () => {
-      render(<CreateServerModal />);
+    it('uses Discord blurple button colors for Create button', () => {
+      render(<InitialModal />);
       
       const createButton = screen.getByText('Create');
       expect(createButton.className).toContain('bg-[#5865F2]');
@@ -193,7 +202,7 @@ describe('CreateServerModal', () => {
     });
 
     it('uses Discord secondary background for input fields', () => {
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const input = screen.getByTestId('server-name-input');
       expect(input.className).toContain('bg-[#2B2D31]');
@@ -205,20 +214,20 @@ describe('CreateServerModal', () => {
   describe('User Interaction', () => {
     it('allows entering server name', async () => {
       const user = userEvent.setup();
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const input = screen.getByTestId('server-name-input');
-      await user.type(input, 'My Test Server');
+      await user.type(input, 'My First Server');
       
-      expect(input).toHaveValue('My Test Server');
+      expect(input).toHaveValue('My First Server');
     });
 
     it('calls Matrix client to create room on submit', async () => {
       const user = userEvent.setup();
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const input = screen.getByTestId('server-name-input');
-      await user.type(input, 'My Test Server');
+      await user.type(input, 'My First Server');
       
       const submitButton = screen.getByText('Create');
       await user.click(submitButton);
@@ -228,26 +237,36 @@ describe('CreateServerModal', () => {
       });
     });
 
-    it('closes modal and navigates after successful creation', async () => {
+    it('navigates to DMs when skip button is clicked', async () => {
       const user = userEvent.setup();
-      render(<CreateServerModal />);
+      render(<InitialModal />);
+      
+      const skipButton = screen.getByText('Skip for now');
+      await user.click(skipButton);
+      
+      expect(mockPush).toHaveBeenCalledWith('/channels/@me');
+    });
+
+    it('navigates to new server after successful creation', async () => {
+      const user = userEvent.setup();
+      render(<InitialModal />);
       
       const input = screen.getByTestId('server-name-input');
-      await user.type(input, 'My Test Server');
+      await user.type(input, 'Test Server');
       
       const submitButton = screen.getByText('Create');
       await user.click(submitButton);
       
       await waitFor(() => {
-        expect(mockOnClose).toHaveBeenCalled();
+        expect(window.location.href).toContain('/servers/');
       });
     });
   });
 
   describe('Matrix Integration', () => {
-    it('creates encrypted room with correct settings', async () => {
+    it('creates encrypted space with correct settings', async () => {
       const user = userEvent.setup();
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const input = screen.getByTestId('server-name-input');
       await user.type(input, 'Encrypted Server');
@@ -272,7 +291,7 @@ describe('CreateServerModal', () => {
 
     it('creates default general channel after space creation', async () => {
       const user = userEvent.setup();
-      render(<CreateServerModal />);
+      render(<InitialModal />);
       
       const input = screen.getByTestId('server-name-input');
       await user.type(input, 'Test Server');
@@ -283,6 +302,34 @@ describe('CreateServerModal', () => {
       await waitFor(() => {
         // Should be called twice: once for space, once for general channel
         expect(mockCreateRoom).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it('handles optional image upload', async () => {
+      const user = userEvent.setup();
+      render(<InitialModal />);
+      
+      // Upload an image
+      const uploadButton = screen.getByText('Upload server icon (optional)');
+      await user.click(uploadButton);
+      
+      const input = screen.getByTestId('server-name-input');
+      await user.type(input, 'Server With Icon');
+      
+      const submitButton = screen.getByText('Create');
+      await user.click(submitButton);
+      
+      await waitFor(() => {
+        expect(mockCreateRoom).toHaveBeenCalledWith(
+          expect.objectContaining({
+            initial_state: expect.arrayContaining([
+              expect.objectContaining({
+                type: 'm.room.avatar',
+                content: { url: 'mxc://test/avatar' }
+              }),
+            ]),
+          })
+        );
       });
     });
   });

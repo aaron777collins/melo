@@ -97,7 +97,7 @@ function getNavSections(
           id: "overview",
           label: "Overview",
           icon: Settings,
-          href: basePath,
+          href: `${basePath}/overview`,
         },
       ],
     });

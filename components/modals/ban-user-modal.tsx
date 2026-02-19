@@ -162,11 +162,11 @@ export function BanUserModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-white dark:bg-zinc-900 text-black dark:text-white p-0 overflow-hidden max-w-md">
+      <DialogContent className="bg-[#313338] text-white border-zinc-700 p-0 overflow-hidden max-w-md">
         <DialogHeader className="pt-8 px-6">
           <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full">
-              <Ban className="h-8 w-8 text-red-600 dark:text-red-400" />
+            <div className="flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full">
+              <Ban className="h-8 w-8 text-red-400" />
             </div>
           </div>
           
@@ -181,7 +181,7 @@ export function BanUserModal() {
 
         {/* User Info */}
         <div className="px-6 py-4">
-          <div className="flex items-center gap-3 p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-lg">
+          <div className="flex items-center gap-3 p-4 bg-[#2B2D31] rounded-lg">
             <Avatar className="h-12 w-12">
               <AvatarImage src={targetUser.avatarUrl} alt={targetUser.name} />
               <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold">
@@ -201,8 +201,8 @@ export function BanUserModal() {
 
         {/* Warning Message */}
         <div className="px-6 py-4">
-          <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-lg">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-red-800 dark:text-red-200">
                 This action will ban the user from the server
@@ -233,7 +233,7 @@ export function BanUserModal() {
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-zinc-100 dark:bg-zinc-800 border-0 focus-visible:ring-0 text-black dark:text-white focus-visible:ring-offset-0">
+                        <SelectTrigger className="bg-[#2B2D31] border-0 focus-visible:ring-0 text-white focus-visible:ring-offset-0">
                           <SelectValue placeholder="Select ban duration" />
                         </SelectTrigger>
                       </FormControl>
@@ -264,7 +264,7 @@ export function BanUserModal() {
                       <Textarea
                         disabled={isLoading}
                         placeholder="Explain why you're banning this user..."
-                        className="bg-zinc-100 dark:bg-zinc-800 border-0 focus-visible:ring-0 text-black dark:text-white focus-visible:ring-offset-0 resize-none"
+                        className="bg-[#2B2D31] border-0 focus-visible:ring-0 text-white focus-visible:ring-offset-0 resize-none"
                         rows={3}
                         {...field}
                       />
@@ -275,7 +275,7 @@ export function BanUserModal() {
               />
             </div>
             
-            <DialogFooter className="bg-gray-100 dark:bg-zinc-800 px-6 py-4">
+            <DialogFooter className="bg-[#2B2D31] px-6 py-4">
               <div className="flex items-center justify-end gap-2 w-full">
                 <Button
                   disabled={isLoading}

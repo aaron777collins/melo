@@ -160,7 +160,7 @@ export function VoiceChannelSettingsModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800">
+      <DialogContent className="max-w-2xl max-h-[80vh] bg-[#313338] text-white border-zinc-700">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold flex items-center gap-2">
             <Settings className="h-5 w-5" />

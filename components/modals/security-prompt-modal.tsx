@@ -148,9 +148,9 @@ function PasswordConfirmationForm({
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <EyeOff className="h-4 w-4 text-zinc-400" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
+                      <Eye className="h-4 w-4 text-zinc-400" />
                     )}
                   </Button>
                 </div>
@@ -185,7 +185,7 @@ function PasswordConfirmationForm({
         )}
 
         {/* Form buttons */}
-        <DialogFooter className="bg-gray-100 dark:bg-zinc-800 px-6 py-4 -mx-6 -mb-6 mt-6">
+        <DialogFooter className="bg-[#2B2D31] px-6 py-4 -mx-6 -mb-6 mt-6">
           <div className="flex items-center justify-end gap-2 w-full">
             <Button
               type="button"
@@ -245,11 +245,11 @@ function DestructiveConfirmationDialog({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-md">
+      <AlertDialogContent className="bg-[#313338] text-white border-zinc-700 max-w-md">
         <AlertDialogHeader>
           <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full">
-              <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            <div className="flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full">
+              <AlertTriangle className="h-8 w-8 text-red-400" />
             </div>
           </div>
           
@@ -351,7 +351,7 @@ export function SecurityPromptModal() {
       case "warning": return <AlertTriangle className="h-8 w-8 text-red-600" />;
       case "key": return <Key className="h-8 w-8 text-green-600" />;
       case "alert": return <ShieldAlert className="h-8 w-8 text-amber-600" />;
-      default: return <Lock className="h-8 w-8 text-gray-600" />;
+      default: return <Lock className="h-8 w-8 text-zinc-400" />;
     }
   };
 
@@ -369,10 +369,10 @@ export function SecurityPromptModal() {
   // For password-protected security actions
   return (
     <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="bg-white dark:bg-zinc-900 text-black dark:text-white p-0 overflow-hidden max-w-md">
+      <DialogContent className="bg-[#313338] text-white border-zinc-700 p-0 overflow-hidden max-w-md">
         <DialogHeader className="pt-8 px-6">
           <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full">
+            <div className="flex items-center justify-center w-16 h-16 bg-[#2B2D31] rounded-full">
               {getPromptIcon()}
             </div>
           </div>
@@ -381,7 +381,7 @@ export function SecurityPromptModal() {
             {config.title}
           </DialogTitle>
           
-          <DialogDescription className="text-center text-zinc-500 dark:text-zinc-400">
+          <DialogDescription className="text-center text-zinc-400">
             {config.description}
           </DialogDescription>
         </DialogHeader>

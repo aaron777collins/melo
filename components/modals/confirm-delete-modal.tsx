@@ -90,17 +90,17 @@ export function ConfirmDeleteModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white dark:bg-zinc-900 text-black dark:text-white p-0 overflow-hidden max-w-md">
+      <DialogContent className="bg-[#313338] text-white border-zinc-700 p-0 overflow-hidden max-w-md">
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-xl text-center font-bold">
             {title}
           </DialogTitle>
-          <DialogDescription className="text-center text-zinc-500 dark:text-zinc-400">
+          <DialogDescription className="text-center text-zinc-400">
             {description}
           </DialogDescription>
         </DialogHeader>
         
-        <DialogFooter className="bg-gray-100 dark:bg-zinc-800 px-6 py-4">
+        <DialogFooter className="bg-[#2B2D31] px-6 py-4">
           <div className="flex items-center justify-between w-full gap-3">
             <Button 
               variant="ghost" 

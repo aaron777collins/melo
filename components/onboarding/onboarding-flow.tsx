@@ -123,7 +123,12 @@ export function OnboardingFlow({
     onComplete?.();
   };
 
+  /**
+   * Handle closing/skipping the entire wizard
+   * This properly completes the wizard so it doesn't show again
+   */
   const handleClose = () => {
+    completeWizard(); // Mark wizard as complete so it doesn't show again
     onClose?.();
   };
 
@@ -234,7 +239,12 @@ export function OnboardingFlow({
   // =============================================================================
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={() => {}}>
+    <Dialog open={isDialogOpen} onOpenChange={(open) => {
+      // When dialog is closed via ESC or clicking outside, complete the wizard
+      if (!open) {
+        handleClose();
+      }
+    }}>
       <DialogContent 
         className={`max-w-5xl max-h-[95vh] overflow-y-auto p-0 ${className || ""}`}
       >

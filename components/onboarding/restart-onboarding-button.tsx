@@ -11,7 +11,7 @@ import React, { useState } from "react";
 import { RefreshCw, BookOpen } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useOnboarding } from "@/hooks/use-onboarding";
+import { useOnboardingWizard } from "@/hooks/use-onboarding-wizard";
 import { toast } from "sonner";
 
 // =============================================================================
@@ -77,7 +77,7 @@ export function RestartOnboardingButton({
   requireConfirmation = false,
   onRestart,
 }: RestartOnboardingButtonProps) {
-  const { startOnboarding, resetOnboarding, hasCompletedOnboarding } = useOnboarding();
+  const { startWizard, resetWizard, isCompleted: hasCompletedOnboarding } = useOnboardingWizard();
   const [isConfirming, setIsConfirming] = useState(false);
 
   // =============================================================================
@@ -94,8 +94,8 @@ export function RestartOnboardingButton({
     }
 
     // Reset onboarding state and start fresh
-    resetOnboarding();
-    startOnboarding();
+    resetWizard();
+    startWizard();
 
     // Show success toast
     toast.success("Tutorial restarted! 🎉", {

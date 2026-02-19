@@ -8,8 +8,9 @@ import { MatrixProvider } from "@/components/providers/matrix-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ServiceWorkerProvider } from "@/components/providers/service-worker-provider";
 import { PWAInstallPrompt } from "@/components/pwa/install-prompt";
-import { OnboardingProvider } from "@/components/providers/onboarding-provider";
 import { OnboardingWizardProvider } from "@/components/providers/onboarding-wizard-provider";
+// NOTE: OnboardingProvider (tutorial modal) removed - consolidated into OnboardingWizardProvider
+// Tutorial content now accessible from Settings > Tutorial
 import { AppErrorBoundary, SectionErrorBoundary } from "@/components/error/error-boundary";
 import { ErrorReportingProvider } from "@/hooks/use-error-reporting";
 import { EnhancedErrorReportingProvider } from "@/components/providers/error-reporting-provider";
@@ -70,7 +71,6 @@ export default function RootLayout({
                   <MatrixAuthProvider>
                     <SectionErrorBoundary name="onboarding" enableAutoRecovery={true}>
                       <OnboardingWizardProvider>
-                        <OnboardingProvider>
                           <SectionErrorBoundary name="matrix-client" enableAutoRecovery={true}>
                           <MatrixProvider>
                             <SectionErrorBoundary name="modals" enableAutoRecovery={false}>
@@ -81,7 +81,6 @@ export default function RootLayout({
                             </SectionErrorBoundary>
                           </MatrixProvider>
                         </SectionErrorBoundary>
-                        </OnboardingProvider>
                       </OnboardingWizardProvider>
                     </SectionErrorBoundary>
                   </MatrixAuthProvider>

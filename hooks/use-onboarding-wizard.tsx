@@ -109,6 +109,7 @@ const DEFAULT_STEPS: OnboardingWizardStep[] = [
     title: "Send your first message",
     description: "Learn the basics of chatting",
     isComplete: false,
+    isOptional: true,
   },
 ];
 

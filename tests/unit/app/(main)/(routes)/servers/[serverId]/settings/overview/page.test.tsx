@@ -1,27 +1,22 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import ServerOverviewPage from '@/app/(main)/(routes)/servers/[serverId]/settings/overview/page';
 import { getClient } from '@/lib/matrix/client';
 import { useSpaces } from '@/hooks/use-spaces';
+import { mockRouterRefresh } from '../../../../../../../setup';
 
 // Mock dependencies
-vi.mock('next/navigation');
 vi.mock('sonner');
 vi.mock('@/lib/matrix/client');
 vi.mock('@/hooks/use-spaces');
-
-const mockRouter = {
-  refresh: vi.fn(),
-};
 
 const mockMatrixClient = {
   setRoomName: vi.fn(),
   sendStateEvent: vi.fn(),
 };
 
-const mockUseSpaces = {
+const defaultMockUseSpaces = {
   spaces: [],
   isLoading: false,
   error: null,
@@ -33,16 +28,15 @@ const mockUseSpaces = {
 describe('ServerOverviewPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as any).mockReturnValue(mockRouter);
     (getClient as any).mockReturnValue(mockMatrixClient);
-    (useSpaces as any).mockReturnValue(mockUseSpaces);
-    (toast.success as any).mockImplementation(() => {});
-    (toast.error as any).mockImplementation(() => {});
+    (useSpaces as any).mockReturnValue(defaultMockUseSpaces);
+    (toast.success as any) = vi.fn();
+    (toast.error as any) = vi.fn();
   });
 
   it('should show loading state when spaces are loading', () => {
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
+      ...defaultMockUseSpaces,
       isLoading: true
     });
 
@@ -52,13 +46,18 @@ describe('ServerOverviewPage', () => {
 
     render(<ServerOverviewPage {...props} />);
 
-    expect(screen.getByTestId('server-overview-page')).toBeInTheDocument();
+    // Should show loading spinner, not the page content
+    expect(screen.queryByText('Server Overview')).not.toBeInTheDocument();
+    // Loading state shows a spinner
+    const loadingElement = document.querySelector('.animate-spin');
+    expect(loadingElement).toBeInTheDocument();
   });
 
   it('should show not found message when space does not exist', () => {
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: []
+      ...defaultMockUseSpaces,
+      spaces: [],
+      isLoading: false
     });
 
     const props = {
@@ -77,12 +76,14 @@ describe('ServerOverviewPage', () => {
       avatarUrl: 'https://example.com/avatar.png',
       topic: 'Server description',
       memberCount: 25,
-      channels: []
+      channels: [],
+      hasUnread: false
     };
 
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: [mockSpace]
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
     });
 
     const props = {
@@ -102,12 +103,14 @@ describe('ServerOverviewPage', () => {
       avatarUrl: 'mxc://matrix.org/avatar123',
       topic: 'A place for gamers',
       memberCount: 50,
-      channels: []
+      channels: [],
+      hasUnread: false
     };
 
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: [mockSpace]
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
     });
 
     const props = {
@@ -127,12 +130,14 @@ describe('ServerOverviewPage', () => {
       avatarUrl: '',
       topic: 'Old description',
       memberCount: 10,
-      channels: []
+      channels: [],
+      hasUnread: false
     };
 
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: [mockSpace]
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
     });
 
     mockMatrixClient.setRoomName.mockResolvedValue({});
@@ -167,12 +172,14 @@ describe('ServerOverviewPage', () => {
       avatarUrl: '',
       topic: 'Old description',
       memberCount: 15,
-      channels: []
+      channels: [],
+      hasUnread: false
     };
 
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: [mockSpace]
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
     });
 
     mockMatrixClient.sendStateEvent.mockResolvedValue({});
@@ -207,12 +214,14 @@ describe('ServerOverviewPage', () => {
       avatarUrl: '',
       topic: 'Test description',
       memberCount: 5,
-      channels: []
+      channels: [],
+      hasUnread: false
     };
 
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: [mockSpace]
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
     });
 
     mockMatrixClient.setRoomName.mockResolvedValue({});
@@ -241,12 +250,14 @@ describe('ServerOverviewPage', () => {
       avatarUrl: '',
       topic: 'Test description',
       memberCount: 5,
-      channels: []
+      channels: [],
+      hasUnread: false
     };
 
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: [mockSpace]
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
     });
 
     mockMatrixClient.setRoomName.mockRejectedValue(new Error('Update failed'));
@@ -275,19 +286,21 @@ describe('ServerOverviewPage', () => {
       avatarUrl: '',
       topic: 'Test',
       memberCount: 1,
-      channels: []
+      channels: [],
+      hasUnread: false
     };
 
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: [mockSpace]
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
     });
 
     const props = {
       params: { serverId: 'test-space-id' }
     };
 
-    const { container } = render(<ServerOverviewPage {...props} />);
+    render(<ServerOverviewPage {...props} />);
 
     // Check for Discord color classes
     const pageElement = screen.getByTestId('server-overview-page');
@@ -297,19 +310,21 @@ describe('ServerOverviewPage', () => {
     expect(cardElement).toHaveClass('bg-[#2B2D31]');
   });
 
-  it('should handle avatar upload callback', () => {
+  it('should handle avatar upload component visibility', () => {
     const mockSpace = {
       id: 'test-space-id',
       name: 'Test Server',
       avatarUrl: '',
       topic: 'Test',
       memberCount: 1,
-      channels: []
+      channels: [],
+      hasUnread: false
     };
 
     (useSpaces as any).mockReturnValue({
-      ...mockUseSpaces,
-      spaces: [mockSpace]
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
     });
 
     const props = {
@@ -319,6 +334,36 @@ describe('ServerOverviewPage', () => {
     render(<ServerOverviewPage {...props} />);
 
     // Test that MatrixFileUpload component is present
-    expect(screen.getByText(/upload server/i)).toBeInTheDocument();
+    expect(screen.getByText(/upload server icon/i)).toBeInTheDocument();
+  });
+
+  it('should display server statistics', () => {
+    const mockSpace = {
+      id: 'test-space-id',
+      name: 'Test Server',
+      avatarUrl: '',
+      topic: 'Test',
+      memberCount: 42,
+      channels: [{ id: 'ch1' }, { id: 'ch2' }, { id: 'ch3' }],
+      hasUnread: true
+    };
+
+    (useSpaces as any).mockReturnValue({
+      ...defaultMockUseSpaces,
+      spaces: [mockSpace],
+      isLoading: false
+    });
+
+    const props = {
+      params: { serverId: 'test-space-id' }
+    };
+
+    render(<ServerOverviewPage {...props} />);
+
+    // Check statistics are displayed
+    expect(screen.getByText('42')).toBeInTheDocument(); // Member count
+    expect(screen.getByText('3')).toBeInTheDocument(); // Channel count
+    expect(screen.getByText('Members')).toBeInTheDocument();
+    expect(screen.getByText('Channels')).toBeInTheDocument();
   });
 });

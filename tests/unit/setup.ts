@@ -26,7 +26,12 @@ vi.mock('matrix-js-sdk', () => ({
     RoomMessage: 'm.room.message',
     RoomName: 'm.room.name',
     RoomTopic: 'm.room.topic',
-    RoomAvatar: 'm.room.avatar'
+    RoomAvatar: 'm.room.avatar',
+    RoomPowerLevels: 'm.room.power_levels',
+    SpaceChild: 'm.space.child',
+    SpaceParent: 'm.space.parent',
+    RoomCreate: 'm.room.create',
+    RoomJoinRules: 'm.room.join_rules'
   },
   MsgType: {
     Text: 'm.text',
@@ -41,12 +46,38 @@ vi.mock('matrix-js-sdk', () => ({
   ClientEvent: {
     Sync: 'sync',
     Room: 'Room',
-    DeleteRoom: 'DeleteRoom'
+    DeleteRoom: 'DeleteRoom',
+    AccountData: 'accountData'
   },
   SyncState: {
     Prepared: 'PREPARED',
     Syncing: 'SYNCING',
-    Error: 'ERROR'
+    Error: 'ERROR',
+    Stopped: 'STOPPED',
+    Catchup: 'CATCHUP',
+    Reconnecting: 'RECONNECTING'
+  },
+  RelationType: {
+    Annotation: 'm.annotation',
+    Replace: 'm.replace',
+    Reference: 'm.reference',
+    Thread: 'm.thread'
+  },
+  RoomMemberEvent: {
+    Name: 'RoomMember.name',
+    Membership: 'RoomMember.membership',
+    Typing: 'RoomMember.typing'
+  },
+  RoomEvent: {
+    Timeline: 'Room.timeline',
+    MyMembership: 'Room.myMembership',
+    Name: 'Room.name',
+    Receipt: 'Room.receipt'
+  },
+  MatrixClient: class MatrixClient {
+    on() {}
+    off() {}
+    removeListener() {}
   }
 }))
 

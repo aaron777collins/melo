@@ -216,7 +216,7 @@ export function ServerHeader({
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none" asChild>
         <button 
-          className="w-full text-md font-semibold px-3 flex items-center h-12 border-neutral-200 dark:border-neutral-800 border-b-2 hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 transition"
+          className="w-full text-md font-semibold px-3 flex items-center h-12 border-[#e3e5e8] dark:border-[#313338] border-b-2 hover:bg-[#f2f3f5] dark:hover:bg-[#313338] transition"
           aria-label={`${server.name} server options`}
         >
           <span className="truncate">{server.name}</span>
@@ -240,7 +240,7 @@ export function ServerHeader({
       </DropdownMenuTrigger>
       
       <DropdownMenuContent 
-        className="w-56 text-xs font-medium text-black dark:text-neutral-400 space-y-[2px]"
+        className="w-56 text-xs font-medium text-[#0f1419] dark:text-[#b5bac1] space-y-[2px]"
       >
         {/* Boost Server - Always visible (Discord-style) */}
         <DropdownMenuItem

@@ -155,6 +155,7 @@ export function MatrixFileUpload({
             onClick={onClear}
             className="absolute -top-1 -right-1 bg-rose-500 text-white p-1 rounded-full shadow-sm hover:bg-rose-600 transition-colors"
             disabled={disabled}
+            role="button"
           >
             <X className="h-4 w-4" />
           </button>
@@ -177,6 +178,7 @@ export function MatrixFileUpload({
             onClick={onClear}
             className="ml-auto bg-rose-500 text-white p-1 rounded-full shadow-sm hover:bg-rose-600 transition-colors"
             disabled={disabled}
+            role="button"
           >
             <X className="h-4 w-4" />
           </button>
@@ -189,13 +191,13 @@ export function MatrixFileUpload({
   return (
     <div
       className={`
-        relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
-        transition-colors
+        relative border-2 border-dashed rounded-lg p-6 text-center transition-colors
+        flex flex-col items-center
         ${dragActive 
           ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" 
           : "border-zinc-300 dark:border-zinc-600 hover:border-indigo-400"
         }
-        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
+        ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
         ${className}
       `}
       onDragEnter={handleDrag}
@@ -203,6 +205,14 @@ export function MatrixFileUpload({
       onDragOver={handleDrag}
       onDrop={handleDrop}
       onClick={disabled ? undefined : handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !disabled) {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
     >
       <input
         ref={inputRef}
@@ -214,16 +224,16 @@ export function MatrixFileUpload({
       />
       
       {isUploading ? (
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-10 w-10 text-indigo-500 animate-spin" />
+        <>
+          <Loader2 className="h-10 w-10 text-indigo-500 animate-spin mx-auto" role="status" />
           <p className="mt-2 text-sm text-zinc-500">Uploading...</p>
-        </div>
+        </>
       ) : (
-        <div className="flex flex-col items-center">
+        <>
           {type === "image" ? (
-            <ImageIcon className="h-10 w-10 text-zinc-400" />
+            <ImageIcon className="h-10 w-10 text-zinc-400 mx-auto" />
           ) : (
-            <Upload className="h-10 w-10 text-zinc-400" />
+            <Upload className="h-10 w-10 text-zinc-400 mx-auto" />
           )}
           <p className="mt-2 text-sm text-indigo-500 font-medium">
             {placeholder || "Choose files or drag and drop"}
@@ -234,7 +244,7 @@ export function MatrixFileUpload({
               : `Max ${Math.round(effectiveMaxSize / 1024 / 1024)}MB`
             }
           </p>
-        </div>
+        </>
       )}
     </div>
   );

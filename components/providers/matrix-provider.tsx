@@ -421,16 +421,61 @@ export function MatrixProvider({
             onCryptoStateChange?.(newCryptoState);
           } catch (error) {
             console.error("[MatrixProvider] Failed to initialize crypto:", error);
-            const errorState: CryptoState = {
-              status: "error",
-              error: error instanceof Error ? error : new Error(String(error)),
-            };
-            setCryptoState(errorState);
-            setCryptoError(
-              error instanceof Error ? error : new Error(String(error))
-            );
-            onCryptoStateChange?.(errorState);
-            // Continue without crypto - degraded mode
+            
+            // Check if this is the specific crypto store mismatch error
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const isCryptoStoreMismatch = errorMessage.includes("the account in the store doesn't match the account in the constructor") ||
+                                       errorMessage.includes("Failed to initialize Rust crypto");
+            
+            if (isCryptoStoreMismatch) {
+              console.log("[MatrixProvider] Crypto store mismatch detected, clearing IndexedDB and retrying...");
+              
+              try {
+                // Import clearCryptoStore function
+                const { clearCryptoStore } = await import("@/lib/matrix/crypto/store");
+                
+                // Clear the crypto store
+                await clearCryptoStore();
+                console.log("[MatrixProvider] Crypto store cleared, retrying initialization...");
+                
+                // Reset crypto state to initializing
+                setCryptoState({ status: "initializing" });
+                onCryptoStateChange?.({ status: "initializing" });
+                
+                // Retry crypto initialization
+                await initializeCrypto();
+                
+                const newCryptoState = getCryptoState();
+                setCryptoState(newCryptoState);
+                onCryptoStateChange?.(newCryptoState);
+                console.log("[MatrixProvider] Crypto initialization succeeded after clearing store");
+                
+              } catch (retryError) {
+                console.error("[MatrixProvider] Failed to retry crypto initialization after clearing store:", retryError);
+                const errorState: CryptoState = {
+                  status: "error",
+                  error: retryError instanceof Error ? retryError : new Error(String(retryError)),
+                };
+                setCryptoState(errorState);
+                setCryptoError(
+                  retryError instanceof Error ? retryError : new Error(String(retryError))
+                );
+                onCryptoStateChange?.(errorState);
+                // Continue without crypto - degraded mode
+              }
+            } else {
+              // Handle other crypto errors normally
+              const errorState: CryptoState = {
+                status: "error",
+                error: error instanceof Error ? error : new Error(String(error)),
+              };
+              setCryptoState(errorState);
+              setCryptoError(
+                error instanceof Error ? error : new Error(String(error))
+              );
+              onCryptoStateChange?.(errorState);
+              // Continue without crypto - degraded mode
+            }
           }
         }
 

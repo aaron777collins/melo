@@ -38,8 +38,8 @@ vi.mock('@/lib/matrix/media', () => ({
 
 // Mock Next.js Image component
 vi.mock('next/image', () => ({
-  default: ({ src, alt, ...props }: any) => (
-    <img src={src} alt={alt} {...props} />
+  default: ({ src, alt, fill, ...props }: any) => (
+    <img src={src} alt={alt} {...props} data-fill={fill ? 'true' : 'false'} />
   ),
 }));
 

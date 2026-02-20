@@ -67,16 +67,16 @@ export function WelcomeStep({ onNext, onSkip, className }: WelcomeStepProps) {
           </h1>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
             Your secure, decentralized chat platform powered by the Matrix protocol.
-            Let's get you set up in just a few quick steps!
+            Let&apos;s get you set up in just a few quick steps!
           </p>
         </div>
       </div>
 
-      {/* What You'll Do */}
+      {/* What You&apos;ll Do */}
       <Card>
         <CardContent className="p-6">
           <h2 className="text-xl font-semibold mb-4 text-center">
-            What We'll Set Up Together
+            What We&apos;ll Set Up Together
           </h2>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/50">
@@ -153,8 +153,8 @@ export function WelcomeStep({ onNext, onSkip, className }: WelcomeStepProps) {
                 New to Matrix?
               </p>
               <p className="text-blue-700 dark:text-blue-200">
-                Don't worry! Melo makes Matrix simple and user-friendly. 
-                You'll be chatting confidently in no time. This setup should only take 2-3 minutes.
+                Don&apos;t worry! Melo makes Matrix simple and user-friendly. 
+                You&apos;ll be chatting confidently in no time. This setup should only take 2-3 minutes.
               </p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export function WelcomeStep({ onNext, onSkip, className }: WelcomeStepProps) {
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 pt-4">
         <Button onClick={onNext} className="flex-1">
-          Let's Get Started! 🚀
+          Let&apos;s Get Started! 🚀
         </Button>
         {onSkip && (
           <Button variant="ghost" onClick={onSkip} className="text-muted-foreground">

@@ -62,7 +62,7 @@ ${recoveryKey}
 
 ⚠️ IMPORTANT:
 - Keep this key safe and secure
-- You'll need it to recover your account if you lose access
+- You&apos;ll need it to recover your account if you lose access
 - Anyone with this key can access your encrypted messages
 - Store it in a password manager or secure location
 `;
@@ -138,7 +138,7 @@ ${recoveryKey}
               <ul className="list-disc list-inside space-y-1 text-sm mt-2">
                 <li>Keep this recovery key safe and secure</li>
                 <li>Anyone with this key can access your encrypted messages</li>
-                <li>You'll need it to recover your account if you lose access</li>
+                <li>You&apos;ll need it to recover your account if you lose access</li>
                 <li>Store it in a password manager or secure location</li>
               </ul>
             </AlertDescription>
@@ -222,7 +222,7 @@ ${recoveryKey}
             className="w-full"
           >
             <ShieldCheck className="h-4 w-4 mr-2" />
-            I've Saved My Recovery Key
+            I&apos;ve Saved My Recovery Key
           </Button>
         </DialogFooter>
       </DialogContent>

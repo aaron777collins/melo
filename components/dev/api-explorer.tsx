@@ -573,7 +573,7 @@ export function ApiExplorer() {
             <div className="space-y-2">
               <h4 className="font-semibold">2. Explore APIs</h4>
               <p className="text-muted-foreground">
-                Browse endpoints by category. System endpoints don't require authentication, while Admin endpoints do.
+                Browse endpoints by category. System endpoints don&apos;t require authentication, while Admin endpoints do.
               </p>
             </div>
             <div className="space-y-2">

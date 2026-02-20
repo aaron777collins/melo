@@ -112,6 +112,7 @@ async function matrixFetch<T>(
   }
 
   try {
+    console.log('[matrixFetch] 📤 Sending request...');
     const response = await fetch(url, {
       ...options,
       headers,
@@ -291,6 +292,10 @@ export async function validateAccessToken(
 ): Promise<MatrixUser> {
   const homeserverUrl = options.homeserverUrl || getDefaultHomeserverUrl();
   const includeProfile = options.includeProfile ?? true;
+
+  console.log('[validateAccessToken] 🚀 Starting validation for homeserver:', homeserverUrl);
+  console.log('[validateAccessToken] 🔑 Access token prefix:', accessToken.substring(0, 20) + '...');
+  console.log('[validateAccessToken] 🎭 Include profile:', includeProfile);
 
   // First, check token validity with whoami endpoint
   const whoami = await matrixFetch<{

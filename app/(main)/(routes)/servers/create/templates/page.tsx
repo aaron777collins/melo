@@ -257,7 +257,7 @@ export default function ServerTemplatesPage() {
                 Server Settings
               </CardTitle>
               <CardDescription>
-                Configure basic settings for your new server based on the "{selectedTemplate.name}" template.
+                Configure basic settings for your new server based on the &quot;{selectedTemplate.name}&quot; template.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -364,7 +364,7 @@ export default function ServerTemplatesPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Server Created!</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Your server "{serverSettings.name}" has been created successfully.
+                    Your server &quot;{serverSettings.name}&quot; has been created successfully.
                   </p>
                   <Button onClick={handleNavigateToServer} className="w-full">
                     Go to Server

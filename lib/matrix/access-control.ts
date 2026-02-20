@@ -321,8 +321,7 @@ export async function hasValidInvite(userId: string): Promise<boolean> {
  * @returns Whether the user has a valid invite
  */
 export function hasValidInviteServerSide(userId: string): boolean {
-  // Dynamic import to avoid bundling fs in client code
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // Dynamic require to avoid bundling fs in client code
   const { serverCheckHasValidInvite } = require('./server-invites');
   return serverCheckHasValidInvite(userId);
 }
@@ -336,8 +335,7 @@ export function hasValidInviteServerSide(userId: string): boolean {
  * @returns Whether the operation succeeded
  */
 export function markInviteUsedServerSide(userId: string): boolean {
-  // Dynamic import to avoid bundling fs in client code
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // Dynamic require to avoid bundling fs in client code
   const { serverMarkInviteUsed } = require('./server-invites');
   return serverMarkInviteUsed(userId);
 }

@@ -149,7 +149,7 @@ export default function ServerOverviewPage({ params }: ServerOverviewPageProps) 
         <div className="max-w-4xl mx-auto">
           <Card className="bg-[#2B2D31] border-zinc-800">
             <CardContent className="p-6">
-              <p className="text-zinc-400">Server not found or you don't have permission to access it.</p>
+              <p className="text-zinc-400">Server not found or you don&apos;t have permission to access it.</p>
             </CardContent>
           </Card>
         </div>
@@ -180,7 +180,7 @@ export default function ServerOverviewPage({ params }: ServerOverviewPageProps) 
                   Server Identity
                 </CardTitle>
                 <CardDescription className="text-zinc-400">
-                  Configure your server's name, description, and icon
+                  Configure your server&apos;s name, description, and icon
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">

@@ -80,7 +80,7 @@ const quickActions: QuickAction[] = [
 ];
 
 // =============================================================================
-// Suggestions Data (could be dynamic based on user's activity)
+// Suggestions Data (could be dynamic based on user&apos;s activity)
 // =============================================================================
 
 const suggestions: SuggestionItem[] = [
@@ -253,7 +253,7 @@ export default function NotFound() {
                 Page Not Found
               </h1>
               <p className="text-lg text-muted-foreground max-w-md mx-auto">
-                The page you're looking for doesn't exist or may have been moved.
+                The page you&apos;re looking for doesn&apos;t exist or may have been moved.
               </p>
               
               {/* Show current path */}

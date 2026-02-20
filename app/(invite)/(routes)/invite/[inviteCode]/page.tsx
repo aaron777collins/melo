@@ -131,7 +131,7 @@ export default function InviteCodePage({ params }: InviteCodePageProps) {
     // Search through stored invites to find matching slug
     const inviteService = createInviteService(client!);
     
-    // This is a limitation - we'd need a better way to track slug->roomId mappings
+    // This is a limitation - we&apos;d need a better way to track slug->roomId mappings
     // For now, check localStorage for any invites with matching slug
     const allRoomKeys = Object.keys(localStorage).filter(key => key.startsWith('melo_invites_'));
     
@@ -151,7 +151,7 @@ export default function InviteCodePage({ params }: InviteCodePageProps) {
   const getRoomPreview = async (roomId: string): Promise<RoomPreview> => {
     const room = client!.getRoom(roomId);
     
-    // If we're already in the room, get full details
+    // If we&apos;re already in the room, get full details
     if (room) {
       const memberCount = room.getJoinedMemberCount();
       const name = room.name || roomId;
@@ -315,7 +315,7 @@ export default function InviteCodePage({ params }: InviteCodePageProps) {
               <div className="text-center">
                 <h3 className="font-semibold text-lg">Welcome!</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  You've successfully joined {state.roomPreview?.name}
+                  You&apos;ve successfully joined {state.roomPreview?.name}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
                   Redirecting to server...
@@ -384,8 +384,8 @@ export default function InviteCodePage({ params }: InviteCodePageProps) {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              You've been invited to join <strong>{room.name}</strong>. 
-              Click "Join Server" to accept this invitation.
+              You&apos;ve been invited to join <strong>{room.name}</strong>. 
+              Click &quot;Join Server&quot; to accept this invitation.
             </AlertDescription>
           </Alert>
 

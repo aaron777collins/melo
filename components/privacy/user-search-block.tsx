@@ -183,7 +183,7 @@ export function UserSearchBlock({ className }: UserSearchBlockProps) {
                 </div>
               ) : searchResults.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
-                  No users found matching "{searchQuery}"
+                  No users found matching &quot;{searchQuery}&quot;
                 </div>
               ) : (
                 searchResults.map((user) => {
@@ -259,7 +259,7 @@ export function UserSearchBlock({ className }: UserSearchBlockProps) {
                     <span className="font-medium">
                       {selectedUser.displayName || selectedUser.userId}
                     </span>
-                    ? They won't be able to send you messages or interact with you.
+                    ? They won&apos;t be able to send you messages or interact with you.
                   </>
                 )}
               </DialogDescription>

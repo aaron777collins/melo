@@ -139,7 +139,7 @@ export function DeleteRoleModal() {
                 <div className="space-y-2">
                   <p className="font-medium">This will permanently:</p>
                   <ul className="space-y-1 text-sm list-disc list-inside ml-2">
-                    <li>Delete the role "{role.name}"</li>
+                    <li>Delete the role &quot;{role.name}&quot;</li>
                     {memberCount > 0 && (
                       <li>Remove this role from {memberCount} member{memberCount !== 1 ? 's' : ''}</li>
                     )}

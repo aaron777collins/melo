@@ -223,29 +223,15 @@ export function MatrixProvider({
   onCryptoStateChange,
   enableCrypto = true,
 }: MatrixProviderProps): JSX.Element {
-  // SSG Guard - prevent execution during static generation
-  if (!isClientEnvironment()) {
-    return <MatrixContext.Provider value={{
-      client: null,
-      syncState: null,
-      cryptoState: { status: "uninitialized" },
-      rooms: [],
-      isReady: false,
-      isSyncing: false,
-      isE2EEEnabled: false,
-      syncError: null,
-      cryptoError: null,
-      getRoom: () => null,
-      refreshRooms: () => {},
-    }}>
-      {children}
-    </MatrixContext.Provider>;
-  }
+  // Check environment early but don't return yet - hooks must all be called first
+  const isClient = isClientEnvironment();
 
-  // Get auth state from parent provider
-  const { session } = useMatrixAuth();
+  // Get auth state from parent provider - only call when in client environment
+  // Use a conditional context access pattern to satisfy Rules of Hooks
+  const authContext = useMatrixAuth();
+  const session = isClient ? authContext.session : null;
 
-  // State
+  // State - all hooks must be called unconditionally
   const [client, setClient] = useState<MatrixClient | null>(null);
   const [syncState, setSyncState] = useState<string | null>(null);
   const [cryptoState, setCryptoState] = useState<CryptoState>({
@@ -270,7 +256,7 @@ export function MatrixProvider({
   // =============================================================================
 
   useEffect(() => {
-    if (!isClientEnvironment()) return;
+    if (!isClient) return;
 
     const loadConstants = async () => {
       const constants = await getMatrixConstants();
@@ -278,7 +264,7 @@ export function MatrixProvider({
     };
 
     loadConstants();
-  }, []);
+  }, [isClient]);
 
   // =============================================================================
   // Derived State
@@ -292,8 +278,8 @@ export function MatrixProvider({
       syncState === matrixConstants.SyncState.Prepared || 
       syncState === matrixConstants.SyncState.Syncing
     );
-  const isReady = isCryptoReadyOrDisabled && isSyncReady;
-  const isSyncing = matrixConstants && matrixConstants.SyncState && syncState === matrixConstants.SyncState.Syncing;
+  const isReady = isClient && isCryptoReadyOrDisabled && isSyncReady;
+  const isSyncing = isClient && matrixConstants && matrixConstants.SyncState && syncState === matrixConstants.SyncState.Syncing;
   const isE2EEEnabled =
     cryptoState.status === "ready" && cryptoState.isEncryptionSupported;
 
@@ -309,23 +295,25 @@ export function MatrixProvider({
   // =============================================================================
 
   const refreshRooms = useCallback(() => {
+    if (!isClient) return;
     const currentClient = getClient();
     if (currentClient) {
       const updatedRooms = currentClient.getRooms();
       setRooms(updatedRooms);
       onRoomsUpdate?.(updatedRooms);
     }
-  }, [onRoomsUpdate]);
+  }, [onRoomsUpdate, isClient]);
 
   // =============================================================================
   // Get Room by ID
   // =============================================================================
 
   const getRoom = useCallback((roomId: string): Room | null => {
+    if (!isClient) return null;
     const currentClient = getClient();
     if (!currentClient) return null;
     return currentClient.getRoom(roomId);
-  }, []);
+  }, [isClient]);
 
   // =============================================================================
   // Sync Event Handler
@@ -367,7 +355,7 @@ export function MatrixProvider({
 
   useEffect(() => {
     // Skip during SSG
-    if (!isClientEnvironment()) return;
+    if (!isClient) return;
 
     // No session = destroy client if exists
     if (!session) {
@@ -508,14 +496,14 @@ export function MatrixProvider({
       // Client will be destroyed via destroyClient() in session change
       // Individual event cleanup not needed since client is recreated
     };
-  }, [session, client, handleSync, enableCrypto, onCryptoStateChange]);
+  }, [session, client, handleSync, enableCrypto, onCryptoStateChange, isClient]);
 
   // =============================================================================
   // Room Events (Join/Leave/Update)
   // =============================================================================
 
   useEffect(() => {
-    if (!client || !isClientEnvironment()) return;
+    if (!client || !isClient) return;
 
     // Listen for room membership changes
     const handleRoom = () => {
@@ -545,7 +533,7 @@ export function MatrixProvider({
     return () => {
       // Client will be destroyed via destroyClient() when session changes
     };
-  }, [client, refreshRooms]);
+  }, [client, refreshRooms, isClient]);
 
   // =============================================================================
   // Context Value

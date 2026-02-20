@@ -76,6 +76,38 @@ export function EnhancedVideoGrid({
     }
   }, [hasScreenShare, viewMode]);
 
+  // Participant actions - hooks must be called before any early returns
+  const handlePin = useCallback((participantId: string) => {
+    setPinnedParticipant(participantId);
+    if (onParticipantAction) {
+      onParticipantAction("pin", participantId);
+    }
+  }, [onParticipantAction]);
+
+  const handleUnpin = useCallback(() => {
+    setPinnedParticipant(null);
+    if (onParticipantAction) {
+      onParticipantAction("unpin", pinnedParticipant || "");
+    }
+  }, [onParticipantAction, pinnedParticipant]);
+
+  const handleKick = useCallback((participantId: string) => {
+    if (onParticipantAction) {
+      onParticipantAction("kick", participantId);
+    }
+  }, [onParticipantAction]);
+
+  const handleMute = useCallback((participantId: string) => {
+    if (onParticipantAction) {
+      onParticipantAction("mute", participantId);
+    }
+  }, [onParticipantAction]);
+
+  // Toggle fullscreen
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(!isFullscreen);
+  }, [isFullscreen]);
+
   // Loading state
   if (connectionState === (ConnectionState as any).Connecting) {
     return (
@@ -123,38 +155,6 @@ export function EnhancedVideoGrid({
         return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
     }
   };
-
-  // Participant actions
-  const handlePin = useCallback((participantId: string) => {
-    setPinnedParticipant(participantId);
-    if (onParticipantAction) {
-      onParticipantAction("pin", participantId);
-    }
-  }, [onParticipantAction]);
-
-  const handleUnpin = useCallback(() => {
-    setPinnedParticipant(null);
-    if (onParticipantAction) {
-      onParticipantAction("unpin", pinnedParticipant || "");
-    }
-  }, [onParticipantAction, pinnedParticipant]);
-
-  const handleKick = useCallback((participantId: string) => {
-    if (onParticipantAction) {
-      onParticipantAction("kick", participantId);
-    }
-  }, [onParticipantAction]);
-
-  const handleMute = useCallback((participantId: string) => {
-    if (onParticipantAction) {
-      onParticipantAction("mute", participantId);
-    }
-  }, [onParticipantAction]);
-
-  // Toggle fullscreen
-  const toggleFullscreen = useCallback(() => {
-    setIsFullscreen(!isFullscreen);
-  }, [isFullscreen]);
 
   // Render participants based on view mode
   const renderParticipants = () => {

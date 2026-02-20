@@ -487,7 +487,7 @@ export function ServerJoinStep({
       {/* Help Text */}
       <div className="text-center pt-2">
         <p className="text-xs text-muted-foreground">
-          Don't worry - you can join more communities anytime from the main interface
+          Don&apos;t worry - you can join more communities anytime from the main interface
         </p>
       </div>
     </div>

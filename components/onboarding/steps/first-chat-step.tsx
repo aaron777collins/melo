@@ -89,7 +89,7 @@ export function FirstChatStep({
       id: 0,
       title: "Reading Messages",
       description: "Messages appear chronologically with sender names and timestamps",
-      action: "Click Next when you're ready to continue",
+      action: "Click Next when you&apos;re ready to continue",
       highlight: "messages",
     },
     {
@@ -214,7 +214,7 @@ export function FirstChatStep({
         </div>
         <h1 className="text-2xl font-bold">Learn to Chat</h1>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Let's learn the basics of sending messages and interacting in Melo
+          Let&apos;s learn the basics of sending messages and interacting in Melo
           {selectedServer && ` in ${selectedServer.name}`}
         </p>
       </div>
@@ -387,8 +387,8 @@ export function FirstChatStep({
         <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
           <CheckCircle className="w-4 h-4 text-green-600" />
           <AlertDescription className="text-green-800 dark:text-green-200">
-            <strong>Great job!</strong> You've mastered the basics of chatting in Melo. 
-            You're ready to start real conversations!
+            <strong>Great job!</strong> You&apos;ve mastered the basics of chatting in Melo. 
+            You&apos;re ready to start real conversations!
           </AlertDescription>
         </Alert>
       )}

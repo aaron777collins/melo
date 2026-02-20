@@ -127,7 +127,7 @@ function PrivacySettingsContent() {
               </Select>
               <p className="text-sm text-muted-foreground">
                 {settings.dmPrivacy === 'everyone' && "Anyone can send you direct messages"}
-                {settings.dmPrivacy === 'friends' && "Only people you've added as friends can message you"}
+                {settings.dmPrivacy === 'friends' && "Only people you&apos;ve added as friends can message you"}
                 {settings.dmPrivacy === 'nobody' && "No one can send you direct messages"}
               </p>
             </div>
@@ -171,7 +171,7 @@ function PrivacySettingsContent() {
               <div className="space-y-0.5">
                 <Label htmlFor="online-status">Show online status</Label>
                 <p className="text-sm text-muted-foreground">
-                  Let others see when you're online, away, or offline
+                  Let others see when you&apos;re online, away, or offline
                 </p>
               </div>
               <Switch 
@@ -185,7 +185,7 @@ function PrivacySettingsContent() {
               <div className="space-y-0.5">
                 <Label htmlFor="activity-status">Share activity status</Label>
                 <p className="text-sm text-muted-foreground">
-                  Display what you're doing in your status (e.g., "Playing a game")
+                  Display what you&apos;re doing in your status (e.g., &quot;Playing a game&quot;)
                 </p>
               </div>
               <Switch 
@@ -213,7 +213,7 @@ function PrivacySettingsContent() {
               <div className="space-y-0.5">
                 <Label htmlFor="read-receipts">Send read receipts</Label>
                 <p className="text-sm text-muted-foreground">
-                  Let others know when you've read their messages
+                  Let others know when you&apos;ve read their messages
                 </p>
               </div>
               <Switch 
@@ -227,7 +227,7 @@ function PrivacySettingsContent() {
               <div className="space-y-0.5">
                 <Label htmlFor="typing-indicator">Show typing indicator</Label>
                 <p className="text-sm text-muted-foreground">
-                  Let others know when you're typing a message
+                  Let others know when you&apos;re typing a message
                 </p>
               </div>
               <Switch 

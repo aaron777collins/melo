@@ -461,7 +461,7 @@ export function AccountDeletionFlow({ profile }: AccountDeletionFlowProps) {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             <strong>Final Warning:</strong> This is your last chance to cancel.
-            Once you click "Delete Account", the process cannot be stopped or undone.
+            Once you click &quot;Delete Account&quot;, the process cannot be stopped or undone.
           </AlertDescription>
         </Alert>
 

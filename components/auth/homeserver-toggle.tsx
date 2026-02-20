@@ -53,7 +53,7 @@ export function HomeserverToggle({
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-[250px] bg-zinc-800 text-zinc-300 border-zinc-700 shadow-lg">
               <p>
-                By default, you'll register on {getHomeserverDisplayName(configuredHomeserver)}. 
+                By default, you&apos;ll register on {getHomeserverDisplayName(configuredHomeserver)}. 
                 Switching to Matrix.org provides a public, community-run homeserver. 
                 Note: Matrix.org may have different policies and registration requirements.
               </p>

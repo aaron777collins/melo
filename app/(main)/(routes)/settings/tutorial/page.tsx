@@ -35,7 +35,7 @@ export default function TutorialPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <h4 className="font-medium text-sm">What you'll learn:</h4>
+              <h4 className="font-medium text-sm">What you&apos;ll learn:</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
                 <li>• Chat basics and direct messages</li>
                 <li>• Creating and joining servers</li>

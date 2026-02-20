@@ -233,6 +233,8 @@ export function MatrixAuthProvider({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  console.log('[MatrixAuthProvider] 🎯 Component render - isLoading:', isLoading, 'hasUser:', !!user);
+
   // =============================================================================
   // Session Validation
   // =============================================================================
@@ -240,62 +242,47 @@ export function MatrixAuthProvider({
   /**
    * Validate session on mount
    */
+  // Initialize auth state on mount
   useEffect(() => {
     let isMounted = true;
     let timeoutId: NodeJS.Timeout;
 
     async function validateSession() {
-      setIsLoading(true);
-      
       try {
-        // Add timeout to prevent hanging forever
+        // Set a reasonable timeout for session validation to prevent hanging
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
-            reject(new Error('Session validation timed out after 10 seconds'));
+            reject(new Error('Session validation timeout'));
           }, 10000);
         });
 
-        const validationPromise = validateCurrentSession();
-        const result = await Promise.race([validationPromise, timeoutPromise]);
+        // Race the validation against the timeout
+        const result = await Promise.race([
+          validateCurrentSession(),
+          timeoutPromise
+        ]);
         
         clearTimeout(timeoutId);
-
+        
         if (!isMounted) return;
 
-        // Handle undefined or malformed result (e.g., server action failure)
-        if (!result || typeof result !== 'object') {
-          console.error('[MatrixAuthProvider] Invalid session validation result:', result);
-          setUser(null);
-          setSession(null);
-          onAuthChange?.(null);
-          return;
-        }
-
-        if (result.success) {
-          if (result.data) {
-            setUser(result.data.user);
-            setSession(result.data.session);
-            onAuthChange?.(result.data.user);
-          } else {
-            setUser(null);
-            setSession(null);
-            onAuthChange?.(null);
-          }
+        if (result && result.success && result.data) {
+          setUser(result.data.user);
+          setSession(result.data.session);
+          if (onAuthChange) onAuthChange(result.data.user);
         } else {
           setUser(null);
           setSession(null);
-          onAuthChange?.(null);
+          if (onAuthChange) onAuthChange(null);
         }
-      } catch (err) {
+      } catch (error) {
         if (!isMounted) return;
-        if (err instanceof Error && err.message.includes('timed out')) {
-          // Don't set error for timeout, just proceed without session
-        } else {
-          console.error('[MatrixAuthProvider] Session validation error:', err);
-        }
+        
+        console.error('[MatrixAuthProvider] Session validation error:', error);
+        // On error, proceed with no session (user needs to log in)
         setUser(null);
         setSession(null);
-        onAuthChange?.(null);
+        if (onAuthChange) onAuthChange(null);
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
         if (isMounted) {

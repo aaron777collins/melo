@@ -37,7 +37,7 @@ function EmailNotificationSettings() {
           Email Notifications
         </CardTitle>
         <CardDescription>
-          Get email notifications when you're offline or away
+          Get email notifications when you&apos;re offline or away
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -45,8 +45,8 @@ function EmailNotificationSettings() {
           <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">Email Notifications</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Email notification support is coming soon. You'll be able to receive
-            email summaries when you're offline.
+            Email notification support is coming soon. You&apos;ll be able to receive
+            email summaries when you&apos;re offline.
           </p>
           <div className="space-y-2 text-left max-w-md mx-auto">
             <div className="text-sm">

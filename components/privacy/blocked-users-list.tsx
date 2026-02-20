@@ -93,7 +93,7 @@ export function BlockedUsersList({ className }: BlockedUsersListProps) {
         </CardTitle>
         <CardDescription>
           {blockedUsers.length === 0 
-            ? "You haven't blocked any users yet."
+            ? "You haven&apos;t blocked any users yet."
             : `You have blocked ${blockedUsers.length} user${blockedUsers.length === 1 ? '' : 's'}.`
           }
         </CardDescription>
@@ -122,7 +122,7 @@ export function BlockedUsersList({ className }: BlockedUsersListProps) {
           <div className="space-y-3">
             {filteredUsers.length === 0 ? (
               <div className="text-center text-muted-foreground py-4">
-                No blocked users found matching "{searchQuery}"
+                No blocked users found matching &quot;{searchQuery}&quot;
               </div>
             ) : (
               filteredUsers.map((user) => (

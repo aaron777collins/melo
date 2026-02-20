@@ -125,7 +125,7 @@ export function ServerOverviewModal() {
             Server Overview
           </DialogTitle>
           <DialogDescription className="text-center text-zinc-400">
-            Customize your server's identity and basic settings. Changes are saved immediately to Matrix.
+            Customize your server&apos;s identity and basic settings. Changes are saved immediately to Matrix.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

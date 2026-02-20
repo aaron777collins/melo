@@ -68,7 +68,7 @@ function WelcomeStep() {
         </h3>
         <p className="text-muted-foreground">
           Melo is your decentralized chat platform powered by Matrix. 
-          Let's take a quick tour of the essential features to get you started.
+          Let&apos;s take a quick tour of the essential features to get you started.
         </p>
       </div>
       <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -91,7 +91,7 @@ function ChatBasicsStep() {
         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <h4 className="font-medium mb-1">Direct Messages</h4>
           <p className="text-sm text-muted-foreground">
-            Chat privately with other users. Click on any user and select "Message" to start.
+            Chat privately with other users. Click on any user and select &quot;Message&quot; to start.
           </p>
         </div>
         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -198,7 +198,7 @@ function PrivacySecurityStep() {
         </div>
         <div className="p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            <strong>Tip:</strong> We'll help you set up encryption later - for now, focus on getting familiar with basic features.
+            <strong>Tip:</strong> We&apos;ll help you set up encryption later - for now, focus on getting familiar with basic features.
           </p>
         </div>
       </div>
@@ -221,7 +221,7 @@ function FeaturesOverviewStep() {
         </div>
         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <h4 className="font-medium mb-1 text-sm">Voice Messages</h4>
-          <p className="text-xs text-muted-foreground">Send voice notes when typing isn't convenient.</p>
+          <p className="text-xs text-muted-foreground">Send voice notes when typing isn&apos;t convenient.</p>
         </div>
         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <h4 className="font-medium mb-1 text-sm">Reactions</h4>
@@ -234,7 +234,7 @@ function FeaturesOverviewStep() {
       </div>
       <div className="bg-green-50 dark:bg-green-950/30 p-3 rounded-lg border border-green-200 dark:border-green-800">
         <p className="text-sm text-green-800 dark:text-green-200">
-          🚀 <strong>Ready to explore!</strong> You'll discover these features naturally as you use Melo.
+          🚀 <strong>Ready to explore!</strong> You&apos;ll discover these features naturally as you use Melo.
         </p>
       </div>
     </div>
@@ -248,13 +248,13 @@ function CompletionStep() {
         <Check className="w-8 h-8 text-white" />
       </div>
       <div>
-        <h3 className="text-xl font-semibold mb-2">You're All Set! 🎊</h3>
+        <h3 className="text-xl font-semibold mb-2">You&apos;re All Set! 🎊</h3>
         <p className="text-muted-foreground">
           Great job completing the onboarding! You now know the basics of Melo.
         </p>
       </div>
       <div className="space-y-2">
-        <p className="text-sm font-medium">What's next?</p>
+        <p className="text-sm font-medium">What&apos;s next?</p>
         <div className="space-y-1 text-sm text-muted-foreground">
           <p>• Create your first server or join existing ones</p>
           <p>• Customize your profile and settings</p>
@@ -290,7 +290,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
     {
       id: "welcome",
       title: "Welcome to Melo",
-      description: "Let's get you started with a quick tour",
+      description: "Let&apos;s get you started with a quick tour",
       icon: <Sparkles className="w-5 h-5" />,
       content: <WelcomeStep />,
     },
@@ -350,7 +350,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
   const finalSteps = [...allSteps, {
     id: "completion",
     title: "Ready to Go!",
-    description: "You've completed the onboarding tour",
+    description: "You&apos;ve completed the onboarding tour",
     icon: <Check className="w-5 h-5" />,
     content: <CompletionStep />,
   }];

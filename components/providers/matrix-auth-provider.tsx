@@ -47,6 +47,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
   type ReactNode,
 } from "react";
 import type { MatrixUser, MatrixSession, AuthError } from "@/lib/matrix/types/auth";
@@ -233,6 +234,17 @@ export function MatrixAuthProvider({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Store the latest onAuthChange callback in a ref to prevent infinite re-renders
+  const onAuthChangeRef = useRef(onAuthChange);
+  onAuthChangeRef.current = onAuthChange;
+  
+  // Stabilize onAuthChange callback to prevent infinite re-renders
+  const stableOnAuthChange = useCallback((user: MatrixUser | null) => {
+    if (onAuthChangeRef.current) {
+      onAuthChangeRef.current(user);
+    }
+  }, []);
+
   console.log('[MatrixAuthProvider] 🎯 Component render - isLoading:', isLoading, 'hasUser:', !!user);
 
   // =============================================================================
@@ -269,11 +281,11 @@ export function MatrixAuthProvider({
         if (result && result.success && result.data) {
           setUser(result.data.user);
           setSession(result.data.session);
-          if (onAuthChange) onAuthChange(result.data.user);
+          stableOnAuthChange(result.data.user);
         } else {
           setUser(null);
           setSession(null);
-          if (onAuthChange) onAuthChange(null);
+          stableOnAuthChange(null);
         }
       } catch (error) {
         if (!isMounted) return;
@@ -282,7 +294,7 @@ export function MatrixAuthProvider({
         // On error, proceed with no session (user needs to log in)
         setUser(null);
         setSession(null);
-        if (onAuthChange) onAuthChange(null);
+        stableOnAuthChange(null);
       } finally {
         if (timeoutId) clearTimeout(timeoutId);
         if (isMounted) {
@@ -297,7 +309,7 @@ export function MatrixAuthProvider({
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [onAuthChange]);
+  }, [stableOnAuthChange]);
 
   // =============================================================================
   // Actions
@@ -334,7 +346,7 @@ export function MatrixAuthProvider({
           // Regular successful login
           setUser(result.data.user);
           setSession(result.data.session);
-          onAuthChange?.(result.data.user);
+          stableOnAuthChange(result.data.user);
           return true;
         } else {
           setError(result.error?.message || "Login failed");
@@ -349,7 +361,7 @@ export function MatrixAuthProvider({
         setIsLoading(false);
       }
     },
-    [onAuthChange]
+    [stableOnAuthChange]
   );
 
   /**
@@ -370,18 +382,18 @@ export function MatrixAuthProvider({
 
         setUser(null);
         setSession(null);
-        onAuthChange?.(null);
+        stableOnAuthChange(null);
       } catch (err) {
         // Even on error, clear local state
         console.error("Logout error:", err);
         setUser(null);
         setSession(null);
-        onAuthChange?.(null);
+        stableOnAuthChange(null);
       } finally {
         setIsLoading(false);
       }
     },
-    [onAuthChange]
+    [stableOnAuthChange]
   );
 
   /**
@@ -408,7 +420,7 @@ export function MatrixAuthProvider({
         if (result.success) {
           setUser(result.data.user);
           setSession(result.data.session);
-          onAuthChange?.(result.data.user);
+          stableOnAuthChange(result.data.user);
           
           // Mark user as new to trigger onboarding flow
           markUserAsNew();
@@ -427,7 +439,7 @@ export function MatrixAuthProvider({
         setIsLoading(false);
       }
     },
-    [onAuthChange]
+    [stableOnAuthChange]
   );
 
   /**
@@ -449,12 +461,12 @@ export function MatrixAuthProvider({
       if (result.success && result.data) {
         setUser(result.data.user);
         setSession(result.data.session);
-        onAuthChange?.(result.data.user);
+        stableOnAuthChange(result.data.user);
       } else if (result.success) {
         // Session no longer valid
         setUser(null);
         setSession(null);
-        onAuthChange?.(null);
+        stableOnAuthChange(null);
       } else {
         setError(result.error.message);
       }
@@ -465,7 +477,7 @@ export function MatrixAuthProvider({
     } finally {
       setIsLoading(false);
     }
-  }, [onAuthChange]);
+  }, [stableOnAuthChange]);
 
   /**
    * Complete 2FA login action
@@ -475,9 +487,9 @@ export function MatrixAuthProvider({
       setUser(user);
       setSession(session);
       setIsLoading(false);
-      onAuthChange?.(user);
+      stableOnAuthChange(user);
     },
-    [onAuthChange]
+    [stableOnAuthChange]
   );
 
   // =============================================================================

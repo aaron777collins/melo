@@ -13,6 +13,7 @@ import { LeaveServerModal } from '@/components/modals/leave-server-modal';
 import { DeleteServerModal } from '@/components/modals/delete-server-modal';
 import { DeleteChannelModal } from '@/components/modals/delete-channel-modal';
 import { InviteModal } from '@/components/modals/invite-modal';
+import { useModal } from '@/hooks/use-modal-store';
 
 // Common mocks
 const mockOnClose = vi.fn();
@@ -97,7 +98,7 @@ vi.mock('@/components/ui/label', () => ({
 describe('LeaveServerModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(require('@/hooks/use-modal-store').useModal).mockReturnValue({
+    vi.mocked(useModal).mockReturnValue({
       isOpen: true,
       type: 'leaveServer',
       onClose: mockOnClose,
@@ -213,7 +214,7 @@ describe('LeaveServerModal', () => {
 describe('DeleteServerModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(require('@/hooks/use-modal-store').useModal).mockReturnValue({
+    vi.mocked(useModal).mockReturnValue({
       isOpen: true,
       type: 'deleteServer',
       onClose: mockOnClose,
@@ -270,7 +271,7 @@ describe('DeleteServerModal', () => {
 describe('DeleteChannelModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(require('@/hooks/use-modal-store').useModal).mockReturnValue({
+    vi.mocked(useModal).mockReturnValue({
       isOpen: true,
       type: 'deleteChannel',
       onClose: mockOnClose,
@@ -312,7 +313,7 @@ describe('DeleteChannelModal', () => {
 describe('InviteModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(require('@/hooks/use-modal-store').useModal).mockReturnValue({
+    vi.mocked(useModal).mockReturnValue({
       isOpen: true,
       type: 'invite',
       onClose: mockOnClose,

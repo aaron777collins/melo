@@ -157,11 +157,15 @@ export async function POST(req: Request) {
     // Check if user has 2FA enabled
     let twoFactorEnabled = false;
     try {
-      const client = createClient({
+      const client = await createClient({
         baseUrl: session.homeserverUrl,
         accessToken: session.accessToken,
         userId: session.userId,
       });
+
+      if (!client) {
+        throw new Error('Failed to create Matrix client');
+      }
 
       await client.startClient({ initialSyncLimit: 0 });
       // Wait briefly for initial sync to get account data

@@ -1,4 +1,27 @@
+"use client";
+
+import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
 export default function RootPage() {
+  const { user, isLoading } = useMatrixAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Wait for auth state to be determined
+    if (isLoading) return;
+
+    if (user) {
+      // User is logged in, redirect to channels
+      router.replace("/channels");
+    } else {
+      // User is not logged in, redirect to sign-in
+      router.replace("/sign-in");
+    }
+  }, [user, isLoading, router]);
+
+  // Show loading screen while checking auth state
   return (
     <div className="flex items-center justify-center min-h-screen bg-zinc-900">
       <div className="text-center">

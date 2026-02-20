@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import responsive fixes for p4-3-d responsive design issues */
+@import "../src/styles/responsive-fixes.css";
+
 /* Temporarily comment out import to debug CSS processing issue */
 /* @import "../src/styles/accessibility.css"; */
 

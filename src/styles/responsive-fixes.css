@@ -1,0 +1,476 @@
+/**
+ * Responsive Fixes for MELO V2
+ * 
+ * Addresses specific responsive design issues found in p4-3-a, p4-3-b, p4-3-c:
+ * - Horizontal scrollbar prevention
+ * - Touch target sizing
+ * - Layout consistency across breakpoints
+ * - Theme consistency in responsive states
+ */
+
+/* Global responsive fixes */
+* {
+  /* Prevent unexpected horizontal overflow */
+  box-sizing: border-box;
+}
+
+html, body {
+  /* Prevent horizontal scrolling */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Root container constraints */
+#__next,
+[data-reactroot] {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Mobile-specific fixes (< 768px) */
+@media (max-width: 767px) {
+  /* Ensure all interactive elements meet touch target minimums */
+  button,
+  [role="button"],
+  a,
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  /* Fix input zoom on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    /* Prevent horizontal overflow in inputs */
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Prevent text overflow */
+  p, span, div {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  
+  /* Mobile-safe margins and padding */
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Hide desktop-only elements */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  /* Show mobile-only elements */
+  .mobile-only {
+    display: block !important;
+  }
+  
+  /* Ensure sidebars are properly hidden */
+  aside:not(.mobile-sidebar) {
+    display: none !important;
+  }
+  
+  /* Mobile navigation improvements */
+  nav[role="navigation"] {
+    width: 100% !important;
+    max-width: 100vw;
+  }
+}
+
+/* Tablet-specific fixes (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Touch targets still important on tablets */
+  button,
+  [role="button"],
+  a {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  
+  /* Hide mobile-only elements */
+  .mobile-only {
+    display: none !important;
+  }
+  
+  /* Show tablet-responsive elements */
+  .tablet-responsive {
+    display: block !important;
+  }
+  
+  /* Hybrid sidebar behavior */
+  .sidebar-collapsible {
+    transition: width 0.3s ease;
+  }
+}
+
+/* Desktop fixes (>= 1024px) */
+@media (min-width: 1024px) {
+  /* Hide mobile elements */
+  .mobile-only,
+  .tablet-only {
+    display: none !important;
+  }
+  
+  /* Show desktop elements */
+  .desktop-only {
+    display: block !important;
+  }
+  
+  /* Ensure proper desktop layout */
+  .desktop-layout {
+    display: flex !important;
+  }
+}
+
+/* Layout-specific fixes */
+
+/* Discord-style three-column layout */
+.discord-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.discord-layout .spaces-sidebar {
+  width: 72px;
+  flex-shrink: 0;
+  background: #1e1f22;
+}
+
+@media (max-width: 767px) {
+  .discord-layout .spaces-sidebar {
+    display: none;
+  }
+}
+
+.discord-layout .server-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--card);
+}
+
+@media (max-width: 767px) {
+  .discord-layout .server-sidebar {
+    display: none;
+  }
+}
+
+.discord-layout .main-content {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0; /* Prevent flex overflow */
+}
+
+.discord-layout .member-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--card);
+}
+
+@media (max-width: 1279px) {
+  .discord-layout .member-sidebar {
+    display: none;
+  }
+}
+
+/* Chat-specific responsive fixes */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 1rem;
+}
+
+@media (max-width: 767px) {
+  .chat-messages {
+    padding: 0 0.5rem;
+  }
+}
+
+.chat-input-container {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: var(--background);
+}
+
+@media (max-width: 767px) {
+  .chat-input-container {
+    padding: 0.5rem;
+  }
+}
+
+/* Modal responsive fixes */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background: var(--card);
+  border-radius: 0.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 1rem;
+  width: 100%;
+  max-width: 32rem;
+}
+
+@media (max-width: 767px) {
+  .modal-content {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+  }
+}
+
+/* Navigation fixes */
+.navigation-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  color: var(--foreground);
+  transition: background-color 0.2s;
+  min-height: 44px; /* Touch target */
+}
+
+@media (max-width: 767px) {
+  .navigation-item {
+    padding: 0.75rem 1rem;
+    min-height: 48px; /* Slightly larger on mobile */
+  }
+}
+
+.navigation-item:hover {
+  background: var(--accent);
+}
+
+/* Form fixes */
+.form-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 1rem;
+}
+
+@media (max-width: 767px) {
+  .form-container {
+    padding: 0.5rem;
+  }
+}
+
+.form-input {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .form-input {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 1rem; /* Larger touch target */
+  }
+}
+
+/* Theme consistency fixes */
+.theme-transition * {
+  transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+}
+
+/* Prevent layout shift during theme changes */
+[data-theme] {
+  color-scheme: light dark;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Scrollbar fixes for responsive design */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch device scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+  
+  [data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Prevent horizontal scroll from any element */
+.no-horizontal-scroll,
+.no-horizontal-scroll * {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+}
+
+/* Safe area fixes for mobile devices */
+@media (max-width: 767px) {
+  .safe-area {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Grid fixes */
+.responsive-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Flex fixes to prevent overflow */
+.flex-no-overflow {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.flex-no-overflow > * {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Text overflow fixes */
+.text-responsive {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .text-responsive {
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+/* Image responsive fixes */
+.image-responsive {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Video responsive fixes */
+.video-responsive {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
+/* Container query fallbacks for older browsers */
+@supports not (container-type: inline-size) {
+  .container-responsive {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  @media (max-width: 767px) {
+    .container-responsive {
+      padding: 0.5rem;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .container-responsive {
+      padding: 1rem;
+    }
+  }
+}
+
+/* Utility classes for common responsive patterns */
+.w-full-safe {
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+.h-full-safe {
+  height: 100%;
+  max-height: 100vh;
+  box-sizing: border-box;
+}
+
+.overflow-hidden-x {
+  overflow-x: hidden !important;
+}
+
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Print fixes */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    overflow: visible !important;
+  }
+}

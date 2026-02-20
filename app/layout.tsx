@@ -51,7 +51,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn(openSans.className, "bg-white dark:bg-[#36393f]")}>
+      <body className={cn(openSans.className, "bg-[#ffffff] dark:bg-[#1e1f22]")}>
         <AppErrorBoundary>
           <EnhancedErrorReportingProvider>
             <ErrorReportingProvider config={{ 

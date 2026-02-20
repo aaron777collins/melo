@@ -57,65 +57,67 @@ body,
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 20 14.3% 4.1%;
+    /* Discord Light Theme Colors */
+    --background: 0 0% 100%; /* #ffffff - Discord primary light background */
+    --foreground: 211 100% 7.3%; /* #0f1419 - Discord primary dark text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
+    --card: 210 17% 96%; /* #f2f3f5 - Discord secondary light background */
+    --card-foreground: 211 100% 7.3%; /* #0f1419 - Discord primary dark text */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
+    --popover: 0 0% 100%; /* #ffffff - Discord primary light background */
+    --popover-foreground: 211 100% 7.3%; /* #0f1419 - Discord primary dark text */
 
-    --primary: 24 9.8% 10%;
-    --primary-foreground: 60 9.1% 97.8%;
+    --primary: 225 100% 62%; /* #5865f2 - Discord blurple accent */
+    --primary-foreground: 0 0% 100%; /* #ffffff - White text on blurple */
 
-    --secondary: 60 4.8% 95.9%;
-    --secondary-foreground: 24 9.8% 10%;
+    --secondary: 213 12% 93%; /* #e3e5e8 - Discord tertiary light background */
+    --secondary-foreground: 217 10% 40%; /* #4f5660 - Discord secondary dark text */
 
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
+    --muted: 213 12% 93%; /* #e3e5e8 - Discord tertiary light background */
+    --muted-foreground: 217 10% 40%; /* #4f5660 - Discord secondary dark text */
 
-    --accent: 60 4.8% 95.9%;
-    --accent-foreground: 24 9.8% 10%;
+    --accent: 213 12% 93%; /* #e3e5e8 - Discord tertiary light background */
+    --accent-foreground: 217 10% 40%; /* #4f5660 - Discord secondary dark text */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 60 9.1% 97.8%;
 
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 20 14.3% 4.1%;
+    --border: 213 12% 93%; /* #e3e5e8 - Discord tertiary light background */
+    --input: 213 12% 93%; /* #e3e5e8 - Discord tertiary light background */
+    --ring: 225 100% 62%; /* #5865f2 - Discord blurple accent */
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 20 14.3% 4.1%;
-    --foreground: 60 9.1% 97.8%;
+    /* Discord Dark Theme Colors */
+    --background: 223 7% 12%; /* #1e1f22 - Discord primary dark background */
+    --foreground: 220 13% 91%; /* #dbdee1 - Discord primary light text */
 
-    --card: 20 14.3% 4.1%;
-    --card-foreground: 60 9.1% 97.8%;
+    --card: 223 7% 17%; /* #2b2d31 - Discord secondary dark background */
+    --card-foreground: 220 13% 91%; /* #dbdee1 - Discord primary light text */
 
-    --popover: 20 14.3% 4.1%;
-    --popover-foreground: 60 9.1% 97.8%;
+    --popover: 223 7% 12%; /* #1e1f22 - Discord primary dark background */
+    --popover-foreground: 220 13% 91%; /* #dbdee1 - Discord primary light text */
 
-    --primary: 60 9.1% 97.8%;
-    --primary-foreground: 24 9.8% 10%;
+    --primary: 225 100% 62%; /* #5865f2 - Discord blurple accent */
+    --primary-foreground: 0 0% 100%; /* #ffffff - White text on blurple */
 
-    --secondary: 12 6.5% 15.1%;
-    --secondary-foreground: 60 9.1% 97.8%;
+    --secondary: 220 7% 20%; /* #313338 - Discord tertiary dark background */
+    --secondary-foreground: 220 9% 71%; /* #b5bac1 - Discord secondary light text */
 
-    --muted: 12 6.5% 15.1%;
-    --muted-foreground: 24 5.4% 63.9%;
+    --muted: 220 7% 20%; /* #313338 - Discord tertiary dark background */
+    --muted-foreground: 220 9% 71%; /* #b5bac1 - Discord secondary light text */
 
-    --accent: 12 6.5% 15.1%;
-    --accent-foreground: 60 9.1% 97.8%;
+    --accent: 220 7% 20%; /* #313338 - Discord tertiary dark background */
+    --accent-foreground: 220 9% 71%; /* #b5bac1 - Discord secondary light text */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 60 9.1% 97.8%;
 
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
-    --ring: 24 5.7% 82.9%;
+    --border: 220 7% 20%; /* #313338 - Discord tertiary dark background */
+    --input: 220 7% 20%; /* #313338 - Discord tertiary dark background */
+    --ring: 225 100% 62%; /* #5865f2 - Discord blurple accent */
   }
 }
 

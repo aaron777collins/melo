@@ -262,6 +262,15 @@ export function MatrixAuthProvider({
 
         if (!isMounted) return;
 
+        // Handle undefined or malformed result (e.g., server action failure)
+        if (!result || typeof result !== 'object') {
+          console.error('[MatrixAuthProvider] Invalid session validation result:', result);
+          setUser(null);
+          setSession(null);
+          onAuthChange?.(null);
+          return;
+        }
+
         if (result.success) {
           if (result.data) {
             setUser(result.data.user);

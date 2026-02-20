@@ -274,12 +274,12 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         announce("File attachment dialog opened", 'polite');
                       }}
                       disabled={isLoading}
-                      className="absolute top-5 left-5 md:top-7 md:left-8 h-[44px] w-[44px] md:h-[24px] md:w-[24px] bg-zinc-500 dark:bg-zinc-400 hover:bg-zinc-600 dark:hover:bg-zinc-300 active:bg-zinc-700 dark:active:bg-zinc-200 transition rounded-full p-2 md:p-1 flex items-center justify-center focus-enhanced"
+                      className="absolute top-5 left-5 md:top-7 md:left-8 h-[44px] w-[44px] md:h-[24px] md:w-[24px] bg-[#4f5660] dark:bg-[#b5bac1] hover:bg-[#0f1419] dark:hover:bg-[#ffffff] active:bg-[#0f1419] dark:active:bg-[#ffffff] transition rounded-full p-2 md:p-1 flex items-center justify-center focus-enhanced"
                       aria-label="Attach file to message"
                       title="Attach file"
                       style={{ touchAction: 'manipulation' }}
                     >
-                      <Plus className="h-5 w-5 md:h-4 md:w-4 text-white dark:text-[#313338]" aria-hidden="true" />
+                      <Plus className="h-5 w-5 md:h-4 md:w-4 text-[#ffffff] dark:text-[#1e1f22]" aria-hidden="true" />
                     </button>
                     
                     {/* Main input - Discord-clone exact styling on desktop (px-14 py-6), mobile-optimized */}
@@ -288,7 +288,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                       ref={inputRef}
                       placeholder={placeholder}
                       disabled={isLoading || (isMatrixMode && !isReady)}
-                      className={`px-14 py-6 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200 ${effectivePreferences.highContrast ? 'high-contrast-input' : ''}`}
+                      className={`px-14 py-6 bg-[#e3e5e8] dark:bg-[#313338] border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#0f1419] dark:text-[#dbdee1] ${effectivePreferences.highContrast ? 'high-contrast-input' : ''}`}
                       value={field.value}
                       onChange={handleInputChange}
                       onKeyPress={handleKeyPress}
@@ -319,12 +319,12 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         variant="ghost"
                         onClick={handleGifClick}
                         disabled={isLoading}
-                        className="h-11 w-11 md:h-8 md:w-8 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 active:bg-zinc-400 dark:active:bg-zinc-500 transition-colors rounded-lg md:rounded focus-enhanced"
+                        className="h-11 w-11 md:h-8 md:w-8 p-0 hover:bg-[#e3e5e8] dark:hover:bg-[#2b2d31] active:bg-[#e3e5e8] dark:active:bg-[#2b2d31] transition-colors rounded-lg md:rounded focus-enhanced"
                         aria-label="Add GIF to message"
                         title="Add GIF"
                         style={{ touchAction: 'manipulation' }}
                       >
-                        <Image className="h-5 w-5 md:h-4 md:w-4 text-zinc-600 dark:text-zinc-300" aria-hidden="true" />
+                        <Image className="h-5 w-5 md:h-4 md:w-4 text-[#4f5660] dark:text-[#b5bac1]" aria-hidden="true" />
                       </Button>
                       
                       {/* Emoji picker */}
@@ -332,7 +332,7 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                         role="button" 
                         aria-label="Add emoji to message" 
                         tabIndex={0}
-                        className="h-11 w-11 md:h-8 md:w-8 p-0 hover:bg-zinc-300 dark:hover:bg-zinc-600 active:bg-zinc-400 dark:active:bg-zinc-500 transition-colors rounded-lg md:rounded flex items-center justify-center"
+                        className="h-11 w-11 md:h-8 md:w-8 p-0 hover:bg-[#e3e5e8] dark:hover:bg-[#2b2d31] active:bg-[#e3e5e8] dark:active:bg-[#2b2d31] transition-colors rounded-lg md:rounded flex items-center justify-center"
                         style={{ touchAction: 'manipulation' }}
                       >
                         <EmojiPicker

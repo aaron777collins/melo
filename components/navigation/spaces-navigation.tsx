@@ -52,7 +52,7 @@ function NavigationItem({ id, imageUrl, name }: NavigationItemProps) {
             "relative group flex mx-3 h-[48px] w-[48px] rounded-[24px] group-hover:rounded-[16px] transition-all overflow-hidden items-center justify-center",
             decodedServerId === id
               ? "bg-primary/10 text-primary rounded-[16px]"
-              : "bg-background dark:bg-neutral-700"
+              : "bg-[#f2f3f5] dark:bg-[#313338]"
           )}
         >
           {imageUrl ? (
@@ -77,7 +77,7 @@ function NavigationAction() {
           onClick={() => onOpen("createServer")}
           className="group flex items-center"
         >
-          <div className="flex mx-3 h-[48px] w-[48px] rounded-[24px] group-hover:rounded-[16px] transition-all overflow-hidden items-center justify-center bg-background dark:bg-neutral-700 group-hover:bg-emerald-500">
+          <div className="flex mx-3 h-[48px] w-[48px] rounded-[24px] group-hover:rounded-[16px] transition-all overflow-hidden items-center justify-center bg-[#f2f3f5] dark:bg-[#313338] group-hover:bg-emerald-500">
             <Plus
               className="group-hover:text-white transition text-emerald-500"
               size={25}
@@ -97,7 +97,7 @@ export function SpacesNavigation() {
     return (
       <div className="space-y-4 flex flex-col h-full items-center text-primary w-full dark:bg-[#1e1f22] bg-[#e3e5e8] py-3" data-testid="spaces-loading">
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+          <Loader2 className="h-6 w-6 animate-spin text-[#4f5660] dark:text-[#b5bac1]" />
         </div>
       </div>
     );
@@ -110,7 +110,7 @@ export function SpacesNavigation() {
           <AlertCircle className="h-6 w-6 text-red-400 mb-2" />
           <button
             onClick={() => window.location.reload()}
-            className="text-xs text-zinc-500 hover:text-zinc-400"
+            className="text-xs text-[#4f5660] dark:text-[#b5bac1] hover:text-[#0f1419] dark:hover:text-[#ffffff]"
           >
             Retry
           </button>
@@ -125,7 +125,7 @@ export function SpacesNavigation() {
       <NavigationAction />
       
       {/* Separator - exact Discord style */}
-      <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mx-auto" />
+      <Separator className="h-[2px] bg-[#e3e5e8] dark:bg-[#313338] rounded-md w-10 mx-auto" />
       
       {/* Server List */}
       <ScrollArea className="flex-1 w-full">
@@ -142,7 +142,7 @@ export function SpacesNavigation() {
         {/* Empty state */}
         {spaces.length === 0 && (
           <div className="px-2 py-4 text-center">
-            <div className="text-zinc-500 text-xs">No servers yet</div>
+            <div className="text-[#4f5660] dark:text-[#b5bac1] text-xs">No servers yet</div>
           </div>
         )}
       </ScrollArea>

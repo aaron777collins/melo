@@ -125,8 +125,8 @@ export const DMChatHeader = ({ roomId }: DMChatHeaderProps) => {
 
   if (!isReady || !roomInfo) {
     return (
-      <div className="flex items-center h-12 px-3 border-b-2 border-neutral-200 dark:border-neutral-800">
-        <div className="text-md font-semibold text-zinc-500 dark:text-zinc-400">
+      <div className="flex items-center h-12 px-3 border-b-2 border-[#e3e5e8] dark:border-[#313338]">
+        <div className="text-md font-semibold text-[#4f5660] dark:text-[#b5bac1]">
           Loading...
         </div>
       </div>
@@ -134,14 +134,14 @@ export const DMChatHeader = ({ roomId }: DMChatHeaderProps) => {
   }
 
   return (
-    <div className="flex items-center justify-between h-12 px-3 border-b-2 border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1e1f22]">
+    <div className="flex items-center justify-between h-12 px-3 border-b-2 border-[#e3e5e8] dark:border-[#313338] bg-[#ffffff] dark:bg-[#1e1f22]">
       {/* Left side - User info */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {/* Avatar with online indicator */}
         <div className="relative">
           <Avatar className="h-8 w-8">
             <AvatarImage src={roomInfo.avatarUrl} />
-            <AvatarFallback className="bg-zinc-500 text-white text-sm">
+            <AvatarFallback className="bg-[#5865f2] text-white text-sm">
               {roomInfo.displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>

@@ -27,9 +27,9 @@ export function ServerSidebar({ serverId }: ServerSidebarProps) {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full w-full bg-[#2B2D31] dark:bg-[#2B2D31]" data-testid="space-loading">
+      <div className="flex flex-col h-full w-full bg-[#f2f3f5] dark:bg-[#2B2D31]" data-testid="space-loading">
         <div className="flex items-center justify-center h-full">
-          <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+          <Loader2 className="h-6 w-6 animate-spin text-[#4f5660] dark:text-[#b5bac1]" />
         </div>
       </div>
     );
@@ -37,8 +37,8 @@ export function ServerSidebar({ serverId }: ServerSidebarProps) {
 
   if (error || !currentSpace) {
     return (
-      <div className="flex flex-col h-full w-full bg-[#2B2D31] dark:bg-[#2B2D31]" data-testid="space-error">
-        <div className="flex items-center justify-center h-full p-4 text-center text-zinc-500">
+      <div className="flex flex-col h-full w-full bg-[#f2f3f5] dark:bg-[#2B2D31]" data-testid="space-error">
+        <div className="flex items-center justify-center h-full p-4 text-center text-[#4f5660] dark:text-[#b5bac1]">
           {error?.message || "Space not found"}
         </div>
       </div>

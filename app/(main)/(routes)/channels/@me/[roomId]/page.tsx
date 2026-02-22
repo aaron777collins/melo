@@ -12,12 +12,12 @@ import { Separator } from "@/components/ui/separator";
 import { MessageCircle } from "lucide-react";
 
 interface DMRoomPageProps {
-  params: {
+  params: Promise<{
     roomId: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     video?: boolean;
-  };
+  }>;
 }
 
 /**
@@ -27,9 +27,12 @@ interface DMRoomPageProps {
  * Layout: [UserSidebar] [DM List] [Chat Content]
  */
 export default async function DMRoomPage({
-  params: { roomId },
-  searchParams: { video }
+  params,
+  searchParams
 }: DMRoomPageProps) {
+  // Next.js 15: params and searchParams are async and must be awaited
+  const { roomId } = await params;
+  const { video } = await searchParams;
   // Get session from cookies
   const session = await getSessionCookie();
   

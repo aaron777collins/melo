@@ -9,10 +9,10 @@ import { SectionErrorBoundary, ChatErrorBoundary } from "@/components/error-boun
 import { getSessionCookie } from "@/lib/matrix/cookies";
 
 interface ChannelIdPageProps {
-  params: {
+  params: Promise<{
     serverId: string;
     channelId: string;
-  };
+  }>;
 }
 
 interface MatrixRoomInfo {
@@ -108,8 +108,11 @@ async function getRoomMembers(
 }
 
 export default async function ChannelIdPage({
-  params: { channelId, serverId }
+  params
 }: ChannelIdPageProps) {
+  // Next.js 15: params is async and must be awaited
+  const { channelId, serverId } = await params;
+  
   // Decode Matrix room IDs
   const spaceId = decodeURIComponent(serverId);
   const roomId = decodeURIComponent(channelId);

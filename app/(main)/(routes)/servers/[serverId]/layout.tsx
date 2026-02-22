@@ -9,8 +9,11 @@ export default async function ServerIdLayout({
   params
 }: {
   children: React.ReactNode;
-  params: { serverId: string };
+  params: Promise<{ serverId: string }>;
 }) {
+  // Next.js 15: params is async and must be awaited
+  const { serverId } = await params;
+  
   // Get session from cookies (properly decoded)
   const session = await getSessionCookie();
   
@@ -19,7 +22,7 @@ export default async function ServerIdLayout({
   }
   
   // Decode the Matrix space ID
-  const spaceId = decodeURIComponent(params.serverId);
+  const spaceId = decodeURIComponent(serverId);
 
   return (
     <div className="h-full">

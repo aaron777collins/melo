@@ -9,10 +9,10 @@ import { SectionErrorBoundary, ChatErrorBoundary } from "@/components/error-boun
 import { getSessionCookie } from "@/lib/matrix/cookies";
 
 interface ConversationPageProps {
-  params: {
+  params: Promise<{
     serverId: string;
     memberId: string;
-  };
+  }>;
 }
 
 interface DirectMessageInfo {
@@ -177,9 +177,12 @@ async function getUserInfo(
 export default async function ConversationPage({
   params
 }: ConversationPageProps) {
+  // Next.js 15: params is async and must be awaited
+  const { serverId, memberId } = await params;
+  
   // Decode Matrix IDs
-  const spaceId = decodeURIComponent(params.serverId);
-  const targetUserId = decodeURIComponent(params.memberId);
+  const spaceId = decodeURIComponent(serverId);
+  const targetUserId = decodeURIComponent(memberId);
   
   // Get session from cookies
   const session = await getSessionCookie();
@@ -192,7 +195,7 @@ export default async function ConversationPage({
   
   // Don't allow DM with yourself
   if (targetUserId === userId) {
-    return redirect(`/servers/${params.serverId}`);
+    return redirect(`/servers/${serverId}`);
   }
   
   // Find or create DM room
@@ -205,7 +208,7 @@ export default async function ConversationPage({
   
   if (!dmInfo) {
     // Failed to create/find DM room
-    return redirect(`/servers/${params.serverId}`);
+    return redirect(`/servers/${serverId}`);
   }
 
   return (

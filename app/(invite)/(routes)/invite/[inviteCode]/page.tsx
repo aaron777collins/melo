@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Users, Hash, Globe, AlertCircle, Loader2, CheckCircle, ArrowLeft } from "lucide-react";
 
@@ -16,9 +16,9 @@ import { parseInviteUrl, createInviteService } from "@/lib/matrix/invites";
 import { validateInviteUsage, trackInviteUsage } from "@/lib/matrix/invite-tracker";
 
 interface InviteCodePageProps {
-  params: {
+  params: Promise<{
     inviteCode: string;
-  };
+  }>;
 }
 
 interface RoomPreview {
@@ -44,6 +44,9 @@ interface InvitePageState {
  * Handles Matrix-based invite system with server preview and joining
  */
 export default function InviteCodePage({ params }: InviteCodePageProps) {
+  // Next.js 15: use() to unwrap async params in client components
+  const { inviteCode } = use(params);
+  
   const { client, isReady } = useMatrixClient();
   const router = useRouter();
   const [state, setState] = useState<InvitePageState>({ status: 'loading' });
@@ -54,9 +57,9 @@ export default function InviteCodePage({ params }: InviteCodePageProps) {
   useEffect(() => {
     // Set the invite URL on client side only
     if (typeof window !== 'undefined') {
-      setInviteUrl(`${window.location.origin}/invite/${params.inviteCode}`);
+      setInviteUrl(`${window.location.origin}/invite/${inviteCode}`);
     }
-  }, [params.inviteCode]);
+  }, [inviteCode]);
 
   useEffect(() => {
     if (!isReady || !client || !inviteUrl) {

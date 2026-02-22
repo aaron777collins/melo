@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { getSessionCookie } from "@/lib/matrix/cookies";
 
 interface ServerIdPageProps {
-  params: {
+  params: Promise<{
     serverId: string;
-  };
+  }>;
 }
 
 /**
@@ -14,8 +14,11 @@ interface ServerIdPageProps {
  * The serverId is a URL-encoded Matrix room ID (e.g., !abc123:server.com)
  */
 export default async function ServerIdPage({ params }: ServerIdPageProps) {
+  // Next.js 15: params is async and must be awaited
+  const { serverId } = await params;
+  
   // Decode the Matrix room ID (it may be URL-encoded)
-  const spaceId = decodeURIComponent(params.serverId);
+  const spaceId = decodeURIComponent(serverId);
   
   // Get session from cookies (properly decoded)
   const session = await getSessionCookie();

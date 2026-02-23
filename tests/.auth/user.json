@@ -4,34 +4,13 @@
     {
       "origin": "https://dev2.aaroncollins.info",
       "localStorage": [
-        {
-          "name": "mx_device_id",
-          "value": "E2E_MOCK_DEVICE_F17D6"
-        },
-        {
-          "name": "mx_hs_url",
-          "value": "https://dev2.aaroncollins.info"
-        },
-        {
-          "name": "melo-accessibility-settings",
-          "value": "{\"reducedMotion\":false,\"highContrast\":false,\"screenReaderOptimizations\":false,\"enhancedFocus\":true,\"announceNavigation\":true,\"announceMessages\":false}"
-        },
-        {
-          "name": "mx_display_name",
-          "value": "E2E Test User"
-        },
-        {
-          "name": "mx_access_token",
-          "value": "e2e_mock_access_token_1771535950166"
-        },
-        {
-          "name": "e2e_auth_bypass",
-          "value": "true"
-        },
-        {
-          "name": "mx_user_id",
-          "value": "@sophietest:dev2.aaroncollins.info"
-        }
+        { "name": "mx_device_id", "value": "E2E_MOCK_DEVICE_TEST123" },
+        { "name": "mx_hs_url", "value": "https://dev2.aaroncollins.info" },
+        { "name": "mx_display_name", "value": "E2E Test User" },
+        { "name": "mx_access_token", "value": "e2e_mock_access_token_valid" },
+        { "name": "e2e_auth_bypass", "value": "true" },
+        { "name": "mx_user_id", "value": "@sophietest:dev2.aaroncollins.info" },
+        { "name": "melo-accessibility-settings", "value": "{\"reducedMotion\":false,\"highContrast\":false,\"screenReaderOptimizations\":false,\"enhancedFocus\":true,\"announceNavigation\":true,\"announceMessages\":false}" }
       ]
     }
   ]

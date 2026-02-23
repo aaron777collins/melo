@@ -1,0 +1,146 @@
+
+> melo@0.1.0 build /home/ubuntu/repos/melo
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentation@0.211.0_@opentelemetry+api@1.9.0/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+node@10.39.0/node_modules/@sentry/node/build/cjs/integrations/tracing/postgresjs.js
+./node_modules/.pnpm/@sentry+node@10.39.0/node_modules/@sentry/node/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@10.39.0_@opentelemetry+context-async-hooks@2.5.1_@opentelemetry+api@1.9._d349416c8af52d128ffe7c2b56883d56/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./lib/monitoring/sentry-integration.ts
+./lib/monitoring/error-reporter.ts
+./hooks/use-error-reporting.tsx
+
+ ✓ Compiled successfully
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+SMTP configuration not complete. Email sending will be simulated.
+SMTP configuration not complete. Email sending will be simulated.
+   Generating static pages (0/50) ...
+   Generating static pages (12/50) 
+[BUILD] API route executing during build - returning mock data
+SMTP configuration not complete. Email sending will be simulated.
+   Generating static pages (24/50) 
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+   Generating static pages (37/50) 
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+ ✓ Generating static pages (50/50)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                       Size     First Load JS
+┌ ○ /                                             666 B          90.1 kB
+├ ○ /_not-found                                   162 B          88.1 kB
+├ ○ /admin/invites                                6.63 kB         178 kB
+├ ○ /admin/jobs                                   9.3 kB          183 kB
+├ ƒ /api/admin/invites                            0 B                0 B
+├ ƒ /api/admin/jobs                               0 B                0 B
+├ ƒ /api/admin/jobs/[jobId]                       0 B                0 B
+├ ƒ /api/admin/jobs/[jobId]/logs                  0 B                0 B
+├ ○ /api/admin/jobs/stats                         0 B                0 B
+├ ƒ /api/admin/workers                            0 B                0 B
+├ ƒ /api/auth/login                               0 B                0 B
+├ ƒ /api/auth/use-invite                          0 B                0 B
+├ ƒ /api/auth/validate-invite                     0 B                0 B
+├ ƒ /api/auth/verify-2fa                          0 B                0 B
+├ ƒ /api/channels                                 0 B                0 B
+├ ƒ /api/channels/[channelId]                     0 B                0 B
+├ ƒ /api/direct-messages                          0 B                0 B
+├ ○ /api/health                                   0 B                0 B
+├ ○ /api/live                                     0 B                0 B
+├ ƒ /api/livekit                                  0 B                0 B
+├ ƒ /api/members/[memberId]                       0 B                0 B
+├ ƒ /api/messages                                 0 B                0 B
+├ ƒ /api/notifications/push                       0 B                0 B
+├ ƒ /api/notifications/subscribe                  0 B                0 B
+├ ƒ /api/notifications/vapid-key                  0 B                0 B
+├ ƒ /api/og-preview                               0 B                0 B
+├ ○ /api/ready                                    0 B                0 B
+├ ƒ /api/reports                                  0 B                0 B
+├ ƒ /api/servers                                  0 B                0 B
+├ ƒ /api/servers/[serverId]                       0 B                0 B
+├ ƒ /api/servers/[serverId]/audit-log             0 B                0 B
+├ ƒ /api/servers/[serverId]/invite-code           0 B                0 B
+├ ƒ /api/servers/[serverId]/leave                 0 B                0 B
+├ ƒ /api/support/contact                          0 B                0 B
+├ ƒ /api/test-rate-limit                          0 B                0 B
+├ ƒ /api/uploadthing                              0 B                0 B
+├ ƒ /channels                                     162 B          88.1 kB
+├ ƒ /channels/[roomId]                            13.8 kB         471 kB
+├ ○ /docs                                         10.3 kB         121 kB
+├ ƒ /invite/[inviteCode]                          10.7 kB         121 kB
+├ ○ /link-preview-test                            2.75 kB        97.2 kB
+├ ○ /offline                                      1.93 kB        98.9 kB
+├ ƒ /servers/[serverId]                           162 B          88.1 kB
+├ ƒ /servers/[serverId]/channels/[channelId]      13.9 kB         503 kB
+├ ƒ /servers/[serverId]/conversations/[memberId]  9.16 kB         376 kB
+├ ƒ /servers/[serverId]/settings                  163 B          88.1 kB
+├ ƒ /servers/[serverId]/settings/audit-log        5.48 kB         138 kB
+├ ƒ /servers/[serverId]/settings/bans             10.2 kB         137 kB
+├ ƒ /servers/[serverId]/settings/members          13.1 kB         171 kB
+├ ƒ /servers/[serverId]/settings/overview         11.8 kB         147 kB
+├ ƒ /servers/[serverId]/settings/roles            8.54 kB         137 kB
+├ ○ /servers/create/templates                     16.8 kB         121 kB
+├ ƒ /settings                                     162 B          88.1 kB
+├ ƒ /settings/accessibility                       4.19 kB         130 kB
+├ ƒ /settings/account/delete                      10.6 kB         117 kB
+├ ƒ /settings/appearance                          6.98 kB         163 kB
+├ ƒ /settings/data-export                         7.52 kB         138 kB
+├ ƒ /settings/help                                9.27 kB         148 kB
+├ ƒ /settings/language                            4.82 kB         126 kB
+├ ƒ /settings/notifications                       15.1 kB         162 kB
+├ ƒ /settings/notifications/advanced              21 kB           185 kB
+├ ƒ /settings/privacy                             12.3 kB         156 kB
+├ ƒ /settings/profile                             10.7 kB         135 kB
+├ ƒ /settings/security                            29.5 kB         207 kB
+├ ƒ /settings/tutorial                            4.08 kB         104 kB
+├ ƒ /settings/voice-video                         10.5 kB         137 kB
+├ ƒ /sign-in/[[...sign-in]]                       6.14 kB         116 kB
+├ ƒ /sign-up/[[...sign-up]]                       7.65 kB         129 kB
+└ ○ /test-voice-channels                          22.5 kB         280 kB
++ First Load JS shared by all                     87.9 kB
+  ├ chunks/33878949-89ef2ca93adc370d.js           53.7 kB
+  ├ chunks/7758-80d53affa6ae723d.js               31.9 kB
+  └ other shared chunks (total)                   2.38 kB
+
+
+ƒ Middleware                                      27.4 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

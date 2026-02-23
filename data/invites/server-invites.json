@@ -1,0 +1,13 @@
+{
+  "invites": [
+    {
+      "invitedUserId": "@test:matrix.org",
+      "createdBy": "@admin:matrix.example.com",
+      "createdAt": "2026-02-23T21:24:05.083Z",
+      "used": true,
+      "id": "b4978857445dc354d48a78e1072f1426",
+      "usedAt": "2026-02-23T21:24:05.086Z"
+    }
+  ],
+  "lastUpdated": "2026-02-23T21:24:05.086Z"
+}

@@ -284,13 +284,28 @@ describe('access-control', () => {
       // No invite check needed for same homeserver users
     })
 
-    // TODO: Enable these tests when server-invites module is fully implemented in Phase E
-    it.skip('should allow external user with valid invite', () => {
-      // Test skipped - requires server-invites module implementation
+    it('should allow external user with valid invite', async () => {
+      // Mock server-invites module to return true for valid invite
+      const mockServerInvites = await import('../../../../lib/matrix/server-invites')
+      vi.mocked(mockServerInvites.serverCheckHasValidInvite).mockReturnValue(true)
+      
+      const result = isLoginAllowedWithInvite('https://matrix.org', '@invited:matrix.org')
+      
+      expect(result.allowed).toBe(true)
+      expect(mockServerInvites.serverCheckHasValidInvite).toHaveBeenCalledWith('@invited:matrix.org')
     })
 
-    it.skip('should reject external user without valid invite', () => {
-      // Test skipped - requires server-invites module implementation
+    it('should reject external user without valid invite', async () => {
+      // Mock server-invites module to return false for no invite
+      const mockServerInvites = await import('../../../../lib/matrix/server-invites')
+      vi.mocked(mockServerInvites.serverCheckHasValidInvite).mockReturnValue(false)
+      
+      const result = isLoginAllowedWithInvite('https://matrix.org', '@uninvited:matrix.org')
+      
+      expect(result.allowed).toBe(false)
+      expect(result.reason).toContain('invitation from an administrator')
+      expect(result.code).toBe('INVITE_REQUIRED')
+      expect(mockServerInvites.serverCheckHasValidInvite).toHaveBeenCalledWith('@uninvited:matrix.org')
     })
 
     it('should fall back to homeserver validation if no userId provided', () => {

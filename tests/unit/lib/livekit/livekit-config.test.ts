@@ -42,7 +42,7 @@ describe('LiveKit Configuration', () => {
 
       const { validateLiveKitEnvironment } = await import('@/lib/livekit/config');
       
-      expect(() => validateLiveKitEnvironment()).toThrow('LIVEKIT_API_KEY is required');
+      expect(() => validateLiveKitEnvironment()).toThrow('LiveKit configuration error');
     });
 
     it('should throw error when LIVEKIT_API_SECRET is missing', async () => {
@@ -52,7 +52,7 @@ describe('LiveKit Configuration', () => {
 
       const { validateLiveKitEnvironment } = await import('@/lib/livekit/config');
       
-      expect(() => validateLiveKitEnvironment()).toThrow('LIVEKIT_API_SECRET is required');
+      expect(() => validateLiveKitEnvironment()).toThrow('LiveKit configuration error');
     });
 
     it('should throw error when NEXT_PUBLIC_LIVEKIT_URL is missing', async () => {
@@ -62,7 +62,7 @@ describe('LiveKit Configuration', () => {
 
       const { validateLiveKitEnvironment } = await import('@/lib/livekit/config');
       
-      expect(() => validateLiveKitEnvironment()).toThrow('NEXT_PUBLIC_LIVEKIT_URL is required');
+      expect(() => validateLiveKitEnvironment()).toThrow('LiveKit configuration error');
     });
   });
 

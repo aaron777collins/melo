@@ -110,7 +110,8 @@ vi.mock('next/navigation', () => ({
     refresh: mockRouterRefresh
   })),
   usePathname: vi.fn(() => '/'),
-  useSearchParams: vi.fn(() => new URLSearchParams())
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+  useParams: vi.fn(() => ({ serverId: 'test-server', channelId: 'test-channel' }))
 }))
 
 // =============================================================================
@@ -120,14 +121,22 @@ vi.mock('next/navigation', () => ({
 export const mockModalOnOpen = vi.fn()
 export const mockModalOnClose = vi.fn()
 
+// Create a more explicit mock implementation
+const mockModalReturn = {
+  isOpen: false,
+  type: null,
+  data: {},
+  onOpen: mockModalOnOpen,
+  onClose: mockModalOnClose
+}
+
 vi.mock('@/hooks/use-modal-store', () => ({
-  useModal: vi.fn(() => ({
-    isOpen: false,
-    type: null,
-    data: {},
-    onOpen: mockModalOnOpen,
-    onClose: mockModalOnClose
-  }))
+  useModal: vi.fn(() => mockModalReturn)
+}))
+
+// Also mock the actual file path without alias as fallback
+vi.mock('../../../hooks/use-modal-store', () => ({
+  useModal: vi.fn(() => mockModalReturn)
 }))
 
 // =============================================================================
@@ -199,7 +208,109 @@ vi.mock('@/lib/matrix/media', () => ({
 }))
 
 // =============================================================================
+// LiveKit SDK Mock - Prevents rate limiting and connection issues
+// =============================================================================
+
+const mockRoom = {
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  on: vi.fn(),
+  off: vi.fn(),
+  state: 'disconnected',
+  participants: new Map(),
+  localParticipant: {
+    identity: 'test-user',
+    publishTrack: vi.fn().mockResolvedValue(undefined),
+    unpublishTrack: vi.fn().mockResolvedValue(undefined),
+    audioTracks: new Map(),
+    videoTracks: new Map()
+  },
+  remoteParticipants: new Map(),
+  name: 'test-room'
+}
+
+vi.mock('livekit-client', () => ({
+  Room: vi.fn().mockImplementation(() => mockRoom),
+  RoomEvent: {
+    Connected: 'connected',
+    Disconnected: 'disconnected',
+    ParticipantConnected: 'participantConnected',
+    ParticipantDisconnected: 'participantDisconnected',
+    TrackPublished: 'trackPublished',
+    TrackUnpublished: 'trackUnpublished'
+  },
+  ConnectionState: {
+    Connected: 'connected',
+    Disconnected: 'disconnected',
+    Connecting: 'connecting',
+    Reconnecting: 'reconnecting'
+  },
+  VideoPresets: {
+    h720: {
+      resolution: { width: 1280, height: 720 },
+      encoding: { maxBitrate: 3000000 }
+    }
+  },
+  AudioPresets: {
+    music: { 
+      bitrate: 128000,
+      maxBitrate: 128000 
+    }
+  },
+  createLocalAudioTrack: vi.fn().mockResolvedValue({
+    kind: 'audio',
+    sid: 'audio-track-id',
+    muted: false
+  }),
+  createLocalVideoTrack: vi.fn().mockResolvedValue({
+    kind: 'video',
+    sid: 'video-track-id',
+    muted: false
+  }),
+  LocalTrack: vi.fn(),
+  RemoteTrack: vi.fn(),
+  Track: {
+    Kind: {
+      Audio: 'audio',
+      Video: 'video'
+    }
+  }
+}))
+
+// =============================================================================
+// Matrix Client Hook Mock
+// =============================================================================
+
+const mockMatrixClient = {
+  sendMessage: vi.fn().mockResolvedValue({ event_id: 'test-event-id' }),
+  createRoom: vi.fn().mockResolvedValue({ room_id: '!test-room:matrix.test.com' }),
+  joinRoom: vi.fn().mockResolvedValue({}),
+  leaveRoom: vi.fn().mockResolvedValue({}),
+  on: vi.fn(),
+  off: vi.fn(),
+  removeListener: vi.fn(),
+  isInitialized: true
+}
+
+// Create matrix client mock return value
+const mockMatrixClientReturn = {
+  client: mockMatrixClient, 
+  isReady: true
+}
+
+export const mockUseMatrixClient = vi.fn(() => mockMatrixClientReturn)
+
+vi.mock('@/hooks/use-matrix-client', () => ({
+  useMatrixClient: mockUseMatrixClient
+}))
+
+// Also mock the actual file path without alias as fallback
+vi.mock('../../../hooks/use-matrix-client', () => ({
+  useMatrixClient: mockUseMatrixClient
+}))
+
+// =============================================================================
 // Export mock values for test customization
 // =============================================================================
 
-export { mockMatrixAuthValue, mockMatrixValue }
+export { mockMatrixAuthValue, mockMatrixValue, mockMatrixClient, mockRoom }

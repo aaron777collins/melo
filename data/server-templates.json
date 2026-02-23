@@ -1,0 +1,644 @@
+{
+  "version": "1.0",
+  "description": "Predefined server templates for different use cases",
+  "templates": [
+    {
+      "id": "gaming-community",
+      "name": "Gaming Community",
+      "description": "Perfect for gaming groups with voice channels, LFG, and game-specific discussions",
+      "category": "gaming",
+      "icon": "🎮",
+      "featured": true,
+      "structure": {
+        "server": {
+          "visibility": "private",
+          "joinRule": "invite",
+          "encrypted": true,
+          "powerLevels": {
+            "invite": 50,
+            "kick": 50,
+            "ban": 50,
+            "redact": 50,
+            "stateDefault": 50,
+            "eventsDefault": 0,
+            "usersDefault": 0,
+            "events": {
+              "m.room.name": 50,
+              "m.room.avatar": 50,
+              "m.room.canonical_alias": 50,
+              "m.room.history_visibility": 100,
+              "m.room.power_levels": 100,
+              "m.room.tombstone": 100,
+              "m.room.encryption": 100
+            }
+          }
+        },
+        "categories": [
+          {
+            "name": "📢 General",
+            "order": 0,
+            "channels": [
+              {
+                "name": "general",
+                "topic": "Main chat for everyone",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "announcements",
+                "topic": "Important server updates",
+                "type": "announcement",
+                "order": 1
+              },
+              {
+                "name": "rules",
+                "topic": "Server rules and guidelines",
+                "type": "text",
+                "order": 2
+              }
+            ]
+          },
+          {
+            "name": "🎯 Gaming",
+            "order": 1,
+            "channels": [
+              {
+                "name": "looking-for-group",
+                "topic": "Find teammates and organize games",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "game-chat",
+                "topic": "General gaming discussion",
+                "type": "text",
+                "order": 1
+              },
+              {
+                "name": "screenshots",
+                "topic": "Share your best gaming moments",
+                "type": "text",
+                "order": 2
+              }
+            ]
+          },
+          {
+            "name": "🔊 Voice",
+            "order": 2,
+            "channels": [
+              {
+                "name": "General Voice",
+                "topic": "General voice chat",
+                "type": "voice",
+                "order": 0
+              },
+              {
+                "name": "Game Room 1",
+                "topic": "Gaming voice channel",
+                "type": "voice",
+                "order": 1
+              },
+              {
+                "name": "Game Room 2",
+                "topic": "Gaming voice channel",
+                "type": "voice",
+                "order": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "study-group",
+      "name": "Study Group",
+      "description": "Organized structure for study groups with subject channels and resource sharing",
+      "category": "education",
+      "icon": "📚",
+      "featured": true,
+      "structure": {
+        "server": {
+          "visibility": "private",
+          "joinRule": "invite",
+          "encrypted": true,
+          "powerLevels": {
+            "invite": 50,
+            "kick": 50,
+            "ban": 50,
+            "redact": 50,
+            "stateDefault": 50,
+            "eventsDefault": 0,
+            "usersDefault": 0,
+            "events": {
+              "m.room.name": 50,
+              "m.room.avatar": 50,
+              "m.room.canonical_alias": 50,
+              "m.room.history_visibility": 100,
+              "m.room.power_levels": 100,
+              "m.room.tombstone": 100,
+              "m.room.encryption": 100
+            }
+          }
+        },
+        "categories": [
+          {
+            "name": "📋 General",
+            "order": 0,
+            "channels": [
+              {
+                "name": "welcome",
+                "topic": "Welcome and introductions",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "announcements",
+                "topic": "Important updates",
+                "type": "announcement",
+                "order": 1
+              },
+              {
+                "name": "general",
+                "topic": "General discussion",
+                "type": "text",
+                "order": 2
+              }
+            ]
+          },
+          {
+            "name": "📖 Study",
+            "order": 1,
+            "channels": [
+              {
+                "name": "study-hall",
+                "topic": "General study discussion",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "homework-help",
+                "topic": "Get help with assignments",
+                "type": "text",
+                "order": 1
+              },
+              {
+                "name": "resources",
+                "topic": "Share study materials and links",
+                "type": "text",
+                "order": 2
+              },
+              {
+                "name": "exam-prep",
+                "topic": "Exam preparation and study tips",
+                "type": "text",
+                "order": 3
+              }
+            ]
+          },
+          {
+            "name": "🔊 Study Sessions",
+            "order": 2,
+            "channels": [
+              {
+                "name": "Study Room",
+                "topic": "Voice study sessions",
+                "type": "voice",
+                "order": 0
+              },
+              {
+                "name": "Group Work",
+                "topic": "Collaborative projects",
+                "type": "voice",
+                "order": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "general-community",
+      "name": "General Community",
+      "description": "Balanced community server with discussion topics and events",
+      "category": "community",
+      "icon": "🏘️",
+      "featured": true,
+      "structure": {
+        "server": {
+          "visibility": "private",
+          "joinRule": "invite",
+          "encrypted": true,
+          "powerLevels": {
+            "invite": 50,
+            "kick": 50,
+            "ban": 50,
+            "redact": 50,
+            "stateDefault": 50,
+            "eventsDefault": 0,
+            "usersDefault": 0,
+            "events": {
+              "m.room.name": 50,
+              "m.room.avatar": 50,
+              "m.room.canonical_alias": 50,
+              "m.room.history_visibility": 100,
+              "m.room.power_levels": 100,
+              "m.room.tombstone": 100,
+              "m.room.encryption": 100
+            }
+          }
+        },
+        "categories": [
+          {
+            "name": "🏠 Welcome",
+            "order": 0,
+            "channels": [
+              {
+                "name": "welcome",
+                "topic": "New member introductions",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "rules",
+                "topic": "Community guidelines",
+                "type": "text",
+                "order": 1
+              },
+              {
+                "name": "announcements",
+                "topic": "Community updates",
+                "type": "announcement",
+                "order": 2
+              }
+            ]
+          },
+          {
+            "name": "💬 Discussion",
+            "order": 1,
+            "channels": [
+              {
+                "name": "general",
+                "topic": "General community chat",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "random",
+                "topic": "Random discussions and off-topic",
+                "type": "text",
+                "order": 1
+              },
+              {
+                "name": "events",
+                "topic": "Community events and meetups",
+                "type": "text",
+                "order": 2
+              },
+              {
+                "name": "feedback",
+                "topic": "Community feedback and suggestions",
+                "type": "text",
+                "order": 3
+              }
+            ]
+          },
+          {
+            "name": "🎪 Social",
+            "order": 2,
+            "channels": [
+              {
+                "name": "Lounge",
+                "topic": "Casual voice chat",
+                "type": "voice",
+                "order": 0
+              },
+              {
+                "name": "Events",
+                "topic": "Community events voice chat",
+                "type": "voice",
+                "order": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "work-team",
+      "name": "Work Team",
+      "description": "Professional workspace with project channels and meeting rooms",
+      "category": "work",
+      "icon": "💼",
+      "featured": false,
+      "structure": {
+        "server": {
+          "visibility": "private",
+          "joinRule": "invite",
+          "encrypted": true,
+          "powerLevels": {
+            "invite": 50,
+            "kick": 50,
+            "ban": 50,
+            "redact": 50,
+            "stateDefault": 50,
+            "eventsDefault": 0,
+            "usersDefault": 0,
+            "events": {
+              "m.room.name": 50,
+              "m.room.avatar": 50,
+              "m.room.canonical_alias": 50,
+              "m.room.history_visibility": 100,
+              "m.room.power_levels": 100,
+              "m.room.tombstone": 100,
+              "m.room.encryption": 100
+            }
+          }
+        },
+        "categories": [
+          {
+            "name": "📢 Company",
+            "order": 0,
+            "channels": [
+              {
+                "name": "announcements",
+                "topic": "Company-wide announcements",
+                "type": "announcement",
+                "order": 0
+              },
+              {
+                "name": "general",
+                "topic": "General team discussion",
+                "type": "text",
+                "order": 1
+              },
+              {
+                "name": "water-cooler",
+                "topic": "Casual chat and social",
+                "type": "text",
+                "order": 2
+              }
+            ]
+          },
+          {
+            "name": "🚀 Projects",
+            "order": 1,
+            "channels": [
+              {
+                "name": "project-alpha",
+                "topic": "Project Alpha discussions",
+                "type": "text",
+                "encrypted": true,
+                "order": 0
+              },
+              {
+                "name": "project-beta",
+                "topic": "Project Beta discussions",
+                "type": "text",
+                "encrypted": true,
+                "order": 1
+              },
+              {
+                "name": "backlog",
+                "topic": "Task backlog and planning",
+                "type": "text",
+                "order": 2
+              }
+            ]
+          },
+          {
+            "name": "🎤 Meetings",
+            "order": 2,
+            "channels": [
+              {
+                "name": "Daily Standup",
+                "topic": "Daily standup meetings",
+                "type": "voice",
+                "order": 0
+              },
+              {
+                "name": "Conference Room",
+                "topic": "General meetings",
+                "type": "voice",
+                "order": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "creative-collective",
+      "name": "Creative Collective",
+      "description": "Perfect for artists, writers, and creative communities",
+      "category": "creative",
+      "icon": "🎨",
+      "featured": false,
+      "structure": {
+        "server": {
+          "visibility": "private",
+          "joinRule": "invite",
+          "encrypted": true,
+          "powerLevels": {
+            "invite": 50,
+            "kick": 50,
+            "ban": 50,
+            "redact": 50,
+            "stateDefault": 50,
+            "eventsDefault": 0,
+            "usersDefault": 0,
+            "events": {
+              "m.room.name": 50,
+              "m.room.avatar": 50,
+              "m.room.canonical_alias": 50,
+              "m.room.history_visibility": 100,
+              "m.room.power_levels": 100,
+              "m.room.tombstone": 100,
+              "m.room.encryption": 100
+            }
+          }
+        },
+        "categories": [
+          {
+            "name": "🎯 General",
+            "order": 0,
+            "channels": [
+              {
+                "name": "introductions",
+                "topic": "Share your creative background",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "announcements",
+                "topic": "Community updates",
+                "type": "announcement",
+                "order": 1
+              },
+              {
+                "name": "general",
+                "topic": "General creative discussion",
+                "type": "text",
+                "order": 2
+              }
+            ]
+          },
+          {
+            "name": "🎨 Showcase",
+            "order": 1,
+            "channels": [
+              {
+                "name": "artwork",
+                "topic": "Share your visual art",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "writing",
+                "topic": "Share your writing projects",
+                "type": "text",
+                "order": 1
+              },
+              {
+                "name": "music",
+                "topic": "Share your musical creations",
+                "type": "text",
+                "order": 2
+              },
+              {
+                "name": "feedback",
+                "topic": "Constructive critiques and feedback",
+                "type": "text",
+                "order": 3
+              }
+            ]
+          },
+          {
+            "name": "🛠️ Workshop",
+            "order": 2,
+            "channels": [
+              {
+                "name": "Creative Session",
+                "topic": "Live creative work sessions",
+                "type": "voice",
+                "order": 0
+              },
+              {
+                "name": "Collaboration",
+                "topic": "Collaborative projects",
+                "type": "voice",
+                "order": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "hobby-enthusiasts",
+      "name": "Hobby Enthusiasts",
+      "description": "General-purpose template for hobby communities and interest groups",
+      "category": "hobby",
+      "icon": "🎯",
+      "featured": false,
+      "structure": {
+        "server": {
+          "visibility": "private",
+          "joinRule": "invite",
+          "encrypted": true,
+          "powerLevels": {
+            "invite": 50,
+            "kick": 50,
+            "ban": 50,
+            "redact": 50,
+            "stateDefault": 50,
+            "eventsDefault": 0,
+            "usersDefault": 0,
+            "events": {
+              "m.room.name": 50,
+              "m.room.avatar": 50,
+              "m.room.canonical_alias": 50,
+              "m.room.history_visibility": 100,
+              "m.room.power_levels": 100,
+              "m.room.tombstone": 100,
+              "m.room.encryption": 100
+            }
+          }
+        },
+        "categories": [
+          {
+            "name": "👋 Welcome",
+            "order": 0,
+            "channels": [
+              {
+                "name": "welcome",
+                "topic": "Welcome to the community!",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "introductions",
+                "topic": "Tell us about yourself",
+                "type": "text",
+                "order": 1
+              },
+              {
+                "name": "rules",
+                "topic": "Community guidelines",
+                "type": "text",
+                "order": 2
+              }
+            ]
+          },
+          {
+            "name": "💭 Discussion",
+            "order": 1,
+            "channels": [
+              {
+                "name": "general",
+                "topic": "General hobby discussion",
+                "type": "text",
+                "order": 0
+              },
+              {
+                "name": "beginners",
+                "topic": "Questions from newcomers",
+                "type": "text",
+                "order": 1
+              },
+              {
+                "name": "advanced",
+                "topic": "Advanced techniques and discussion",
+                "type": "text",
+                "order": 2
+              },
+              {
+                "name": "marketplace",
+                "topic": "Buy, sell, and trade",
+                "type": "text",
+                "order": 3
+              }
+            ]
+          },
+          {
+            "name": "🗣️ Voice",
+            "order": 2,
+            "channels": [
+              {
+                "name": "General Chat",
+                "topic": "General voice discussion",
+                "type": "voice",
+                "order": 0
+              },
+              {
+                "name": "Workshop",
+                "topic": "Live project work",
+                "type": "voice",
+                "order": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

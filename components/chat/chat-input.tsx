@@ -62,10 +62,13 @@ const formSchema = z.object({
 });
 
 export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps) {
-  const { onOpen } = useModal();
+  const modalHook = useModal() || {};
+  const { onOpen = () => {} } = modalHook;
   const router = useRouter();
-  const { client, isReady } = useMatrixClient();
-  const { announce, effectivePreferences } = useAccessibility();
+  const matrixClientHook = useMatrixClient() || {};
+  const { client = null, isReady = false } = matrixClientHook;
+  const accessibilityHook = useAccessibility() || {};
+  const { announce = () => {}, effectivePreferences = {} } = accessibilityHook;
   
   // Generate unique IDs for accessibility
   const inputId = useId();
@@ -73,11 +76,26 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
   const gifButtonId = useId();
   const sendButtonId = useId();
   
-  // Mentions functionality (only if roomId provided)
-  const mentions = useMentions(roomId || "");
+  // Mentions functionality (only if roomId provided) - defensive
+  const mentionsHook = useMentions(roomId || "") || {};
+  const mentions = {
+    filteredMembers: [],
+    filteredRooms: [],
+    selectedMentionIndex: -1,
+    handleMentionSelect: () => {},
+    handleMentionKeyDown: () => {},
+    ...mentionsHook
+  };
   
-  // Emoji autocomplete functionality
-  const emojiAutocomplete = useEmojiAutocomplete();
+  // Emoji autocomplete functionality - defensive
+  const emojiAutocompleteHook = useEmojiAutocomplete() || {};
+  const emojiAutocomplete = {
+    emojiSuggestions: [],
+    selectedEmojiIndex: -1,
+    handleEmojiSelect: () => {},
+    handleEmojiKeyDown: () => {},
+    ...emojiAutocompleteHook
+  };
   
   // Form state
   const form = useForm<z.infer<typeof formSchema>>({

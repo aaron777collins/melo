@@ -5,6 +5,77 @@
  * Validates Discord-clone visual parity and Matrix integration.
  */
 
+// Create mock variables that can be accessed by tests
+const mockUseModal = vi.fn(() => ({
+  isOpen: false,
+  type: null,
+  data: {},
+  onOpen: vi.fn(),
+  onClose: vi.fn()
+}));
+
+const mockUseMatrixClient = vi.fn(() => ({
+  client: {
+    getUserId: () => '@user:example.com',
+    sendMessage: vi.fn(() => Promise.resolve({ event_id: '$event123' })),
+    on: vi.fn(),
+    off: vi.fn(),
+    getRoom: vi.fn(() => ({
+      roomId: '!room123:example.com',
+      getMember: vi.fn(() => ({
+        name: 'Test User',
+        userId: '@user:example.com',
+      })),
+    })),
+  },
+  isReady: true,
+}));
+
+// Mock all necessary hooks at the top level
+vi.mock('@/hooks/use-modal-store', () => ({
+  useModal: mockUseModal
+}));
+
+vi.mock('@/hooks/use-matrix-client', () => ({
+  useMatrixClient: mockUseMatrixClient
+}));
+
+vi.mock('@/hooks/use-mentions', () => ({
+  useMentions: vi.fn(() => ({
+    members: [],
+    rooms: [],
+    mentionQuery: '',
+    filteredMembers: [],
+    filteredRooms: [],
+    selectedMentionIndex: -1,
+    handleMentionSelect: vi.fn(),
+    handleMentionKeyDown: vi.fn(),
+    setMentionQuery: vi.fn(),
+  })),
+}));
+
+vi.mock('@/hooks/use-emoji-autocomplete', () => ({
+  useEmojiAutocomplete: vi.fn(() => ({
+    emojiSuggestions: [],
+    emojiQuery: '',
+    selectedEmojiIndex: -1,
+    handleEmojiSelect: vi.fn(),
+    handleEmojiKeyDown: vi.fn(),
+    setEmojiQuery: vi.fn(),
+  })),
+}));
+
+vi.mock('@/src/hooks/use-accessibility', () => ({
+  useAccessibility: vi.fn(() => ({
+    announce: vi.fn(),
+    effectivePreferences: {
+      reducedMotion: false,
+      highContrast: false,
+      screenReader: false,
+    },
+  })),
+}));
+
 import React from 'react';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -478,7 +549,8 @@ describe('ChatInput Component', () => {
       // Create a delayed mock
       const delayedSendMessage = vi.fn(() => new Promise(resolve => setTimeout(resolve, 1000)));
       
-      vi.mocked(require('@/hooks/use-matrix-client').useMatrixClient).mockReturnValueOnce({
+      // Configure the mock for this specific test
+      mockUseMatrixClient.mockReturnValueOnce({
         client: {
           getUserId: () => '@user:example.com',
           sendMessage: delayedSendMessage,

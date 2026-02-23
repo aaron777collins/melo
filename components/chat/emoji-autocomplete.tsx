@@ -125,8 +125,8 @@ export function EmojiAutocomplete({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Limit emojis to maxResults
-  const displayEmojis = emojis.slice(0, maxResults);
+  // Limit emojis to maxResults - defensive programming
+  const displayEmojis = (emojis || []).slice(0, maxResults);
   
   // Reset selection when query changes
   useEffect(() => {

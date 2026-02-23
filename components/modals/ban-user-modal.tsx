@@ -162,7 +162,10 @@ export function BanUserModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#313338] text-white border-zinc-700 p-0 overflow-hidden max-w-md">
+      <DialogContent 
+        className="bg-[#313338] text-white border-zinc-700 p-0 overflow-hidden max-w-md"
+        data-testid="ban-user-modal"
+      >
         <DialogHeader className="pt-8 px-6">
           <div className="flex items-center justify-center mb-4">
             <div className="flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full">

@@ -4,6 +4,7 @@
  * Main admin page for managing invite codes for external users.
  */
 
+import React from "react";
 import { AdminInvitesDashboard } from "@/components/admin/admin-invites-dashboard";
 
 export default function AdminInvitesPage() {

@@ -10,7 +10,9 @@ import {
   ShieldAlert,
   ShieldCheck,
   ShieldQuestion,
-  Ban
+  Ban,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 
 import {
@@ -137,44 +139,40 @@ export function MembersModal() {
     }
   };
 
-  const onKick = async (memberId: string) => {
-    if (!roomId) return;
-    
-    try {
-      setLoadingId(memberId);
-      const matrixClient = client || getClient();
-      if (!matrixClient) return;
-
-      const decodedRoomId = decodeURIComponent(roomId);
-      await matrixClient.kick(decodedRoomId, memberId, "Kicked by moderator");
-      
-      // Refresh member list
-      await loadMembers();
-    } catch (error) {
-      console.error("Failed to kick member:", error);
-    } finally {
-      setLoadingId("");
-    }
+  const onKick = (member: MemberInfo) => {
+    // Open the dedicated kick modal
+    onOpen("kickUser", {
+      targetUser: {
+        id: member.id,
+        name: member.name,
+        avatarUrl: member.avatarUrl
+      },
+      serverId: roomId
+    });
   };
 
-  const onBan = async (memberId: string) => {
-    if (!roomId) return;
-    
-    try {
-      setLoadingId(memberId);
-      const matrixClient = client || getClient();
-      if (!matrixClient) return;
+  const onBan = (member: MemberInfo) => {
+    // Open the dedicated ban modal
+    onOpen("banUser", {
+      targetUser: {
+        id: member.id,
+        name: member.name,
+        avatarUrl: member.avatarUrl
+      },
+      serverId: roomId
+    });
+  };
 
-      const decodedRoomId = decodeURIComponent(roomId);
-      await matrixClient.ban(decodedRoomId, memberId, "Banned by moderator");
-      
-      // Refresh member list
-      await loadMembers();
-    } catch (error) {
-      console.error("Failed to ban member:", error);
-    } finally {
-      setLoadingId("");
-    }
+  const onMute = (member: MemberInfo) => {
+    // Open the dedicated mute modal
+    onOpen("muteUser", {
+      targetUser: {
+        id: member.id,
+        name: member.name,
+        avatarUrl: member.avatarUrl
+      },
+      serverId: roomId
+    });
   };
 
   const onRoleChange = async (memberId: string, role: MemberRoleType) => {
@@ -252,7 +250,7 @@ export function MembersModal() {
             </div>
           ) : (
             members.map((member) => (
-              <div key={member.id} className="flex items-center gap-x-2 mb-6">
+              <div key={member.id} className="flex items-center gap-x-2 mb-6" data-testid={`member-${member.id}`}>
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={member.avatarUrl} />
                   <AvatarFallback className="bg-[#5865F2] text-white text-xs">
@@ -271,7 +269,7 @@ export function MembersModal() {
                   currentUserPowerLevel > member.powerLevel && (
                     <div className="ml-auto">
                       <DropdownMenu>
-                        <DropdownMenuTrigger>
+                        <DropdownMenuTrigger data-testid={`member-actions-${member.id}`}>
                           <MoreVertical className="h-4 w-4 text-zinc-400 hover:text-white" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent side="left" className="bg-[#2B2D31] border-zinc-600">
@@ -319,15 +317,25 @@ export function MembersModal() {
                           </DropdownMenuSub>
                           <DropdownMenuSeparator className="bg-zinc-600" />
                           <DropdownMenuItem 
-                            onClick={() => onKick(member.id)}
-                            className="text-white hover:bg-[#313338] focus:bg-[#313338]"
+                            onClick={() => onMute(member)}
+                            className="text-yellow-400 hover:bg-[#313338] focus:bg-[#313338]"
+                            data-testid={`mute-user-${member.id}`}
+                          >
+                            <VolumeX className="h-4 w-4 mr-2" />
+                            Mute
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => onKick(member)}
+                            className="text-orange-400 hover:bg-[#313338] focus:bg-[#313338]"
+                            data-testid={`kick-user-${member.id}`}
                           >
                             <Gavel className="h-4 w-4 mr-2" />
                             Kick
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => onBan(member.id)}
+                            onClick={() => onBan(member)}
                             className="text-red-400 hover:bg-[#313338] focus:bg-[#313338] hover:text-red-300"
+                            data-testid={`ban-user-${member.id}`}
                           >
                             <Ban className="h-4 w-4 mr-2" />
                             Ban

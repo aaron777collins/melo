@@ -218,6 +218,7 @@ export function ServerHeader({
         <button 
           className="w-full text-md font-semibold px-3 flex items-center h-12 border-[#e3e5e8] dark:border-[#313338] border-b-2 hover:bg-[#f2f3f5] dark:hover:bg-[#313338] transition"
           aria-label={`${server.name} server options`}
+          data-testid="server-header-dropdown"
         >
           <span className="truncate">{server.name}</span>
           
@@ -290,11 +291,12 @@ export function ServerHeader({
           </DropdownMenuItem>
         )}
 
-        {/* Manage Members - Admin only */}
-        {hasAdminPerms && (
+        {/* Manage Members - Moderator+ */}
+        {hasModeratorPerms && (
           <DropdownMenuItem
             onClick={() => onOpen("members", { server } as any)}
             className="px-3 py-2 text-sm cursor-pointer"
+            data-testid="manage-members-button"
           >
             Manage Members
             <Users className="h-4 w-4 ml-auto" />

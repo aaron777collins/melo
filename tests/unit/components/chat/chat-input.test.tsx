@@ -5,87 +5,32 @@
  * Validates Discord-clone visual parity and Matrix integration.
  */
 
-// Create mock variables that can be accessed by tests
-const mockUseModal = vi.fn(() => ({
-  isOpen: false,
-  type: null,
-  data: {},
-  onOpen: vi.fn(),
-  onClose: vi.fn()
-}));
-
-const mockUseMatrixClient = vi.fn(() => ({
-  client: {
-    getUserId: () => '@user:example.com',
-    sendMessage: vi.fn(() => Promise.resolve({ event_id: '$event123' })),
-    on: vi.fn(),
-    off: vi.fn(),
-    getRoom: vi.fn(() => ({
-      roomId: '!room123:example.com',
-      getMember: vi.fn(() => ({
-        name: 'Test User',
-        userId: '@user:example.com',
-      })),
-    })),
-  },
-  isReady: true,
-}));
-
-// Mock all necessary hooks at the top level
-vi.mock('@/hooks/use-modal-store', () => ({
-  useModal: mockUseModal
-}));
-
-vi.mock('@/hooks/use-matrix-client', () => ({
-  useMatrixClient: mockUseMatrixClient
-}));
-
-vi.mock('@/hooks/use-mentions', () => ({
-  useMentions: vi.fn(() => ({
-    members: [],
-    rooms: [],
-    mentionQuery: '',
-    filteredMembers: [],
-    filteredRooms: [],
-    selectedMentionIndex: -1,
-    handleMentionSelect: vi.fn(),
-    handleMentionKeyDown: vi.fn(),
-    setMentionQuery: vi.fn(),
-  })),
-}));
-
-vi.mock('@/hooks/use-emoji-autocomplete', () => ({
-  useEmojiAutocomplete: vi.fn(() => ({
-    emojiSuggestions: [],
-    emojiQuery: '',
-    selectedEmojiIndex: -1,
-    handleEmojiSelect: vi.fn(),
-    handleEmojiKeyDown: vi.fn(),
-    setEmojiQuery: vi.fn(),
-  })),
-}));
-
-vi.mock('@/src/hooks/use-accessibility', () => ({
-  useAccessibility: vi.fn(() => ({
-    announce: vi.fn(),
-    effectivePreferences: {
-      reducedMotion: false,
-      highContrast: false,
-      screenReader: false,
-    },
-  })),
-}));
-
 import React from 'react';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ChatInput } from '@/components/chat/chat-input';
 
-// Mock hooks
-const mockSendMessage = vi.fn(() => Promise.resolve({ event_id: '$event123' }));
-const mockOnOpen = vi.fn();
-const mockAnnounce = vi.fn();
+// Create mock functions using vi.hoisted so they're available before vi.mock runs
+const { mockSendMessage, mockOnOpen, mockAnnounce, mockHandleMentionsInputChange, mockHandleEmojiInputChange } = vi.hoisted(() => {
+  return {
+    mockSendMessage: vi.fn(() => Promise.resolve({ event_id: '$event123' })),
+    mockOnOpen: vi.fn(),
+    mockAnnounce: vi.fn(),
+    mockHandleMentionsInputChange: vi.fn(),
+    mockHandleEmojiInputChange: vi.fn(),
+  };
+});
+
+// Override hooks with test-specific mocks (these override the setup.ts mocks)
+vi.mock('@/hooks/use-modal-store', () => ({
+  useModal: vi.fn(() => ({
+    isOpen: false,
+    type: null,
+    data: {},
+    onOpen: mockOnOpen,
+    onClose: vi.fn(),
+  })),
+}));
 
 vi.mock('@/hooks/use-matrix-client', () => ({
   useMatrixClient: vi.fn(() => ({
@@ -106,23 +51,34 @@ vi.mock('@/hooks/use-matrix-client', () => ({
   })),
 }));
 
-vi.mock('@/hooks/use-modal-store', () => ({
-  useModal: vi.fn(() => ({
-    onOpen: mockOnOpen,
-    isOpen: false,
-    type: null,
-  })),
-}));
-
+// Mock using both paths to ensure coverage
 vi.mock('@/hooks/use-mentions', () => ({
   useMentions: vi.fn(() => ({
     members: [],
     rooms: [],
+    channels: [],
     mentionQuery: '',
     showAutocomplete: false,
     autocompletePosition: { top: 0, left: 0 },
     currentMentionRange: null,
-    handleInputChange: vi.fn(),
+    handleInputChange: mockHandleMentionsInputChange,
+    handleUserSelect: vi.fn(),
+    handleChannelSelect: vi.fn(),
+    closeAutocomplete: vi.fn(),
+    parseMentions: vi.fn((text: string) => ({ text, mentions: [] })),
+  })),
+}));
+
+vi.mock('../../../../hooks/use-mentions', () => ({
+  useMentions: vi.fn(() => ({
+    members: [],
+    rooms: [],
+    channels: [],
+    mentionQuery: '',
+    showAutocomplete: false,
+    autocompletePosition: { top: 0, left: 0 },
+    currentMentionRange: null,
+    handleInputChange: mockHandleMentionsInputChange,
     handleUserSelect: vi.fn(),
     handleChannelSelect: vi.fn(),
     closeAutocomplete: vi.fn(),
@@ -136,7 +92,19 @@ vi.mock('@/hooks/use-emoji-autocomplete', () => ({
     emojiQuery: '',
     showAutocomplete: false,
     autocompletePosition: { top: 0, left: 0 },
-    handleInputChange: vi.fn(),
+    handleInputChange: mockHandleEmojiInputChange,
+    handleEmojiSelect: vi.fn(),
+    closeAutocomplete: vi.fn(),
+  })),
+}));
+
+vi.mock('../../../../hooks/use-emoji-autocomplete', () => ({
+  useEmojiAutocomplete: vi.fn(() => ({
+    filteredEmojis: [],
+    emojiQuery: '',
+    showAutocomplete: false,
+    autocompletePosition: { top: 0, left: 0 },
+    handleInputChange: mockHandleEmojiInputChange,
     handleEmojiSelect: vi.fn(),
     closeAutocomplete: vi.fn(),
   })),
@@ -146,12 +114,17 @@ vi.mock('@/src/hooks/use-accessibility', () => ({
   useAccessibility: vi.fn(() => ({
     announce: mockAnnounce,
     effectivePreferences: {
-      enhancedFocus: false,
+      reducedMotion: false,
       highContrast: false,
+      screenReader: false,
+      enhancedFocus: false,
       reduceMotion: false,
     },
   })),
 }));
+
+// Now import the component after mocks are defined
+import { ChatInput } from '@/components/chat/chat-input';
 
 // Mock form components
 vi.mock('@/components/ui/form', () => ({

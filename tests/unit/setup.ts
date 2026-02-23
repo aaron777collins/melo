@@ -310,6 +310,54 @@ vi.mock('../../../hooks/use-matrix-client', () => ({
 }))
 
 // =============================================================================
+// Mentions Hook Mock - These are globals that test files can override
+// =============================================================================
+
+export const mockMentionsHandleInputChange = vi.fn()
+export const mockMentionsUserSelect = vi.fn()
+export const mockMentionsChannelSelect = vi.fn()
+export const mockMentionsCloseAutocomplete = vi.fn()
+export const mockMentionsParseMentions = vi.fn((text: string) => ({ text, mentions: [] }))
+
+// NOTE: Individual test files should define their own vi.mock for @/hooks/use-mentions
+// if they need custom behavior. This is a base default.
+
+// =============================================================================
+// Emoji Autocomplete Hook Mock
+// =============================================================================
+
+export const mockEmojiHandleInputChange = vi.fn()
+export const mockEmojiSelectEmoji = vi.fn()
+export const mockEmojiCloseAutocomplete = vi.fn()
+
+// NOTE: Individual test files should define their own vi.mock for @/hooks/use-emoji-autocomplete
+// if they need custom behavior.
+
+// =============================================================================
+// Accessibility Hook Mock
+// =============================================================================
+
+export const mockAnnounce = vi.fn()
+export const mockAccessibilityReturn = {
+  announce: mockAnnounce,
+  effectivePreferences: {
+    reducedMotion: false,
+    highContrast: false,
+    screenReader: false,
+    enhancedFocus: false,
+    reduceMotion: false,
+  },
+}
+
+vi.mock('@/src/hooks/use-accessibility', () => ({
+  useAccessibility: vi.fn(() => mockAccessibilityReturn)
+}))
+
+vi.mock('../../../src/hooks/use-accessibility', () => ({
+  useAccessibility: vi.fn(() => mockAccessibilityReturn)
+}))
+
+// =============================================================================
 // Export mock values for test customization
 // =============================================================================
 

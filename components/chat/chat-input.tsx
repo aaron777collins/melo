@@ -114,13 +114,13 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     // Update form state
     form.setValue("content", value);
     
-    // Handle mention detection (only if Matrix-based)
-    if (roomId && inputRef.current) {
+    // Handle mention detection (only if Matrix-based and handler exists)
+    if (roomId && inputRef.current && typeof mentions.handleInputChange === 'function') {
       mentions.handleInputChange(value, selectionStart, inputRef.current);
     }
     
-    // Handle emoji detection (always enabled)
-    if (inputRef.current) {
+    // Handle emoji detection (if handler exists)
+    if (inputRef.current && typeof emojiAutocomplete.handleInputChange === 'function') {
       emojiAutocomplete.handleInputChange(value, selectionStart, inputRef.current);
     }
   }, [form, roomId, mentions, emojiAutocomplete]);
@@ -358,8 +358,8 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                             const newValue = `${field.value} ${emoji}`;
                             form.setValue("content", newValue);
                             
-                            // Update mentions if in Matrix mode
-                            if (roomId && inputRef.current) {
+                            // Update mentions if in Matrix mode and handler exists
+                            if (roomId && inputRef.current && typeof mentions.handleInputChange === 'function') {
                               inputRef.current.value = newValue;
                               mentions.handleInputChange(newValue, newValue.length, inputRef.current);
                             }

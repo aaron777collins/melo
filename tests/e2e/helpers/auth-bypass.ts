@@ -148,7 +148,10 @@ export async function bypassAuthenticationDirectly(page: Page, mockAuth: MockAut
   
   // Navigate to root and set up authenticated state
   await page.goto('/');
-  await page.waitForLoadState('networkidle');
+  // Use domcontentloaded instead of networkidle (Matrix SDK keeps network active)
+  await page.waitForLoadState('domcontentloaded');
+  // Give a brief moment for client-side routing
+  await page.waitForTimeout(1000);
   
   // If still redirected to sign-in, force navigation away
   if (page.url().includes('/sign-in')) {

@@ -125,10 +125,17 @@ async function createMinimalAuthState(page) {
 setup('authenticate', async ({ page }) => {
   console.log('🔐 Setting up authentication...');
   
-  // Check if we already have a valid auth state
-  if (await isAuthStateValid(page)) {
-    console.log('   ✅ Found valid existing authentication state, skipping login');
-    return;
+  // Check if we already have a valid auth state file
+  if (fs.existsSync(authFile)) {
+    try {
+      const authData = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
+      if (authData?.origins?.length > 0) {
+        console.log('   ✅ Found existing authentication state file, using it');
+        return;
+      }
+    } catch (e) {
+      console.log('   ⚠️ Could not parse auth file, will re-create');
+    }
   }
   
   // First, check if we should skip due to recent rate limit

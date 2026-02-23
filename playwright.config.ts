@@ -87,6 +87,18 @@ export default defineConfig({
       },
     },
     
+    // Route validation tests - no auth needed (tests route handling, not Matrix)
+    {
+      name: 'route-tests',
+      testMatch: /.*\/routes\/.*\.spec\.ts/,
+      use: { 
+        ...devices['Desktop Chrome'],
+        // Empty storage state - these tests don't need auth
+        storageState: { cookies: [], origins: [] },
+      },
+      // No dependencies - runs without auth setup
+    },
+    
     // All other tests use authenticated state
     {
       name: 'chromium',

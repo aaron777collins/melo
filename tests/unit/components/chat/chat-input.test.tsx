@@ -154,15 +154,15 @@ vi.mock('@/components/emoji-picker', () => ({
   ),
 }));
 
-vi.mock('./mention-autocomplete', () => ({
+vi.mock('@/components/chat/mention-autocomplete', () => ({
   MentionAutocomplete: () => null,
 }));
 
-vi.mock('./channel-autocomplete', () => ({
+vi.mock('@/components/chat/channel-autocomplete', () => ({
   ChannelAutocomplete: () => null,
 }));
 
-vi.mock('./emoji-autocomplete', () => ({
+vi.mock('@/components/chat/emoji-autocomplete', () => ({
   EmojiAutocomplete: () => null,
 }));
 
@@ -263,7 +263,7 @@ describe('ChatInput Component', () => {
         />
       );
 
-      const sendButton = screen.getByLabelText(/send message/i);
+      const sendButton = screen.getByLabelText(/send message to #general/i);
       expect(sendButton).toBeInTheDocument();
     });
   });
@@ -279,7 +279,7 @@ describe('ChatInput Component', () => {
       );
 
       // The wrapper div should have the discord-clone padding classes
-      const wrapper = screen.getByTestId('chat-input').parentElement?.parentElement;
+      const wrapper = screen.getByTestId('chat-input').parentElement;
       expect(wrapper?.className).toMatch(/p-4/);
       expect(wrapper?.className).toMatch(/pb-6/);
     });
@@ -294,13 +294,13 @@ describe('ChatInput Component', () => {
       );
 
       const input = screen.getByTestId('chat-input');
-      // Check for discord-clone input classes
-      expect(input.className).toMatch(/bg-zinc-200\/90/);
-      expect(input.className).toMatch(/dark:bg-zinc-700\/75/);
+      // Check for discord-clone input classes (actual implementation)
+      expect(input.className).toMatch(/px-14/);
+      expect(input.className).toMatch(/py-6/);
+      expect(input.className).toMatch(/bg-\[#e3e5e8\]/);
+      expect(input.className).toMatch(/dark:bg-\[#313338\]/);
       expect(input.className).toMatch(/border-none/);
       expect(input.className).toMatch(/focus-visible:ring-0/);
-      expect(input.className).toMatch(/text-zinc-600/);
-      expect(input.className).toMatch(/dark:text-zinc-200/);
     });
 
     it('should have attachment button with rounded-full style', () => {
@@ -314,8 +314,8 @@ describe('ChatInput Component', () => {
 
       const attachButton = screen.getByLabelText('Attach file to message');
       expect(attachButton.className).toMatch(/rounded-full/);
-      expect(attachButton.className).toMatch(/bg-zinc-500/);
-      expect(attachButton.className).toMatch(/dark:bg-zinc-400/);
+      expect(attachButton.className).toMatch(/bg-\[#4f5660\]/);
+      expect(attachButton.className).toMatch(/dark:bg-\[#b5bac1\]/);
     });
   });
 

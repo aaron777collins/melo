@@ -74,10 +74,18 @@ vi.mock('matrix-js-sdk', () => ({
     Name: 'Room.name',
     Receipt: 'Room.receipt'
   },
+  NotificationCountType: {
+    Highlight: 'highlight',
+    Total: 'total'
+  },
   MatrixClient: class MatrixClient {
     on() {}
     off() {}
     removeListener() {}
+    getUserId() { return '@testuser:matrix.test.com' }
+    leave() { return Promise.resolve() }
+    createRoom() { return Promise.resolve({ room_id: '!test:matrix.test.com' }) }
+    sendMessage() { return Promise.resolve({ event_id: '$test:matrix.test.com' }) }
   }
 }))
 
@@ -115,29 +123,35 @@ vi.mock('next/navigation', () => ({
 }))
 
 // =============================================================================
-// Modal Store Mock
+// Modal Store Mock (Zustand) - Fixed to work with test overrides
 // =============================================================================
 
 export const mockModalOnOpen = vi.fn()
 export const mockModalOnClose = vi.fn()
 
-// Create a more explicit mock implementation
-const mockModalReturn = {
-  isOpen: false,
-  type: null,
+// Create the default modal store configuration
+export const defaultModalStore = () => ({
+  isOpen: true,  // Default to open for testing
+  type: 'createChannel' as const,  // Default modal type
   data: {},
   onOpen: mockModalOnOpen,
   onClose: mockModalOnClose
-}
+})
+
+// Create a flexible mock function that returns the default but can be overridden
+export const mockUseModal = vi.fn(() => defaultModalStore())
 
 vi.mock('@/hooks/use-modal-store', () => ({
-  useModal: vi.fn(() => mockModalReturn)
+  useModal: mockUseModal
 }))
 
 // Also mock the actual file path without alias as fallback
-vi.mock('../../../hooks/use-modal-store', () => ({
-  useModal: vi.fn(() => mockModalReturn)
+vi.mock('../../hooks/use-modal-store', () => ({
+  useModal: mockUseModal
 }))
+
+// Note: Individual test files can override this by calling:
+// mockUseModal.mockReturnValue({ isOpen: true, type: 'specificType', data: {...}, onOpen: vi.fn(), onClose: vi.fn() })
 
 // =============================================================================
 // MatrixAuthProvider Mock
@@ -286,6 +300,9 @@ const mockMatrixClient = {
   createRoom: vi.fn().mockResolvedValue({ room_id: '!test-room:matrix.test.com' }),
   joinRoom: vi.fn().mockResolvedValue({}),
   leaveRoom: vi.fn().mockResolvedValue({}),
+  leave: vi.fn().mockResolvedValue({}),
+  getUserId: vi.fn().mockReturnValue('@testuser:matrix.test.com'),
+  sendStateEvent: vi.fn().mockResolvedValue({}),
   on: vi.fn(),
   off: vi.fn(),
   removeListener: vi.fn(),
@@ -355,6 +372,32 @@ vi.mock('@/src/hooks/use-accessibility', () => ({
 
 vi.mock('../../../src/hooks/use-accessibility', () => ({
   useAccessibility: vi.fn(() => mockAccessibilityReturn)
+}))
+
+// =============================================================================
+// Additional Hook Mocks
+// =============================================================================
+
+// Chat Scroll Hook Mock
+export const mockUseChatScroll = vi.fn()
+
+vi.mock('@/hooks/use-chat-scroll', () => ({
+  useChatScroll: mockUseChatScroll
+}))
+
+// Room Messages Hook Mock
+export const mockUseRoomMessages = vi.fn(() => ({
+  status: 'success',
+  data: {
+    pages: [{ messages: [], nextCursor: null }]
+  },
+  hasNextPage: false,
+  fetchNextPage: vi.fn(),
+  isFetchingNextPage: false
+}))
+
+vi.mock('@/hooks/use-room-messages', () => ({
+  useRoomMessages: mockUseRoomMessages
 }))
 
 // =============================================================================

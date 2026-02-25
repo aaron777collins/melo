@@ -37,6 +37,17 @@ vi.mock('@/lib/matrix/client', () => ({
     uploadContent: vi.fn().mockResolvedValue({ content_uri: 'mxc://example.com/test123' }),
     getRoom: vi.fn(),
     getUserId: vi.fn(() => '@testuser:example.com'),
+    getRooms: vi.fn(() => [
+      {
+        roomId: '!testserver:example.com',
+        name: 'Test Server',
+        currentState: {
+          getStateEvents: vi.fn(() => ({
+            getContent: () => ({ type: 'm.space' })
+          }))
+        }
+      }
+    ]),
   })),
 }));
 
@@ -67,6 +78,7 @@ vi.mock('@/hooks/use-spaces', () => ({
 // Import after mocks
 import ServerSettingsPage from '@/app/server-settings/page';
 import * as serverSettings from '@/lib/matrix/server-settings';
+import * as matrixClient from '@/lib/matrix/client';
 
 describe('ServerSettingsPage', () => {
   const mockSettings = {
@@ -149,14 +161,14 @@ describe('ServerSettingsPage', () => {
     });
 
     it('should show message when no server is selected', async () => {
-      vi.mock('@/hooks/use-spaces', () => ({
-        useSpaces: () => ({
-          spaces: [],
-          currentSpace: null,
-          isLoading: false,
-          error: null,
-        }),
-      }));
+      // Mock client to return no rooms
+      const mockGetClient = vi.mocked(matrixClient.getClient);
+      mockGetClient.mockReturnValue({
+        uploadContent: vi.fn().mockResolvedValue({ content_uri: 'mxc://example.com/test123' }),
+        getRoom: vi.fn(),
+        getUserId: vi.fn(() => '@testuser:example.com'),
+        getRooms: vi.fn(() => []), // No rooms available
+      });
 
       render(<ServerSettingsPage />);
 

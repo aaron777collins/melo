@@ -3,6 +3,9 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ChatMessages } from '@/components/chat/chat-messages';
 
+// Import the mocked hook so we can use it properly
+import { useRoomMessages } from '@/hooks/use-room-messages';
+
 // Mock the hooks
 vi.mock('@/hooks/use-room-messages', () => ({
   useRoomMessages: vi.fn()
@@ -46,7 +49,7 @@ describe('ChatMessages Focused Test', () => {
 
   it('renders loading state correctly', () => {
     // Mock loading state
-    vi.mocked(require('@/hooks/use-room-messages').useRoomMessages).mockReturnValue({
+    vi.mocked(useRoomMessages).mockReturnValue({
       messages: null,
       isLoading: true,
       hasMore: false,
@@ -63,7 +66,7 @@ describe('ChatMessages Focused Test', () => {
 
   it('renders error state correctly', () => {
     // Mock error state
-    vi.mocked(require('@/hooks/use-room-messages').useRoomMessages).mockReturnValue({
+    vi.mocked(useRoomMessages).mockReturnValue({
       messages: null,
       isLoading: false,
       hasMore: false,
@@ -80,7 +83,7 @@ describe('ChatMessages Focused Test', () => {
 
   it('renders welcome message when no messages', () => {
     // Mock empty state
-    vi.mocked(require('@/hooks/use-room-messages').useRoomMessages).mockReturnValue({
+    vi.mocked(useRoomMessages).mockReturnValue({
       messages: [],
       isLoading: false,
       hasMore: false,
@@ -105,7 +108,7 @@ describe('ChatMessages Focused Test', () => {
       isRedacted: () => false,
     };
 
-    vi.mocked(require('@/hooks/use-room-messages').useRoomMessages).mockReturnValue({
+    vi.mocked(useRoomMessages).mockReturnValue({
       messages: [mockMessage],
       isLoading: false,
       hasMore: false,
@@ -123,7 +126,7 @@ describe('ChatMessages Focused Test', () => {
   it('renders pagination button when hasMore is true', () => {
     const mockFetchNextPage = vi.fn();
     
-    vi.mocked(require('@/hooks/use-room-messages').useRoomMessages).mockReturnValue({
+    vi.mocked(useRoomMessages).mockReturnValue({
       messages: [],
       isLoading: false,
       hasMore: true,

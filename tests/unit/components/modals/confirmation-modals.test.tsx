@@ -34,6 +34,10 @@ vi.mock('next/navigation', () => ({
     push: mockPush,
     refresh: mockRefresh,
   })),
+  useParams: vi.fn(() => ({ 
+    serverId: 'test-server', 
+    channelId: 'test-channel' 
+  })),
 }));
 
 vi.mock('@/lib/matrix/client', () => ({

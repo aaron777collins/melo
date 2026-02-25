@@ -1,7 +1,8 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
-import SignInPage from '@/app/(auth)/sign-in/page';
+import SignInPage from '@/app/(auth)/(routes)/sign-in/[[...sign-in]]/page';
 
 // Mock the auth provider
 const mockLogin = vi.fn();

@@ -4,6 +4,7 @@
  * Main admin page for the background job queue system.
  */
 
+import React from "react";
 import { JobQueueDashboard } from "@/components/admin/job-queue-dashboard";
 
 export default function JobQueueAdminPage() {

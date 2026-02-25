@@ -74,6 +74,15 @@ vi.mock('matrix-js-sdk', () => ({
     Name: 'Room.name',
     Receipt: 'Room.receipt'
   },
+  RoomStateEvent: {
+    Events: 'RoomState.events',
+    Update: 'RoomState.update'
+  },
+  UserEvent: {
+    AvatarUrl: 'User.avatarUrl',
+    DisplayName: 'User.displayName',
+    Presence: 'User.presence'
+  },
   NotificationCountType: {
     Highlight: 'highlight',
     Total: 'total'
@@ -387,13 +396,12 @@ vi.mock('@/hooks/use-chat-scroll', () => ({
 
 // Room Messages Hook Mock
 export const mockUseRoomMessages = vi.fn(() => ({
-  status: 'success',
-  data: {
-    pages: [{ messages: [], nextCursor: null }]
-  },
-  hasNextPage: false,
-  fetchNextPage: vi.fn(),
-  isFetchingNextPage: false
+  messages: [],
+  isLoading: false,
+  hasMore: false,
+  loadMore: vi.fn(),
+  error: null,
+  isLoadingMore: false
 }))
 
 vi.mock('@/hooks/use-room-messages', () => ({

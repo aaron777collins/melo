@@ -1,3 +1,4 @@
+import React from "react";
 import { Wifi, WifiOff, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import OfflinePageClient from "./offline-page-client";

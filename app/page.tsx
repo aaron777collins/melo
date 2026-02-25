@@ -1,8 +1,8 @@
 "use client";
 
+import React, { useEffect } from "react";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function RootPage() {
   const { user, isLoading } = useMatrixAuth();

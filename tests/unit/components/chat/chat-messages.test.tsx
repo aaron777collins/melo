@@ -100,32 +100,12 @@ describe('ChatMessages', () => {
     
     // Default successful state
     mockUseRoomMessages.mockReturnValue({
-      data: {
-        pages: [{
-          items: [
-            {
-              ...mockMatrixEvent,
-              id: 'msg1',
-              content: 'Hello world',
-              createdAt: new Date('2023-01-01T10:00:00Z'),
-              updatedAt: new Date('2023-01-01T10:00:00Z'),
-              deleted: false,
-              fileUrl: null,
-              member: {
-                ...mockMember,
-                profile: {
-                  name: 'Test User',
-                  imageUrl: 'avatar.jpg',
-                },
-              },
-            },
-          ],
-        }],
-      },
-      fetchNextPage: vi.fn(),
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      status: 'success',
+      messages: [mockMatrixEvent],
+      isLoading: false,
+      hasMore: false,
+      loadMore: vi.fn(),
+      error: null,
+      isLoadingMore: false,
     });
   });
 
@@ -136,11 +116,12 @@ describe('ChatMessages', () => {
   describe('Loading State', () => {
     it('renders loading spinner when status is loading', () => {
       mockUseRoomMessages.mockReturnValue({
-        data: null,
-        fetchNextPage: vi.fn(),
-        hasNextPage: false,
-        isFetchingNextPage: false,
-        status: 'loading',
+        messages: [],
+        isLoading: true,
+        hasMore: false,
+        loadMore: vi.fn(),
+        error: null,
+        isLoadingMore: false,
       });
 
       render(<ChatMessages {...defaultProps} />);

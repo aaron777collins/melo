@@ -1,3 +1,4 @@
+import React from "react";
 /**
  * Channels root page - redirects to Direct Messages
  * 

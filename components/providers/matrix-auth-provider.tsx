@@ -236,14 +236,18 @@ export function MatrixAuthProvider({
 
   // Store the latest onAuthChange callback in a ref to prevent infinite re-renders
   const onAuthChangeRef = useRef(onAuthChange);
-  onAuthChangeRef.current = onAuthChange;
+  
+  // Update ref on every render but don't cause re-renders
+  useEffect(() => {
+    onAuthChangeRef.current = onAuthChange;
+  }, [onAuthChange]);
   
   // Stabilize onAuthChange callback to prevent infinite re-renders
   const stableOnAuthChange = useCallback((user: MatrixUser | null) => {
     if (onAuthChangeRef.current) {
       onAuthChangeRef.current(user);
     }
-  }, []);
+  }, []); // Empty dependency array - callback never changes
 
   console.log('[MatrixAuthProvider] 🎯 Component render - isLoading:', isLoading, 'hasUser:', !!user);
 
@@ -257,14 +261,16 @@ export function MatrixAuthProvider({
   // Initialize auth state on mount
   useEffect(() => {
     let isMounted = true;
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: NodeJS.Timeout | undefined;
 
     async function validateSession() {
       try {
+        console.log('[MatrixAuthProvider] 🔄 Starting session validation...');
+        
         // Set a reasonable timeout for session validation to prevent hanging
         const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
-            reject(new Error('Session validation timeout'));
+            reject(new Error('Session validation timeout after 10 seconds'));
           }, 10000);
         });
 
@@ -274,15 +280,20 @@ export function MatrixAuthProvider({
           timeoutPromise
         ]);
         
-        clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = undefined;
+        }
         
         if (!isMounted) return;
 
         if (result && result.success && result.data) {
+          console.log('[MatrixAuthProvider] ✅ Session validation successful');
           setUser(result.data.user);
           setSession(result.data.session);
           stableOnAuthChange(result.data.user);
         } else {
+          console.log('[MatrixAuthProvider] ❌ No valid session found');
           setUser(null);
           setSession(null);
           stableOnAuthChange(null);
@@ -290,14 +301,27 @@ export function MatrixAuthProvider({
       } catch (error) {
         if (!isMounted) return;
         
-        console.error('[MatrixAuthProvider] Session validation error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('[MatrixAuthProvider] Session validation error:', errorMessage);
+        
+        // Handle specific server action errors gracefully
+        if (errorMessage.includes('workers') || 
+            errorMessage.includes('clientModules') || 
+            errorMessage.includes('Failed to find Server Action')) {
+          console.warn('[MatrixAuthProvider] ⚠️ Server action error detected, proceeding without session');
+        }
+        
         // On error, proceed with no session (user needs to log in)
         setUser(null);
         setSession(null);
         stableOnAuthChange(null);
       } finally {
-        if (timeoutId) clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = undefined;
+        }
         if (isMounted) {
+          console.log('[MatrixAuthProvider] 🎯 Session validation complete, setting isLoading to false');
           setIsLoading(false);
         }
       }
@@ -307,7 +331,10 @@ export function MatrixAuthProvider({
 
     return () => {
       isMounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = undefined;
+      }
     };
   }, [stableOnAuthChange]);
 

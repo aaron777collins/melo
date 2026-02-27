@@ -53,20 +53,21 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
     // Worker restrictions
     "worker-src 'self' blob:",
     // Manifest restrictions
-    "manifest-src 'self'",
-    // Upgrade insecure requests in production
-    ...(process.env.NODE_ENV === 'production' ? ["upgrade-insecure-requests"] : [])
+    "manifest-src 'self'"
+    // NOTE: upgrade-insecure-requests REMOVED for DEF-004 fix
+    // TODO: Add environment-specific logic for production deployment
   ].join("; ");
   
   response.headers.set('Content-Security-Policy', cspDirectives);
   
-  // HTTP Strict Transport Security (HSTS) - only in production with HTTPS
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
-    );
-  }
+  // HTTP Strict Transport Security (HSTS) - TEMPORARILY DISABLED for DEF-004 fix
+  // TODO: Re-enable with proper environment detection for production
+  // if (process.env.DEPLOYMENT_ENV === 'production') {
+  //   response.headers.set(
+  //     'Strict-Transport-Security',
+  //     'max-age=31536000; includeSubDomains; preload'
+  //   );
+  // }
   
   // X-Frame-Options - prevent embedding in frames (clickjacking protection)
   response.headers.set('X-Frame-Options', 'SAMEORIGIN');

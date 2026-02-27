@@ -1,0 +1,235 @@
+
+> melo@0.1.0 start
+> next start
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 290ms
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+ ⨯ TypeError: Cannot read properties of undefined (reading 'clientModules')
+    at r7 (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:15556)
+    at rE (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:1325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async no (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:19:1144)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1962:32)
+    at async NextNodeServer.pipeImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:922:25)
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+ ⨯ TypeError: Cannot read properties of undefined (reading 'clientModules')
+    at r7 (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:15556)
+    at rE (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:1325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async no (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:19:1144)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1962:32)
+    at async NextNodeServer.pipeImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:922:25)
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+ ⨯ TypeError: Cannot read properties of undefined (reading 'clientModules')
+    at r7 (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:15556)
+    at rE (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:1325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async no (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:19:1144)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1962:32)
+    at async NextNodeServer.pipeImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:922:25)
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+ ⨯ TypeError: Cannot read properties of undefined (reading 'clientModules')
+    at r7 (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:15556)
+    at rE (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:1325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async no (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:19:1144)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1962:32)
+    at async NextNodeServer.pipeImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:922:25)
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[RATE_LIMIT] Test mode detected: {
+  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.7632.6 Safari/537.36',
+  testModeHeader: true,
+  playwrightHeader: true,
+  nodeEnv: 'production'
+}
+[RATE_LIMIT] Skipping rate limiting for test request
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[ACCESS_CONTROL] Homeserver comparison: {
+  requestedHomeserver: 'https://dev2.aaroncollins.info',
+  configuredHomeserver: 'https://dev2.aaroncollins.info',
+  matches: true,
+  privateMode: true,
+  publicMode: false
+}
+[matrixFetch] 📤 Sending request...
+[AUTH_LOGIN] a [MatrixAuthError]: Invalid username or password
+    at n (/home/ubuntu/repos/melo/.next/server/chunks/5803.js:1:546)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async o (/home/ubuntu/repos/melo/.next/server/chunks/5803.js:1:943)
+    at async c (/home/ubuntu/repos/melo/.next/server/chunks/5803.js:1:1442)
+    at async v (/home/ubuntu/repos/melo/.next/server/app/api/auth/login/route.js:1:1852)
+    at async /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
+    at async e_.execute (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
+    at async e_.handle (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1366:42)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28) {
+  code: 'M_FORBIDDEN',
+  httpStatus: 403,
+  details: { errcode: 'M_FORBIDDEN', error: 'Invalid username or password' }
+}
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+ ⨯ TypeError: Cannot read properties of undefined (reading 'clientModules')
+    at r7 (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:15556)
+    at rE (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:1325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async no (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:19:1144)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1962:32)
+    at async NextNodeServer.pipeImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:922:25)
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+ ⨯ TypeError: Cannot read properties of undefined (reading 'clientModules')
+    at r7 (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:15556)
+    at rE (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:1325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async no (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:19:1144)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1962:32)
+    at async NextNodeServer.pipeImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:922:25)
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+ ⨯ TypeError: Cannot read properties of undefined (reading 'clientModules')
+    at r7 (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:15556)
+    at rE (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:1325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async no (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:19:1144)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1962:32)
+    at async NextNodeServer.pipeImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:922:25)
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+ ⨯ TypeError: Cannot read properties of undefined (reading 'clientModules')
+    at r7 (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:15556)
+    at rE (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:17:1325)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async no (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:19:1144)
+    at async doRender (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1427:30)
+    at async cacheEntry.responseCache.get.routeKind (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1588:28)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1496:28)
+    at async NextNodeServer.renderPageComponent (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1924:24)
+    at async NextNodeServer.renderToResponseImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:1962:32)
+    at async NextNodeServer.pipeImpl (/home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/base-server.js:922:25)
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false

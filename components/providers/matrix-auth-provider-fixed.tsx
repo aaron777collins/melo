@@ -1,46 +1,23 @@
 "use client";
 
 /**
- * Matrix Authentication Context Provider
+ * EMERGENCY FIX: Matrix Authentication Context Provider
  *
- * Provides authentication state and actions throughout the application.
- * Handles session validation on mount, login, logout, and registration.
+ * Fixed version that addresses catastrophic runtime failures:
+ * 1. MatrixAuthProvider infinite loading loop (circuit breaker)
+ * 2. Server Action failures (defensive error handling) 
+ * 3. Next.js client module loading errors (safe property access)
+ * 4. Build vs Runtime disconnect (graceful degradation)
  *
- * @example
- * ```tsx
- * // In your root layout
- * import { MatrixAuthProvider } from '@/components/providers/matrix-auth-provider';
- *
- * export default function RootLayout({ children }) {
- *   return (
- *     <html>
- *       <body>
- *         <MatrixAuthProvider>{children}</MatrixAuthProvider>
- *       </body>
- *     </html>
- *   );
- * }
- *
- * // In a component
- * import { useMatrixAuth } from '@/components/providers/matrix-auth-provider';
- *
- * function Profile() {
- *   const { user, isLoading, logout } = useMatrixAuth();
- *
- *   if (isLoading) return <Spinner />;
- *   if (!user) return <LoginButton />;
- *
- *   return (
- *     <div>
- *       <p>Welcome, {user.displayName}</p>
- *       <button onClick={logout}>Logout</button>
- *     </div>
- *   );
- * }
- * ```
+ * Key fixes applied:
+ * - Circuit breaker pattern to prevent infinite retry loops
+ * - Defensive property access for undefined objects
+ * - Graceful degradation when server actions fail
+ * - Timeout mechanism for session validation
+ * - Comprehensive error handling with fallbacks
  */
 
-import {
+import React, {
   createContext,
   useContext,
   useEffect,
@@ -60,7 +37,7 @@ import {
 import { markUserAsNew } from "@/hooks/use-onboarding";
 
 // =============================================================================
-// EMERGENCY FIX: Circuit Breaker Implementation
+// Circuit Breaker Implementation
 // =============================================================================
 
 interface CircuitBreakerState {
@@ -119,87 +96,41 @@ class SessionValidationCircuitBreaker {
       );
     }
   }
+
+  getState(): Readonly<CircuitBreakerState> {
+    return { ...this.state };
+  }
 }
 
 // =============================================================================
-// Types
+// Types (unchanged from original)
 // =============================================================================
 
-/**
- * Authentication context state
- */
 interface MatrixAuthState {
-  /** Current authenticated user, or null if not logged in */
   user: MatrixUser | null;
-  /** Current session data, or null if not logged in */
   session: MatrixSession | null;
-  /** Whether auth state is being loaded/validated */
   isLoading: boolean;
-  /** Current error message, or null if no error */
   error: string | null;
 }
 
-/**
- * Authentication context actions
- */
 interface MatrixAuthActions {
-  /**
-   * Log in with username and password
-   * @param username - Matrix user ID or localpart
-   * @param password - User's password
-   * @param homeserverUrl - Optional homeserver URL (defaults to env config)
-   * @returns Promise resolving to true on success, "2fa_required" for 2FA, false on failure
-   */
   login: (
     username: string,
     password: string,
     homeserverUrl?: string
   ) => Promise<boolean | "2fa_required">;
-
-  /**
-   * Log out the current user
-   * @param allDevices - Whether to log out all devices (default: false)
-   * @returns Promise resolving when logout completes
-   */
   logout: (allDevices?: boolean) => Promise<void>;
-
-  /**
-   * Register a new account
-   * @param username - Desired username (localpart only)
-   * @param password - Password for the new account
-   * @param email - Optional email for account recovery
-   * @param homeserverUrl - Optional homeserver URL (defaults to env config)
-   * @returns Promise resolving to true on success, false on failure
-   */
   register: (
     username: string,
     password: string,
     email?: string,
     homeserverUrl?: string
   ) => Promise<boolean>;
-
-  /**
-   * Clear the current error state
-   */
   clearError: () => void;
-
-  /**
-   * Refresh the current session (re-validates with server)
-   * @returns Promise resolving when refresh completes
-   */
   refreshSession: () => Promise<void>;
-
-  /**
-   * Complete 2FA verification and login
-   * @param session - The session data from 2FA verification
-   * @param user - The user data from 2FA verification
-   */
   complete2FALogin: (session: any, user: any) => void;
 }
 
-/**
- * Complete auth context value
- */
 type MatrixAuthContextValue = MatrixAuthState & MatrixAuthActions;
 
 // =============================================================================
@@ -209,43 +140,9 @@ type MatrixAuthContextValue = MatrixAuthState & MatrixAuthActions;
 const MatrixAuthContext = createContext<MatrixAuthContextValue | null>(null);
 
 // =============================================================================
-// Hook
+// Hook (unchanged)
 // =============================================================================
 
-/**
- * Hook to access Matrix authentication state and actions
- *
- * @throws Error if used outside of MatrixAuthProvider
- * @returns Authentication state and actions
- *
- * @example
- * ```tsx
- * function LoginForm() {
- *   const { login, isLoading, error } = useMatrixAuth();
- *   const [username, setUsername] = useState('');
- *   const [password, setPassword] = useState('');
- *
- *   const handleSubmit = async (e: FormEvent) => {
- *     e.preventDefault();
- *     const success = await login(username, password);
- *     if (success) {
- *       router.push('/channels');
- *     }
- *   };
- *
- *   return (
- *     <form onSubmit={handleSubmit}>
- *       {error && <p className="error">{error}</p>}
- *       <input value={username} onChange={e => setUsername(e.target.value)} />
- *       <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
- *       <button type="submit" disabled={isLoading}>
- *         {isLoading ? 'Loading...' : 'Login'}
- *       </button>
- *     </form>
- *   );
- * }
- * ```
- */
 export function useMatrixAuth(): MatrixAuthContextValue {
   const context = useContext(MatrixAuthContext);
 
@@ -264,28 +161,14 @@ export function useMatrixAuth(): MatrixAuthContextValue {
 // =============================================================================
 
 interface MatrixAuthProviderProps {
-  /** Child components */
   children: ReactNode;
-  /**
-   * Callback when authentication state changes
-   * Useful for analytics or logging
-   */
   onAuthChange?: (user: MatrixUser | null) => void;
 }
 
 // =============================================================================
-// Provider Component
+// Emergency Fixed Provider Component
 // =============================================================================
 
-/**
- * Matrix Authentication Provider
- *
- * Wraps the application with authentication context.
- * Automatically validates session on mount.
- *
- * @param props - Provider props
- * @returns Provider component
- */
 export function MatrixAuthProvider({
   children,
   onAuthChange,
@@ -296,7 +179,7 @@ export function MatrixAuthProvider({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // EMERGENCY FIX: Circuit breaker for session validation
+  // Circuit breaker for session validation
   const circuitBreaker = useRef(new SessionValidationCircuitBreaker());
 
   // Store the latest onAuthChange callback in a ref to prevent infinite re-renders
@@ -314,7 +197,7 @@ export function MatrixAuthProvider({
     }
   }, []); // Empty dependency array - callback never changes
 
-  // EMERGENCY FIX: Prevent infinite logging - only log state changes, not every render
+  // DEFENSIVE LOGGING: Only log state changes, not every render
   const previousState = useRef({ isLoading, hasUser: !!user });
   useEffect(() => {
     const currentState = { isLoading, hasUser: !!user };
@@ -328,16 +211,16 @@ export function MatrixAuthProvider({
   }, [isLoading, user]);
 
   // =============================================================================
-  // Session Validation
+  // Enhanced Session Validation with Circuit Breaker
   // =============================================================================
 
   /**
-   * EMERGENCY FIX: Enhanced session validation with circuit breaker and defensive error handling
+   * Safe validateCurrentSession wrapper with circuit breaker and defensive coding
    */
   const safeValidateCurrentSession = useCallback(async (): Promise<{
     success: boolean;
     data?: { user: MatrixUser; session: MatrixSession } | null;
-    error?: any;
+    error?: AuthError;
   }> => {
     // Check circuit breaker first
     if (!circuitBreaker.current.canAttempt()) {
@@ -433,7 +316,9 @@ export function MatrixAuthProvider({
     }
   }, []);
 
-  // Initialize auth state on mount
+  /**
+   * Initialize auth state on mount with enhanced error handling
+   */
   useEffect(() => {
     let isMounted = true;
     let timeoutId: NodeJS.Timeout | undefined;
@@ -502,14 +387,14 @@ export function MatrixAuthProvider({
         clearTimeout(timeoutId);
       }
     };
-  }, [stableOnAuthChange]); // Remove safeValidateCurrentSession from deps to prevent infinite loop
+  }, [safeValidateCurrentSession, stableOnAuthChange]);
 
   // =============================================================================
-  // Actions
+  // Enhanced Actions with Circuit Breaker Integration
   // =============================================================================
 
   /**
-   * Login action
+   * Enhanced login action with defensive server action handling
    */
   const login = useCallback(
     async (
@@ -528,26 +413,30 @@ export function MatrixAuthProvider({
           body: JSON.stringify({ username, password, homeserverUrl }),
         });
 
-        const result = await response.json();
+        // Defensive response handling
+        const result = response.ok ? await response.json() : { success: false, error: { message: 'Network error' } };
 
-        if (result.success) {
+        if (result?.success) {
           // Check if 2FA is required
           if (result.requiresTwoFactor) {
             return "2fa_required";
           }
           
-          // Regular successful login
-          setUser(result.data.user);
-          setSession(result.data.session);
-          stableOnAuthChange(result.data.user);
-          return true;
-        } else {
-          setError(result.error?.message || "Login failed");
-          return false;
+          // Regular successful login - defensive property access
+          if (result.data?.user && result.data?.session) {
+            setUser(result.data.user);
+            setSession(result.data.session);
+            stableOnAuthChange(result.data.user);
+            circuitBreaker.current.recordSuccess(); // Reset circuit breaker on successful login
+            return true;
+          }
         }
+
+        const errorMessage = result?.error?.message || "Login failed";
+        setError(errorMessage);
+        return false;
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Login failed unexpectedly";
+        const message = err instanceof Error ? err.message : "Login failed unexpectedly";
         setError(message);
         return false;
       } finally {
@@ -558,7 +447,7 @@ export function MatrixAuthProvider({
   );
 
   /**
-   * Logout action
+   * Enhanced logout action (unchanged but documented)
    */
   const logout = useCallback(
     async (allDevices: boolean = false): Promise<void> => {
@@ -566,20 +455,28 @@ export function MatrixAuthProvider({
       setError(null);
 
       try {
-        const result = await logoutAction(allDevices);
-
-        if (!result.success) {
-          // Log error but continue with local logout
-          console.warn("Logout warning:", result.error.message);
+        // Use defensive server action call
+        let result: any;
+        try {
+          result = await logoutAction(allDevices);
+        } catch (serverActionError) {
+          // Even if server action fails, proceed with local logout
+          console.warn("Logout server action failed, proceeding with local logout:", serverActionError);
+          result = { success: false };
         }
 
+        if (!result?.success) {
+          console.warn("Logout warning:", result?.error?.message || 'Unknown error');
+        }
+
+        // Always clear local state
         setUser(null);
         setSession(null);
         stableOnAuthChange(null);
         circuitBreaker.current.recordSuccess(); // Reset circuit breaker on logout
       } catch (err) {
-        // Even on error, clear local state
         console.error("Logout error:", err);
+        // Even on error, clear local state
         setUser(null);
         setSession(null);
         stableOnAuthChange(null);
@@ -591,7 +488,7 @@ export function MatrixAuthProvider({
   );
 
   /**
-   * Register action
+   * Enhanced register action (similar defensive patterns)
    */
   const register = useCallback(
     async (
@@ -604,29 +501,31 @@ export function MatrixAuthProvider({
       setError(null);
 
       try {
-        const result = await registerAction(
-          username,
-          password,
-          email,
-          homeserverUrl
-        );
+        let result: any;
+        try {
+          result = await registerAction(username, password, email, homeserverUrl);
+        } catch (serverActionError) {
+          const errorMessage = serverActionError instanceof Error ? serverActionError.message : 'Registration failed';
+          setError(errorMessage);
+          return false;
+        }
 
-        if (result.success) {
+        if (result?.success && result.data?.user && result.data?.session) {
           setUser(result.data.user);
           setSession(result.data.session);
           stableOnAuthChange(result.data.user);
+          circuitBreaker.current.recordSuccess();
           
           // Mark user as new to trigger onboarding flow
           markUserAsNew();
           
           return true;
         } else {
-          setError(result.error.message);
+          setError(result?.error?.message || 'Registration failed');
           return false;
         }
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Registration failed unexpectedly";
+        const message = err instanceof Error ? err.message : "Registration failed unexpectedly";
         setError(message);
         return false;
       } finally {
@@ -637,44 +536,44 @@ export function MatrixAuthProvider({
   );
 
   /**
-   * Clear error action
+   * Clear error action (unchanged)
    */
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
   /**
-   * Refresh session action
+   * Enhanced refresh session with circuit breaker
    */
   const refreshSession = useCallback(async (): Promise<void> => {
     setIsLoading(true);
 
     try {
-      const result = await validateCurrentSession();
+      const result = await safeValidateCurrentSession();
 
-      if (result.success && result.data) {
-        setUser(result.data.user);
-        setSession(result.data.session);
-        stableOnAuthChange(result.data.user);
-      } else if (result.success) {
-        // Session no longer valid
-        setUser(null);
-        setSession(null);
-        stableOnAuthChange(null);
+      if (result.success) {
+        if (result.data) {
+          setUser(result.data.user);
+          setSession(result.data.session);
+          stableOnAuthChange(result.data.user);
+        } else {
+          setUser(null);
+          setSession(null);
+          stableOnAuthChange(null);
+        }
+        setError(null);
       } else {
-        setError(result.error.message);
+        setError(result.error?.message || 'Failed to refresh session');
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to refresh session"
-      );
+      setError(err instanceof Error ? err.message : "Failed to refresh session");
     } finally {
       setIsLoading(false);
     }
-  }, [stableOnAuthChange]);
+  }, [safeValidateCurrentSession, stableOnAuthChange]);
 
   /**
-   * Complete 2FA login action
+   * Complete 2FA login action (unchanged)
    */
   const complete2FALogin = useCallback(
     (session: any, user: any) => {
@@ -682,6 +581,7 @@ export function MatrixAuthProvider({
       setSession(session);
       setIsLoading(false);
       stableOnAuthChange(user);
+      circuitBreaker.current.recordSuccess();
     },
     [stableOnAuthChange]
   );

@@ -233,3 +233,5 @@
 [MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined
 [MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
 [MatrixAuthProvider] 🎯 Component render - isLoading: true hasUser: false
+[MIDDLEWARE_DEBUG] NODE_ENV: production
+[MIDDLEWARE_DEBUG] DEPLOYMENT_ENV: undefined

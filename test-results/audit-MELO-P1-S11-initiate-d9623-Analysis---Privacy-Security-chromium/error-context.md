@@ -1,21 +1,67 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e3]:
-  - generic [ref=e6]:
-    - heading "This site can’t be reached" [level=1] [ref=e7]
-    - paragraph [ref=e8]:
-      - strong [ref=e9]: localhost
-      - text: refused to connect.
-    - generic [ref=e10]:
-      - paragraph [ref=e11]: "Try:"
-      - list [ref=e12]:
-        - listitem [ref=e13]: Checking the connection
-        - listitem [ref=e14]:
-          - link "Checking the proxy and the firewall" [ref=e15] [cursor=pointer]:
-            - /url: "#buttons"
-    - generic [ref=e16]: ERR_CONNECTION_REFUSED
-  - generic [ref=e17]:
-    - button "Reload" [ref=e19] [cursor=pointer]
-    - button "Details" [ref=e20] [cursor=pointer]
+- generic [active]:
+  - alert [ref=e1]
+  - dialog "Server Error" [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - navigation [ref=e8]:
+          - button "previous" [disabled] [ref=e9]:
+            - img "previous" [ref=e10]
+          - button "next" [disabled] [ref=e12]:
+            - img "next" [ref=e13]
+          - generic [ref=e15]: 1 of 1 error
+          - generic [ref=e16]:
+            - text: Next.js (14.2.35) is outdated
+            - link "(learn more)" [ref=e18] [cursor=pointer]:
+              - /url: https://nextjs.org/docs/messages/version-staleness
+        - heading "Server Error" [level=1] [ref=e19]
+        - paragraph [ref=e20]: "Error: Cannot find module './4428.js' Require stack: - /home/ubuntu/repos/melo/.next/server/webpack-runtime.js - /home/ubuntu/repos/melo/.next/server/pages/_document.js - /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/require.js - /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/load-components.js - /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/build/utils.js - /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/dev/hot-middleware.js - /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/dev/hot-reloader-webpack.js - /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js - /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/lib/router-server.js - /home/ubuntu/repos/melo/node_modules/.pnpm/next@14.2.35_@babel+core@7.29.0_@opentelemetry+api@1.9.0_@playwright+test@1.58.2_react-_c1457a0a973345c922eb1158cba47504/node_modules/next/dist/server/lib/start-server.js"
+        - generic [ref=e21]: This error happened while generating the page. Any console logs will be displayed in the terminal window.
+      - generic [ref=e22]:
+        - heading "Call Stack" [level=2] [ref=e23]
+        - group [ref=e24]:
+          - generic "Next.js" [ref=e25] [cursor=pointer]:
+            - img [ref=e26]
+            - img [ref=e28]
+            - text: Next.js
+        - generic [ref=e33]:
+          - heading "TracingChannel.traceSync" [level=3] [ref=e34]
+          - generic [ref=e36]: node:diagnostics_channel (328:14)
+        - group [ref=e37]:
+          - generic "Next.js" [ref=e38] [cursor=pointer]:
+            - img [ref=e39]
+            - img [ref=e41]
+            - text: Next.js
+        - generic [ref=e46]:
+          - heading "Array.reduce" [level=3] [ref=e47]
+          - generic [ref=e49]: <anonymous>
+        - group [ref=e50]:
+          - generic "Next.js" [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+            - img [ref=e54]
+            - text: Next.js
+        - generic [ref=e59]:
+          - heading "Array.map" [level=3] [ref=e60]
+          - generic [ref=e62]: <anonymous>
+        - group [ref=e63]:
+          - generic "Next.js" [ref=e64] [cursor=pointer]:
+            - img [ref=e65]
+            - img [ref=e67]
+            - text: Next.js
+        - generic [ref=e72]:
+          - heading "<unknown>" [level=3] [ref=e73]
+          - generic [ref=e75]: file:///home/ubuntu/repos/melo/.next/server/pages/_document.js (1:340)
+        - generic [ref=e76]:
+          - heading "Object.<anonymous>" [level=3] [ref=e77]
+          - generic [ref=e79]: file:///home/ubuntu/repos/melo/.next/server/pages/_document.js (1:383)
+        - generic [ref=e80]:
+          - heading "TracingChannel.traceSync" [level=3] [ref=e81]
+          - generic [ref=e83]: node:diagnostics_channel (328:14)
+        - group [ref=e84]:
+          - generic "Next.js" [ref=e85] [cursor=pointer]:
+            - img [ref=e86]
+            - img [ref=e88]
+            - text: Next.js
 ```

@@ -9,7 +9,7 @@
 import { test, expect, Page, BrowserContext } from '@playwright/test';
 import path from 'path';
 
-const APP_URL = 'http://dev2.aaroncollins.info:3000';
+const APP_URL = 'http://localhost:3000';
 const SCREENSHOT_DIR = path.join(__dirname, '../../../scheduler/validation/screenshots/melo-audit/s10');
 
 // Viewport configurations for comprehensive testing

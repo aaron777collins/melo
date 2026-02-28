@@ -5,6 +5,7 @@ import {
   Check,
   Gavel,
   Loader2,
+  MessageCircle,
   MoreVertical,
   Shield,
   ShieldAlert,
@@ -175,6 +176,35 @@ export function MembersModal() {
     });
   };
 
+  const onMessage = (member: MemberInfo) => {
+    try {
+      // Validate user ID
+      if (!member.id || member.id.trim() === "") {
+        console.warn("Cannot start DM with invalid user ID");
+        return;
+      }
+
+      // Don't allow DM to self
+      if (currentUserId === member.id) {
+        console.warn("Cannot start DM with yourself");
+        return;
+      }
+
+      // Open the NewDM modal with target user
+      onOpen("newDM", {
+        targetUser: {
+          id: member.id,
+          name: member.name,
+          avatarUrl: member.avatarUrl,
+          role: member.role,
+          powerLevel: member.powerLevel,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to open DM modal:", error);
+    }
+  };
+
   const onRoleChange = async (memberId: string, role: MemberRoleType) => {
     if (!roomId) return;
     
@@ -257,15 +287,31 @@ export function MembersModal() {
                     {member.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col gap-y-1">
-                  <div className="text-xs font-semibold flex items-center text-white">
+                <div className="flex flex-col gap-y-1 flex-1">
+                  <div className="text-xs font-semibold flex items-center text-white truncate">
                     {member.name}
                     {roleIconMap[member.role]}
                   </div>
                   <p className="text-xs text-zinc-400">{member.id}</p>
                 </div>
+                {/* Message Button for all users (except self and invalid IDs) */}
+                {currentUserId !== member.id && 
+                 member.id && member.id.trim() !== "" && (
+                  <button
+                    onClick={() => onMessage(member)}
+                    disabled={!client}
+                    className="message-button px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:opacity-50 text-white rounded-md flex items-center gap-1 truncate"
+                    data-testid={`message-user-${member.id}`}
+                    aria-label={`Start direct message with ${member.name}`}
+                    aria-busy={loadingId === member.id ? "true" : undefined}
+                  >
+                    <MessageCircle className="h-3 w-3" data-icon="message" />
+                    Message
+                  </button>
+                )}
                 {currentUserId !== member.id &&
                   loadingId !== member.id &&
+                  member.id && member.id.trim() !== "" &&
                   currentUserPowerLevel > member.powerLevel && (
                     <div className="ml-auto">
                       <DropdownMenu>

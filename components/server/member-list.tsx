@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import {
   Search,
   MoreVertical,
+  MessageCircle,
   Shield,
   Crown,
   Hammer,
@@ -138,9 +139,10 @@ interface MemberItemProps {
   onRoleEdit: (member: MemberWithRoles) => void;
   onMemberKick: (member: MemberWithRoles) => void;
   onMemberBan: (member: MemberWithRoles) => void;
+  onMessage: (member: MemberWithRoles) => void;
 }
 
-function MemberItem({ member, onRoleEdit, onMemberKick, onMemberBan }: MemberItemProps) {
+function MemberItem({ member, onRoleEdit, onMemberKick, onMemberBan, onMessage }: MemberItemProps) {
   const { client } = useMatrixClient();
   const currentUserId = client?.getUserId();
   const Icon = getRoleIcon(member.powerLevel);
@@ -237,6 +239,17 @@ function MemberItem({ member, onRoleEdit, onMemberKick, onMemberBan }: MemberIte
               <DropdownMenuSeparator />
               
               <DropdownMenuItem 
+                onClick={() => onMessage(member)}
+                className="text-blue-400 focus:text-blue-300 message-button"
+                data-testid={`message-member-${member.id}`}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" data-icon="message" />
+                Message
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem 
                 onClick={() => onMemberKick(member)}
                 className="text-yellow-400 focus:text-yellow-300"
               >
@@ -254,6 +267,21 @@ function MemberItem({ member, onRoleEdit, onMemberKick, onMemberBan }: MemberIte
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      )}
+
+      {/* Message Button for all users (except self) */}
+      {!isCurrentUser && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onMessage(member)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity message-button truncate"
+          data-testid={`message-member-${member.id}`}
+          aria-label={`Start direct message with ${member.profile.name}`}
+        >
+          <MessageCircle className="h-4 w-4 mr-1" data-icon="message" />
+          Message
+        </Button>
       )}
 
       {/* Role Edit Button for manageable members */}
@@ -399,6 +427,37 @@ export function MemberList({ serverId, userPowerLevel, spaceName }: MemberListPr
     });
   };
 
+  const handleMessage = (member: MemberWithRoles) => {
+    try {
+      // Validate user ID  
+      if (!member.id || member.id.trim() === "") {
+        console.warn("Cannot start DM with invalid user ID");
+        return;
+      }
+
+      const currentUserId = client?.getUserId();
+      
+      // Don't allow DM to self
+      if (currentUserId === member.id) {
+        console.warn("Cannot start DM with yourself");
+        return;
+      }
+
+      // Open the NewDM modal with target user
+      onOpen("newDM", {
+        targetUser: {
+          id: member.id,
+          name: member.profile.name,
+          avatarUrl: member.profile.imageUrl,
+          role: member.role,
+          powerLevel: member.powerLevel,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to open DM modal:", error);
+    }
+  };
+
   const canManageRoles = userPowerLevel >= 50; // Moderator+
 
   return (
@@ -517,6 +576,7 @@ export function MemberList({ serverId, userPowerLevel, spaceName }: MemberListPr
                 onRoleEdit={handleRoleEdit}
                 onMemberKick={handleMemberKick}
                 onMemberBan={handleMemberBan}
+                onMessage={handleMessage}
               />
             ))}
           </div>

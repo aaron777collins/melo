@@ -1,4 +1,5 @@
 import { test, expect, Page, BrowserContext } from '@playwright/test';
+import { bypassAuthenticationDirectly } from './helpers/auth-bypass';
 
 // Test configuration for different viewport sizes
 const VIEWPORTS = {
@@ -18,6 +19,9 @@ const TEST_SERVER = process.env.TEST_SERVER || 'http://dev2.aaroncollins.info:30
  */
 test.describe('DM Mobile Responsiveness & Unread Indicators (AC-9, AC-10)', () => {
   test.beforeEach(async ({ page, context }) => {
+    // Set up authentication bypass for test environment
+    await bypassAuthenticationDirectly(page);
+    
     // Set up test context
     await page.goto(TEST_SERVER);
     

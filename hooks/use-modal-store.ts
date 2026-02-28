@@ -66,6 +66,7 @@ export type ModalType =
   | "featureComingSoon"
   // DM Options
   | "dmOptions"
+  | "newDM"
   // Voice Channel Management
   | "incomingCall"
   | "voiceChannelSettings";

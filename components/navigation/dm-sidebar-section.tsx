@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { DMListItem } from './dm-list-item';
 import { DMEmptyState } from './dm-empty-state';
 import { ActionTooltip } from '@/components/action-tooltip';
+import { useModal } from '@/hooks/use-modal-store';
 import { cn } from '@/lib/utils';
 
 // Simpler structure for the test-compatible version
@@ -57,13 +58,18 @@ export function DMSidebarSection({
   onSelectDM,
   className 
 }: DMSidebarSectionProps) {
+  const { onOpen } = useModal();
+
   // Use conversations prop if provided (test compatibility), otherwise use dms
   const dmList = conversations.length > 0 ? conversations : dms;
   const isSimpleFormat = conversations.length > 0;
 
   const handleNewDMClick = () => {
+    // Use modal store first, fallback to prop for backward compatibility
     if (onNewDM) {
       onNewDM();
+    } else {
+      onOpen('newDM');
     }
   };
 

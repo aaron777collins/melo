@@ -15,12 +15,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useModal } from "@/hooks/use-modal-store";
-import { getClient } from "@/lib/matrix/client";
+import { useToast } from "@/hooks/use-toast";
+import { deleteRoom } from "@/lib/matrix/delete-room";
 
 export function DeleteChannelModal() {
   const { isOpen, onClose, type, data } = useModal();
   const router = useRouter();
   const params = useParams();
+  const { toast } = useToast();
 
   const isModalOpen = isOpen && type === "deleteChannel";
   const { server, channel, space, spaceChannel } = data;
@@ -34,56 +36,82 @@ export function DeleteChannelModal() {
   // Enable delete button only when name matches exactly and not loading
   const isDeleteEnabled = nameConfirmation === channelName && !isLoading;
 
-  const onClick = async () => {
+  // Enhanced deletion function with toast notifications and retry
+  const performDeletion = async () => {
+    const channelId = channel?.id || spaceChannel?.roomId;
+    const serverId = server?.id || space?.id;
+
+    if (!channelId) {
+      toast.error("No channel ID found");
+      return false;
+    }
+
+    const loadingToastId = toast.loading("Deleting channel...");
+
     try {
-      setIsLoading(true);
+      const result = await deleteRoom({
+        roomId: channelId,
+        spaceId: serverId
+      });
 
-      const client = getClient();
-      if (!client) {
-        console.error("Matrix client not initialized");
-        return;
-      }
+      toast.dismiss(loadingToastId);
 
-      // Get channel/room ID for Matrix operations
-      const channelId = channel?.id || spaceChannel?.roomId;
-      const serverId = server?.id || space?.id;
-      
-      if (!channelId) {
-        console.error("No channel ID found");
-        return;
-      }
-
-      // Leave and forget the Matrix room (delete for this user)
-      await client.leave(decodeURIComponent(channelId));
-      await client.forget(decodeURIComponent(channelId));
-
-      // If this is a space child, remove it from the space
-      if (serverId) {
-        try {
-          await client.sendStateEvent(
-            decodeURIComponent(serverId),
-            "m.space.child" as any,
-            {},
-            decodeURIComponent(channelId)
-          );
-        } catch (e) {
-          console.warn("Failed to remove channel from space:", e);
+      if (result.success) {
+        toast.success("Channel deleted successfully");
+        
+        // Close modal and navigate
+        onClose();
+        router.refresh();
+        
+        // Navigate back to server
+        if (serverId) {
+          router.push(`/servers/${encodeURIComponent(serverId)}`);
+        } else if (params?.serverId) {
+          router.push(`/servers/${params.serverId}`);
+        } else {
+          router.push("/");
         }
-      }
-
-      onClose();
-      router.refresh();
-      
-      // Navigate back to server
-      if (serverId) {
-        router.push(`/servers/${encodeURIComponent(serverId)}`);
-      } else if (params?.serverId) {
-        router.push(`/servers/${params.serverId}`);
-      } else {
-        router.push("/");
+        
+        return true;
+      } else if (result.error) {
+        // Handle error with conditional retry option
+        const errorMessage = `Failed to delete channel: ${result.error.message}`;
+        
+        if (result.error.retryable) {
+          toast.error(errorMessage, {
+            action: {
+              label: "Retry",
+              onClick: performDeletion
+            },
+            duration: 10000
+          });
+        } else {
+          toast.error(errorMessage, {
+            duration: 8000
+          });
+        }
+        
+        return false;
       }
     } catch (error) {
-      console.error("Failed to delete channel:", error);
+      toast.dismiss(loadingToastId);
+      toast.error(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+        action: {
+          label: "Retry",
+          onClick: performDeletion
+        },
+        duration: 10000
+      });
+      return false;
+    }
+  };
+
+  const onClick = async () => {
+    if (isLoading) return; // Prevent multiple clicks
+    
+    try {
+      setIsLoading(true);
+      await performDeletion();
     } finally {
       setIsLoading(false);
     }

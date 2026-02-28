@@ -73,7 +73,10 @@ export function LeaveServerModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#313338] text-white p-0 overflow-hidden">
+      <DialogContent 
+        data-testid="leave-server-modal" 
+        className="bg-[#313338] text-white p-0 overflow-hidden"
+      >
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold text-white">
             Leave Server
@@ -91,7 +94,12 @@ export function LeaveServerModal() {
             <Button variant="ghost" disabled={isLoading} onClick={onClose} className="text-white hover:bg-zinc-700">
               Cancel
             </Button>
-            <Button disabled={isLoading} onClick={onClick} className="bg-yellow-600 hover:bg-yellow-700 text-white">
+            <Button 
+              data-testid="confirm-leave-button"
+              disabled={isLoading} 
+              onClick={onClick} 
+              className="bg-yellow-600 hover:bg-yellow-700 text-white"
+            >
               Confirm
             </Button>
           </div>

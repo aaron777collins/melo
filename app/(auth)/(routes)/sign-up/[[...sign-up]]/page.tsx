@@ -11,9 +11,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-// Registration form validation schema
+// Registration form validation schema with enhanced validation
 const registrationSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
   email: z.string().refine((email) => !email || z.string().email().safeParse(email).success, {
     message: "Please enter a valid email address"
   }),
@@ -78,6 +80,32 @@ export default function SignUpPage() {
   const router = useRouter();
   const { register, isLoading, error, clearError } = useMatrixAuth();
   
+  // EMERGENCY FIX for ST-P2-01-D: Prevent stuck loading state
+  const [loadingOverride, setLoadingOverride] = useState(false);
+  
+  useEffect(() => {
+    // Safety mechanism: if loading state is stuck for too long, override it
+    let safetyTimeout: NodeJS.Timeout;
+    
+    if (isLoading) {
+      safetyTimeout = setTimeout(() => {
+        console.warn('[SignUpPage] ⚠️ Auth loading state stuck, overriding...');
+        setLoadingOverride(true);
+      }, 12000); // 12 seconds - within the auth provider's timeout
+    } else {
+      setLoadingOverride(false);
+    }
+    
+    return () => {
+      if (safetyTimeout) {
+        clearTimeout(safetyTimeout);
+      }
+    };
+  }, [isLoading]);
+  
+  // Use override when loading is stuck
+  const effectiveIsLoading = isLoading && !loadingOverride;
+  
   // Get private mode config
   const config = getClientConfig();
   
@@ -87,6 +115,7 @@ export default function SignUpPage() {
   // React Hook Form setup with Zod validation
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
+    mode: "onChange", // Enable real-time validation
     defaultValues: {
       username: "",
       email: "",
@@ -103,6 +132,92 @@ export default function SignUpPage() {
   const [isValidatingInvite, setIsValidatingInvite] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteValidated, setInviteValidated] = useState(false);
+  
+  // Username availability checking
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  
+  // Password strength state
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
+
+  // Helper function to calculate password strength
+  const calculatePasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
+    let score = 0;
+    
+    if (password.length >= 8) score += 1;
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score += 1;
+    
+    if (score <= 2) return 'weak';
+    if (score <= 4) return 'medium';
+    return 'strong';
+  };
+
+  // Debounced username availability check
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username.length < 3) {
+      setUsernameAvailable(null);
+      setUsernameError(null);
+      return;
+    }
+
+    setIsCheckingUsername(true);
+    setUsernameError(null);
+
+    try {
+      const response = await fetch('/api/auth/check-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+
+      const result = await response.json();
+
+      if (result.available) {
+        setUsernameAvailable(true);
+        setUsernameError(null);
+      } else {
+        setUsernameAvailable(false);
+        setUsernameError(result.reason || 'Username already taken');
+      }
+    } catch (err) {
+      setUsernameError('Failed to check username availability');
+      setUsernameAvailable(null);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  // Real-time validation effects
+  useEffect(() => {
+    const password = formData.password;
+    if (password) {
+      setPasswordStrength(calculatePasswordStrength(password));
+    } else {
+      setPasswordStrength(null);
+    }
+  }, [formData.password]);
+
+  // Debounce username availability check
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (formData.username && !form.formState.errors.username) {
+        checkUsernameAvailability(formData.username);
+      } else {
+        setUsernameAvailable(null);
+        setUsernameError(null);
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.username, form.formState.errors.username]);
+
+  // Check if passwords match
+  const passwordsMatch = formData.password && formData.confirmPassword && 
+                        formData.password === formData.confirmPassword;
 
   // Update homeserver and invite fields when toggle is used
   useEffect(() => {
@@ -209,6 +324,16 @@ export default function SignUpPage() {
     clearError(); // Clear previous errors
     setInviteError(null);
 
+    // Enhanced validation before submission
+    if (!values.username || !values.password || !values.confirmPassword) {
+      return; // React Hook Form will handle the validation messages
+    }
+
+    // Check if username is available (if not already checked)
+    if (usernameAvailable === false || usernameError) {
+      return; // Don't submit if username is not available
+    }
+
     // Validate invite code if required
     if (showInviteField) {
       const inviteValid = await validateInviteCode();
@@ -247,6 +372,12 @@ export default function SignUpPage() {
       router.push("/");
     }
   };
+
+  // Form validation state
+  const isFormValid = form.formState.isValid && 
+                     (!showInviteField || inviteValidated) &&
+                     (usernameAvailable !== false) &&
+                     (!isCheckingUsername);
 
   // Extract homeserver display name
   const getHomeserverName = (url: string) => {
@@ -308,7 +439,7 @@ export default function SignUpPage() {
                     type="checkbox"
                     checked={useMatrixOrgHomeserver}
                     onChange={(e) => setUseMatrixOrgHomeserver(e.target.checked)}
-                    disabled={isLoading}
+                    disabled={effectiveIsLoading}
                     data-testid="matrix-org-toggle"
                     className="sr-only peer"
                   />
@@ -333,7 +464,7 @@ export default function SignUpPage() {
                     form.setValue("inviteCode", ""); // Reset invite code when homeserver changes
                   }
                 }}
-                disabled={isLoading || useMatrixOrgHomeserver}
+                disabled={effectiveIsLoading || useMatrixOrgHomeserver}
               />
 
               {/* Homeserver Input */}
@@ -345,7 +476,7 @@ export default function SignUpPage() {
                   type="url"
                   placeholder="https://matrix.org"
                   {...form.register("homeserver")}
-                  disabled={isLoading || useMatrixOrgHomeserver}
+                  disabled={effectiveIsLoading || useMatrixOrgHomeserver}
                   data-testid="homeserver-input"
                   className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                     useMatrixOrgHomeserver 
@@ -398,7 +529,7 @@ export default function SignUpPage() {
                 type="text"
                 placeholder="inv_..."
                 {...form.register("inviteCode")}
-                disabled={isLoading || isValidatingInvite}
+                disabled={effectiveIsLoading || isValidatingInvite}
                 data-testid="invite-code-input"
                 className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 font-mono text-sm ${
                   inviteError 
@@ -446,23 +577,54 @@ export default function SignUpPage() {
               type="text"
               placeholder="Choose a username"
               {...form.register("username")}
-              disabled={isLoading}
+              disabled={effectiveIsLoading}
               data-testid="username-input"
+              aria-describedby="username-error username-availability"
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                form.formState.errors.username
+                form.formState.errors.username || usernameError
                   ? 'border-red-500 focus:border-red-500'
-                  : formData.username 
-                    ? 'border-zinc-600 focus:border-indigo-500' 
-                    : 'border-red-500 focus:border-red-500'
+                  : usernameAvailable === true
+                    ? 'border-green-500 focus:border-green-500'
+                    : formData.username 
+                      ? 'border-zinc-600 focus:border-indigo-500' 
+                      : 'border-zinc-600 focus:border-indigo-500'
               }`}
               required
             />
+            
+            {/* Username validation errors */}
             {form.formState.errors.username && (
-              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+              <p id="username-error" className="text-red-400 text-xs mt-1 flex items-center gap-1" aria-live="polite">
                 <AlertCircle className="h-3 w-3" />
                 {form.formState.errors.username.message}
               </p>
             )}
+            
+            {/* Username availability feedback */}
+            {!form.formState.errors.username && (
+              <div id="username-availability" className="mt-1">
+                {isCheckingUsername && (
+                  <div data-testid="username-checking-indicator" className="text-zinc-400 text-xs flex items-center gap-1" aria-live="polite">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Checking availability...
+                  </div>
+                )}
+                
+                {usernameAvailable === true && !isCheckingUsername && (
+                  <div data-testid="username-availability-indicator" className="text-green-400 text-xs flex items-center gap-1" aria-live="polite">
+                    ✓ Username available
+                  </div>
+                )}
+                
+                {usernameError && !isCheckingUsername && (
+                  <p className="text-red-400 text-xs flex items-center gap-1" aria-live="polite">
+                    <AlertCircle className="h-3 w-3" />
+                    {usernameError}
+                  </p>
+                )}
+              </div>
+            )}
+            
             <p className="text-zinc-500 text-xs mt-1">
               Your Matrix ID will be @{formData.username || "username"}:{getHomeserverName(
                 config.privateMode ? config.allowedHomeserver : formData.homeserver
@@ -479,7 +641,7 @@ export default function SignUpPage() {
               type="email"
               placeholder="your.email@example.com"
               {...form.register("email")}
-              disabled={isLoading}
+              disabled={effectiveIsLoading}
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 form.formState.errors.email
                   ? 'border-red-500 focus:border-red-500'
@@ -506,19 +668,48 @@ export default function SignUpPage() {
               type="password"
               placeholder="Create a strong password"
               {...form.register("password")}
-              disabled={isLoading}
+              disabled={effectiveIsLoading}
+              data-testid="password-input"
+              aria-describedby="password-error password-strength"
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 form.formState.errors.password
                   ? 'border-red-500 focus:border-red-500'
                   : formData.password 
                     ? 'border-zinc-600 focus:border-indigo-500' 
-                    : 'border-red-500 focus:border-red-500'
+                    : 'border-zinc-600 focus:border-indigo-500'
               }`}
               required
               minLength={8}
             />
+            
+            {/* Password strength indicator */}
+            {passwordStrength && (
+              <div id="password-strength" className="mt-2">
+                <div data-testid="password-strength-indicator" className="flex items-center gap-2">
+                  <span className="text-zinc-300 text-xs">Strength:</span>
+                  <span className={`text-xs font-medium ${
+                    passwordStrength === 'weak' ? 'text-red-400' :
+                    passwordStrength === 'medium' ? 'text-yellow-400' :
+                    'text-green-400'
+                  }`}>
+                    {passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}
+                  </span>
+                </div>
+                <div className="mt-1 w-full bg-zinc-600 rounded-full h-1">
+                  <div 
+                    data-testid="password-strength-bar"
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      passwordStrength === 'weak' ? 'w-1/3 bg-red-400 strength-weak' :
+                      passwordStrength === 'medium' ? 'w-2/3 bg-yellow-400 strength-medium' :
+                      'w-full bg-green-400 strength-strong'
+                    }`}
+                  />
+                </div>
+              </div>
+            )}
+            
             {form.formState.errors.password && (
-              <div className="text-red-400 text-xs mt-1">
+              <div id="password-error" className="text-red-400 text-xs mt-1" aria-live="polite">
                 <div className="flex items-center gap-1 mb-1">
                   <AlertCircle className="h-3 w-3" />
                   Password requirements:
@@ -532,25 +723,38 @@ export default function SignUpPage() {
 
           {/* Confirm Password Input */}
           <div>
-            <label className="block text-zinc-300 text-sm font-medium mb-2">
+            <label htmlFor="confirmPassword" className="block text-zinc-300 text-sm font-medium mb-2">
               Confirm Password
             </label>
             <input
+              id="confirmPassword"
+              name="confirmPassword"
               type="password"
               placeholder="Confirm your password"
               {...form.register("confirmPassword")}
-              disabled={isLoading}
+              disabled={effectiveIsLoading}
+              aria-describedby="confirm-password-error confirm-password-match"
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                 form.formState.errors.confirmPassword
                   ? 'border-red-500 focus:border-red-500'
-                  : formData.confirmPassword 
-                    ? 'border-zinc-600 focus:border-indigo-500' 
-                    : 'border-red-500 focus:border-red-500'
+                  : passwordsMatch
+                    ? 'border-green-500 focus:border-green-500'
+                    : formData.confirmPassword 
+                      ? 'border-zinc-600 focus:border-indigo-500' 
+                      : 'border-zinc-600 focus:border-indigo-500'
               }`}
               required
             />
+            
+            {/* Password match indicator */}
+            {passwordsMatch && !form.formState.errors.confirmPassword && (
+              <div id="confirm-password-match" data-testid="password-match-indicator" className="text-green-400 text-xs mt-1 flex items-center gap-1" aria-live="polite">
+                ✓ Passwords match
+              </div>
+            )}
+            
             {form.formState.errors.confirmPassword && (
-              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+              <p id="confirm-password-error" className="text-red-400 text-xs mt-1 flex items-center gap-1" aria-live="polite">
                 <AlertCircle className="h-3 w-3" />
                 {form.formState.errors.confirmPassword.message}
               </p>
@@ -560,11 +764,18 @@ export default function SignUpPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading || isValidatingInvite || !formData.username || !formData.password || (showInviteField && !formData.inviteCode)}
+            disabled={!isFormValid || effectiveIsLoading || isValidatingInvite || isCheckingUsername}
             data-testid="signup-button"
             className="w-full p-3 rounded bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Creating Account..." : isValidatingInvite ? "Validating..." : "Create Account"}
+            {effectiveIsLoading 
+              ? "Creating Account..." 
+              : isValidatingInvite 
+                ? "Validating..." 
+                : isCheckingUsername 
+                  ? "Checking username..."
+                  : "Create Account"
+            }
           </button>
         </form>
 

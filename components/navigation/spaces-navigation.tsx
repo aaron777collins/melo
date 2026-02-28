@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useModal } from "@/hooks/use-modal-store";
+import { ServerContextMenu } from '@/components/navigation/server-context-menu';
 
 // Discord clone exact styling for NavigationItem
 interface NavigationItemProps {
@@ -25,12 +26,51 @@ function NavigationItem({ id, imageUrl, name }: NavigationItemProps) {
   const router = useRouter();
   const decodedServerId = params?.serverId ? decodeURIComponent(params.serverId) : null;
 
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    isVisible: boolean;
+    x: number;
+    y: number;
+  }>({
+    isVisible: false,
+    x: 0,
+    y: 0,
+  });
+
   const onClick = () => {
     router.push(`/servers/${encodeURIComponent(id)}`);
   };
 
-  // Generate initials for fallback
-  const initials = name
+  const onContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({
+      isVisible: true,
+      x: e.clientX,
+      y: e.clientY,
+    });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu(prev => ({ ...prev, isVisible: false }));
+  };
+
+  // Close context menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeContextMenu();
+      }
+    };
+
+    if (contextMenu.isVisible) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [contextMenu.isVisible]);
+
+  // Generate initials for fallback - handle missing name gracefully
+  const safeName = name || 'Server';
+  const initials = safeName
     .split(' ')
     .map(word => word.charAt(0))
     .join('')
@@ -38,31 +78,50 @@ function NavigationItem({ id, imageUrl, name }: NavigationItemProps) {
     .slice(0, 2);
 
   return (
-    <ActionTooltip side="right" align="center" label={name}>
-      <button onClick={onClick} className="group relative flex items-center">
-        <div
-          className={cn(
-            "absolute left-0 bg-primary rounded-full transition-all w-[4px]",
-            decodedServerId !== id && "group-hover:h-[20px]",
-            decodedServerId === id ? "h-[36px]" : "h-[8px]"
-          )}
-        />
-        <div
-          className={cn(
-            "relative group flex mx-3 h-[48px] w-[48px] rounded-[24px] group-hover:rounded-[16px] transition-all overflow-hidden items-center justify-center",
-            decodedServerId === id
-              ? "bg-primary/10 text-primary rounded-[16px]"
-              : "bg-[#f2f3f5] dark:bg-[#313338]"
-          )}
+    <>
+      <ActionTooltip side="right" align="center" label={safeName}>
+        <button 
+          onClick={onClick} 
+          onContextMenu={onContextMenu}
+          className="group relative flex items-center"
         >
-          {imageUrl ? (
-            <Image fill src={imageUrl} alt={name} className="object-cover" />
-          ) : (
-            <span className="font-semibold text-sm">{initials}</span>
-          )}
-        </div>
-      </button>
-    </ActionTooltip>
+          <div
+            className={cn(
+              "absolute left-0 bg-primary rounded-full transition-all w-[4px]",
+              decodedServerId !== id && "group-hover:h-[20px]",
+              decodedServerId === id ? "h-[36px]" : "h-[8px]"
+            )}
+          />
+          <div
+            className={cn(
+              "relative group flex mx-3 h-[48px] w-[48px] rounded-[24px] group-hover:rounded-[16px] transition-all overflow-hidden items-center justify-center",
+              decodedServerId === id
+                ? "bg-primary/10 text-primary rounded-[16px]"
+                : "bg-[#f2f3f5] dark:bg-[#313338]"
+            )}
+          >
+            {imageUrl ? (
+              <Image fill src={imageUrl} alt={safeName} className="object-cover" />
+            ) : (
+              <span className="font-semibold text-sm">{initials}</span>
+            )}
+          </div>
+        </button>
+      </ActionTooltip>
+
+      {/* Context Menu */}
+      <ServerContextMenu
+        isVisible={contextMenu.isVisible}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        server={{
+          id,
+          name: safeName,
+          imageUrl,
+        }}
+        onClose={closeContextMenu}
+      />
+    </>
   );
 }
 

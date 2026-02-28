@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { getSpaceInitials } from "@/lib/matrix/types/space";
+import { ServerContextMenu } from "@/components/navigation/server-context-menu";
 
 interface NavigationItemProps {
   /** Space/Server ID */
@@ -38,6 +39,7 @@ export function NavigationItem({
 }: NavigationItemProps) {
   const params = useParams();
   const router = useRouter();
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const isActive = params?.serverId === id;
 
@@ -45,11 +47,27 @@ export function NavigationItem({
     router.push(`/servers/${id}`);
   };
 
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu(null);
+  };
+
   const initials = getSpaceInitials(name);
 
   return (
     <ActionTooltip side="right" align="center" label={name}>
-      <button onClick={onClick} className="group relative flex items-center">
+      <button 
+        onClick={onClick} 
+        onContextMenu={handleRightClick}
+        data-testid="server-icon"
+        aria-label={name}
+        className="group relative flex items-center"
+      >
         {/* Active/hover indicator pill on left */}
         <div
           className={cn(
@@ -101,6 +119,21 @@ export function NavigationItem({
           </div>
         )}
       </button>
+      
+      {/* Context Menu */}
+      {contextMenu && (
+        <ServerContextMenu
+          isVisible={true}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          server={{
+            id,
+            name,
+            imageUrl,
+          }}
+          onClose={closeContextMenu}
+        />
+      )}
     </ActionTooltip>
   );
 }

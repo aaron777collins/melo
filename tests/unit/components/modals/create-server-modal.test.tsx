@@ -15,6 +15,89 @@ const mockOnClose = vi.fn();
 const mockPush = vi.fn();
 const mockRefresh = vi.fn();
 
+// Mock react-hook-form to prevent formState errors
+vi.mock('react-hook-form', () => ({
+  useForm: () => ({
+    handleSubmit: vi.fn((onSubmit) => (e: any) => {
+      e?.preventDefault?.();
+      onSubmit({ name: 'Test Server', imageUrl: 'mxc://test/avatar' });
+    }),
+    setValue: vi.fn(),
+    reset: vi.fn(),
+    formState: {
+      isSubmitting: false,
+      errors: {},
+      isValid: true,
+      isDirty: false,
+      isValidating: false,
+      touchedFields: {},
+      dirtyFields: {},
+      submitCount: 0,
+      defaultValues: { name: '', imageUrl: '' }
+    },
+    control: {
+      _formValues: { name: '', imageUrl: '' },
+      _defaultValues: { name: '', imageUrl: '' }
+    },
+    register: vi.fn(() => ({
+      name: 'field',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      ref: vi.fn()
+    })),
+    watch: vi.fn(),
+    trigger: vi.fn(),
+    getValues: vi.fn(() => ({ name: '', imageUrl: '' })),
+    setError: vi.fn(),
+    clearErrors: vi.fn(),
+    resetField: vi.fn(),
+    setFocus: vi.fn(),
+    getFieldState: vi.fn(() => ({
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }))
+  }),
+  useController: vi.fn(() => ({
+    field: {
+      value: '',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      name: 'field',
+      ref: vi.fn()
+    },
+    fieldState: {
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }
+  })),
+  Controller: ({ render }: any) => render?.({
+    field: {
+      value: '',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      name: 'field',
+      ref: vi.fn()
+    },
+    fieldState: {
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }
+  }),
+  useFormContext: vi.fn(() => null),
+  FormProvider: ({ children }: any) => children
+}));
+
+// Mock @hookform/resolvers/zod to prevent resolver errors
+vi.mock('@hookform/resolvers/zod', () => ({
+  zodResolver: vi.fn(() => vi.fn())
+}));
+
 vi.mock('@/hooks/use-modal-store', () => ({
   useModal: () => ({
     isOpen: true,

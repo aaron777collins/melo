@@ -12,15 +12,26 @@ import { DeleteChannelModal } from '@/components/modals/delete-channel-modal';
 // Import mocks from setup
 import { mockUseModal, mockRouterPush, mockRouterRefresh } from './setup';
 
-// Mock Matrix client specifically for this test
-const mockMatrixClient = {
-  leave: vi.fn().mockResolvedValue({}),
-  forget: vi.fn().mockResolvedValue({}),
-  sendStateEvent: vi.fn().mockResolvedValue({}),
-};
+// Mock deleteRoom function - this is what the component actually uses
+const mockDeleteRoom = vi.fn();
+vi.mock('@/lib/matrix/delete-room', () => ({
+  deleteRoom: (options: any) => mockDeleteRoom(options),
+}));
 
-vi.mock('@/lib/matrix/client', () => ({
-  getClient: vi.fn(() => mockMatrixClient),
+// Mock toast for testing error display
+const mockToastError = vi.fn();
+const mockToastSuccess = vi.fn();
+const mockToastLoading = vi.fn().mockReturnValue('loading-toast-id');
+const mockToastDismiss = vi.fn();
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: {
+      error: mockToastError,
+      success: mockToastSuccess,
+      loading: mockToastLoading,
+      dismiss: mockToastDismiss,
+    },
+  }),
 }));
 
 describe('DeleteChannelModal', () => {
@@ -34,10 +45,15 @@ describe('DeleteChannelModal', () => {
     mockRouterPush.mockClear();
     mockRouterRefresh.mockClear();
     
-    // Reset matrix client mocks
-    mockMatrixClient.leave.mockClear();
-    mockMatrixClient.forget.mockClear();
-    mockMatrixClient.sendStateEvent.mockClear();
+    // Reset deleteRoom mock - default to successful deletion
+    mockDeleteRoom.mockClear();
+    mockDeleteRoom.mockResolvedValue({ success: true });
+    
+    // Reset toast mocks
+    mockToastError.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastLoading.mockClear();
+    mockToastDismiss.mockClear();
     
     // Configure modal mock for delete channel
     mockUseModal.mockReturnValue({
@@ -195,7 +211,7 @@ describe('DeleteChannelModal', () => {
   });
 
   describe('Matrix Integration', () => {
-    it('should call Matrix client methods on successful deletion', async () => {
+    it('should call deleteRoom with correct options on successful deletion', async () => {
       render(<DeleteChannelModal />);
       
       const input = screen.getByPlaceholderText('Type channel name to confirm');
@@ -207,18 +223,16 @@ describe('DeleteChannelModal', () => {
       fireEvent.click(deleteButton);
       
       await waitFor(() => {
-        expect(mockMatrixClient.leave).toHaveBeenCalledWith('test-channel-id');
-        expect(mockMatrixClient.forget).toHaveBeenCalledWith('test-channel-id');
-        expect(mockMatrixClient.sendStateEvent).toHaveBeenCalledWith(
-          'test-server-id',
-          'm.space.child',
-          {},
-          'test-channel-id'
-        );
+        expect(mockDeleteRoom).toHaveBeenCalledWith({
+          roomId: 'test-channel-id',
+          spaceId: 'test-server-id'
+        });
       });
     });
 
     it('should close modal and navigate after successful deletion', async () => {
+      mockDeleteRoom.mockResolvedValue({ success: true });
+      
       render(<DeleteChannelModal />);
       
       const input = screen.getByPlaceholderText('Type channel name to confirm');
@@ -274,11 +288,15 @@ describe('DeleteChannelModal', () => {
     });
 
     it('should handle missing Matrix client', async () => {
-      // Mock getClient to return null for this test
-      const { getClient } = await import('@/lib/matrix/client');
-      vi.mocked(getClient).mockReturnValueOnce(null);
-      
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      // Mock deleteRoom to return client not available error
+      mockDeleteRoom.mockResolvedValue({
+        success: false,
+        error: {
+          code: 'CLIENT_NOT_AVAILABLE',
+          message: 'Matrix client not initialized. Please try again.',
+          retryable: true
+        }
+      });
       
       render(<DeleteChannelModal />);
       
@@ -291,10 +309,14 @@ describe('DeleteChannelModal', () => {
       fireEvent.click(deleteButton);
       
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith('Matrix client not initialized');
+        expect(mockToastError).toHaveBeenCalledWith(
+          'Failed to delete channel: Matrix client not initialized. Please try again.',
+          expect.objectContaining({
+            action: expect.any(Object),
+            duration: 10000
+          })
+        );
       });
-      
-      consoleSpy.mockRestore();
     });
   });
 });

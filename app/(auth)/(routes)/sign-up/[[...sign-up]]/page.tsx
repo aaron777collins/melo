@@ -7,6 +7,30 @@ import Link from "next/link";
 import { Shield, Lock, Ticket, AlertCircle, Loader2 } from "lucide-react";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
 import { HomeserverToggle } from "@/components/auth/homeserver-toggle";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+// Registration form validation schema
+const registrationSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().refine((email) => !email || z.string().email().safeParse(email).success, {
+    message: "Please enter a valid email address"
+  }),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  confirmPassword: z.string(),
+  homeserver: z.string().url("Invalid homeserver URL"),
+  inviteCode: z.string().optional()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
+});
+
+type RegistrationFormValues = z.infer<typeof registrationSchema>;
 
 /**
  * Matrix Registration Page
@@ -60,17 +84,22 @@ export default function SignUpPage() {
   // Add state for matrix.org toggle 
   const [useMatrixOrgHomeserver, setUseMatrixOrgHomeserver] = useState(false);
 
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    inviteCode: "",
-    // In private mode, use the configured homeserver
-    homeserver: config.privateMode ? config.allowedHomeserver : "https://matrix.org"
+  // React Hook Form setup with Zod validation
+  const form = useForm<RegistrationFormValues>({
+    resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      inviteCode: "",
+      // In private mode, use the configured homeserver
+      homeserver: config.privateMode ? config.allowedHomeserver : "https://matrix.org"
+    }
   });
 
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  // Watch form values for reactive updates
+  const formData = form.watch();
   const [isValidatingInvite, setIsValidatingInvite] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteValidated, setInviteValidated] = useState(false);
@@ -79,24 +108,19 @@ export default function SignUpPage() {
   useEffect(() => {
     // If toggle is on, switch to matrix.org and reset invite code
     if (useMatrixOrgHomeserver) {
-      setFormData(prev => ({
-        ...prev,
-        homeserver: "https://matrix.org",
-        inviteCode: "" // Clear invite code when switching
-      }));
+      form.setValue("homeserver", "https://matrix.org");
+      form.setValue("inviteCode", ""); // Clear invite code when switching
     } else {
       // If in private mode, use the configured homeserver
       // Otherwise, reset to previous non-matrix.org homeserver 
-      setFormData(prev => ({
-        ...prev,
-        homeserver: config.privateMode ? config.allowedHomeserver : prev.homeserver === "https://matrix.org" ? "" : prev.homeserver,
-        inviteCode: "" // Clear invite code to be safe
-      }));
+      const currentHomeserver = form.getValues("homeserver");
+      form.setValue("homeserver", config.privateMode ? config.allowedHomeserver : currentHomeserver === "https://matrix.org" ? "" : currentHomeserver);
+      form.setValue("inviteCode", ""); // Clear invite code to be safe
     }
     // Reset invite validation when toggle changes
     setInviteValidated(false);
     setInviteError(null);
-  }, [useMatrixOrgHomeserver, config.privateMode, config.allowedHomeserver]);
+  }, [useMatrixOrgHomeserver, config.privateMode, config.allowedHomeserver, form]);
 
   // Determine if invite is required based on homeserver
   const isExternalHomeserver = useMemo(() => {
@@ -119,12 +143,9 @@ export default function SignUpPage() {
   // Reset homeserver if config changes
   useEffect(() => {
     if (config.privateMode) {
-      setFormData(prev => ({
-        ...prev,
-        homeserver: config.allowedHomeserver
-      }));
+      form.setValue("homeserver", config.allowedHomeserver);
     }
-  }, [config.privateMode, config.allowedHomeserver]);
+  }, [config.privateMode, config.allowedHomeserver, form]);
 
   // Reset invite validation when relevant fields change
   useEffect(() => {
@@ -184,41 +205,9 @@ export default function SignUpPage() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (values: RegistrationFormValues) => {
     clearError(); // Clear previous errors
-    setValidationErrors([]); // Clear validation errors
     setInviteError(null);
-    
-    // Validate form
-    const errors: string[] = [];
-    
-    if (!formData.username) {
-      errors.push("Username is required");
-    }
-    if (!formData.password) {
-      errors.push("Password is required");
-    }
-    if (formData.password !== formData.confirmPassword) {
-      errors.push("Passwords do not match");
-    }
-    if (formData.password && formData.password.length < 8) {
-      errors.push("Password must be at least 8 characters");
-    }
-    
-    // Skip homeserver validation in private mode
-    if (!config.privateMode) {
-      try {
-        new URL(formData.homeserver);
-      } catch {
-        errors.push("Invalid homeserver URL");
-      }
-    }
-    
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      return;
-    }
 
     // Validate invite code if required
     if (showInviteField) {
@@ -229,26 +218,26 @@ export default function SignUpPage() {
     }
 
     // Use configured homeserver in private mode
-    const homeserver = config.privateMode ? config.allowedHomeserver : formData.homeserver;
+    const homeserver = config.privateMode ? config.allowedHomeserver : values.homeserver;
 
     const success = await register(
-      formData.username,
-      formData.password,
-      formData.email || undefined,
+      values.username,
+      values.password,
+      values.email || undefined,
       homeserver
     );
 
     if (success) {
       // Mark invite as used (best effort, don't block on failure)
-      if (showInviteField && formData.inviteCode) {
+      if (showInviteField && values.inviteCode) {
         try {
           await fetch("/api/auth/use-invite", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              inviteCode: formData.inviteCode,
-              username: formData.username,
-              homeserverUrl: formData.homeserver
+              inviteCode: values.inviteCode,
+              username: values.username,
+              homeserverUrl: values.homeserver
             })
           });
         } catch (err) {
@@ -256,17 +245,6 @@ export default function SignUpPage() {
         }
       }
       router.push("/");
-    }
-  };
-
-  const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-    // Clear validation errors when user starts typing
-    if (validationErrors.length > 0) {
-      setValidationErrors([]);
     }
   };
 
@@ -316,16 +294,7 @@ export default function SignUpPage() {
           </div>
         )}
 
-        {/* Validation Errors */}
-        {validationErrors.length > 0 && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
-            {validationErrors.map((validationError, index) => (
-              <p key={index} className="text-red-400 text-sm">{validationError}</p>
-            ))}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           {/* Homeserver Toggle & Input - Hidden in Private Mode */}
           {!config.privateMode && (
             <div className="space-y-3">
@@ -360,11 +329,8 @@ export default function SignUpPage() {
                 onHomeserverChange={(homeserver) => {
                   // Only allow changing if matrix.org toggle is off
                   if (!useMatrixOrgHomeserver) {
-                    setFormData(prev => ({
-                      ...prev,
-                      homeserver,
-                      inviteCode: "" // Reset invite code when homeserver changes
-                    }));
+                    form.setValue("homeserver", homeserver);
+                    form.setValue("inviteCode", ""); // Reset invite code when homeserver changes
                   }
                 }}
                 disabled={isLoading || useMatrixOrgHomeserver}
@@ -378,19 +344,26 @@ export default function SignUpPage() {
                 <input
                   type="url"
                   placeholder="https://matrix.org"
-                  value={formData.homeserver}
-                  onChange={handleInputChange("homeserver")}
+                  {...form.register("homeserver")}
                   disabled={isLoading || useMatrixOrgHomeserver}
                   data-testid="homeserver-input"
                   className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
                     useMatrixOrgHomeserver 
                       ? 'border-indigo-500/50 bg-zinc-700/50 text-zinc-500 cursor-not-allowed'
-                      : formData.homeserver 
-                        ? 'border-zinc-600 focus:border-indigo-500' 
-                        : 'border-red-500 focus:border-red-500'
+                      : form.formState.errors.homeserver
+                        ? 'border-red-500 focus:border-red-500'
+                        : formData.homeserver 
+                          ? 'border-zinc-600 focus:border-indigo-500' 
+                          : 'border-red-500 focus:border-red-500'
                   }`}
                   required
                 />
+                {form.formState.errors.homeserver && (
+                  <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {form.formState.errors.homeserver.message}
+                  </p>
+                )}
                 {/* External homeserver notice */}
                 {isExternalHomeserver && (
                   <p className="text-amber-400 text-xs mt-1 flex items-center gap-1">
@@ -424,8 +397,7 @@ export default function SignUpPage() {
               <input
                 type="text"
                 placeholder="inv_..."
-                value={formData.inviteCode}
-                onChange={handleInputChange("inviteCode")}
+                {...form.register("inviteCode")}
                 disabled={isLoading || isValidatingInvite}
                 data-testid="invite-code-input"
                 className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 font-mono text-sm ${
@@ -473,15 +445,24 @@ export default function SignUpPage() {
             <input
               type="text"
               placeholder="Choose a username"
-              value={formData.username}
-              onChange={handleInputChange("username")}
+              {...form.register("username")}
               disabled={isLoading}
               data-testid="username-input"
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                formData.username ? 'border-zinc-600 focus:border-indigo-500' : 'border-red-500 focus:border-red-500'
+                form.formState.errors.username
+                  ? 'border-red-500 focus:border-red-500'
+                  : formData.username 
+                    ? 'border-zinc-600 focus:border-indigo-500' 
+                    : 'border-red-500 focus:border-red-500'
               }`}
               required
             />
+            {form.formState.errors.username && (
+              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {form.formState.errors.username.message}
+              </p>
+            )}
             <p className="text-zinc-500 text-xs mt-1">
               Your Matrix ID will be @{formData.username || "username"}:{getHomeserverName(
                 config.privateMode ? config.allowedHomeserver : formData.homeserver
@@ -497,11 +478,20 @@ export default function SignUpPage() {
             <input
               type="email"
               placeholder="your.email@example.com"
-              value={formData.email}
-              onChange={handleInputChange("email")}
+              {...form.register("email")}
               disabled={isLoading}
-              className="w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border border-zinc-600 focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+              className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
+                form.formState.errors.email
+                  ? 'border-red-500 focus:border-red-500'
+                  : 'border-zinc-600 focus:border-indigo-500'
+              }`}
             />
+            {form.formState.errors.email && (
+              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {form.formState.errors.email.message}
+              </p>
+            )}
             <p className="text-zinc-500 text-xs mt-1">
               For account recovery and verification
             </p>
@@ -515,15 +505,29 @@ export default function SignUpPage() {
             <input
               type="password"
               placeholder="Create a strong password"
-              value={formData.password}
-              onChange={handleInputChange("password")}
+              {...form.register("password")}
               disabled={isLoading}
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                formData.password ? 'border-zinc-600 focus:border-indigo-500' : 'border-red-500 focus:border-red-500'
+                form.formState.errors.password
+                  ? 'border-red-500 focus:border-red-500'
+                  : formData.password 
+                    ? 'border-zinc-600 focus:border-indigo-500' 
+                    : 'border-red-500 focus:border-red-500'
               }`}
               required
               minLength={8}
             />
+            {form.formState.errors.password && (
+              <div className="text-red-400 text-xs mt-1">
+                <div className="flex items-center gap-1 mb-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Password requirements:
+                </div>
+                <ul className="ml-4 space-y-1">
+                  <li>• {form.formState.errors.password.message}</li>
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Confirm Password Input */}
@@ -534,14 +538,23 @@ export default function SignUpPage() {
             <input
               type="password"
               placeholder="Confirm your password"
-              value={formData.confirmPassword}
-              onChange={handleInputChange("confirmPassword")}
+              {...form.register("confirmPassword")}
               disabled={isLoading}
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                formData.confirmPassword ? 'border-zinc-600 focus:border-indigo-500' : 'border-red-500 focus:border-red-500'
+                form.formState.errors.confirmPassword
+                  ? 'border-red-500 focus:border-red-500'
+                  : formData.confirmPassword 
+                    ? 'border-zinc-600 focus:border-indigo-500' 
+                    : 'border-red-500 focus:border-red-500'
               }`}
               required
             />
+            {form.formState.errors.confirmPassword && (
+              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {form.formState.errors.confirmPassword.message}
+              </p>
+            )}
           </div>
 
           {/* Submit Button */}

@@ -127,14 +127,17 @@ vi.mock('next/navigation', () => ({
 // Import the mock from setup.ts to ensure consistency
 import { mockMatrixAuthValue } from '../../../setup';
 
-const mockCreateRoom = vi.fn(() => Promise.resolve({ room_id: '!newchannel:matrix.org' }));
-const mockSendStateEvent = vi.fn(() => Promise.resolve({}));
+// Use vi.hoisted to ensure mock functions are available before vi.mock factory runs
+const { mockCreateRoom, mockSendStateEvent } = vi.hoisted(() => ({
+  mockCreateRoom: vi.fn(() => Promise.resolve({ room_id: '!newchannel:matrix.org' })),
+  mockSendStateEvent: vi.fn(() => Promise.resolve({})),
+}));
 
 vi.mock('@/lib/matrix/client', () => ({
-  getClient: vi.fn(() => ({
+  getClient: () => ({
     createRoom: mockCreateRoom,
     sendStateEvent: mockSendStateEvent,
-  })),
+  }),
 }));
 
 // Mock UI components
@@ -147,10 +150,8 @@ vi.mock('@/components/ui/dialog', () => ({
 }));
 
 vi.mock('@/components/ui/form', () => ({
-  Form: ({ children }: any) => {
-    // Simple wrapper that doesn't pass any react-hook-form props to DOM
-    return <form data-form="true">{children}</form>;
-  },
+  // Form is FormProvider (context only) - NO DOM element
+  Form: ({ children }: any) => children,
   FormField: ({ render, name }: any) => {
     const [value, setValue] = React.useState(name === 'type' ? 'TEXT' : '');
     return render({ 

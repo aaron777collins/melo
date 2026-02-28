@@ -114,7 +114,8 @@ vi.mock('@/components/ui/dialog', () => ({
 }));
 
 vi.mock('@/components/ui/form', () => ({
-  Form: ({ children }: any) => <form data-testid="form-container" onSubmit={(e: any) => e.preventDefault()}>{children}</form>,
+  // Form is FormProvider (context only) - NO DOM element
+  Form: ({ children }: any) => children,
   FormField: ({ render, name }: any) => {
     return render({ 
       field: { 

@@ -68,14 +68,14 @@ export function CreateChannelModal() {
     if (channelType && typeof channelType === "string") {
       const typeValue = channelType.toUpperCase();
       if (typeValue === "TEXT" || typeValue === "AUDIO" || typeValue === "VIDEO") {
-        form.setValue("type", typeValue);
+        form?.setValue("type", typeValue);
       }
     } else {
-      form.setValue("type", "TEXT");
+      form?.setValue("type", "TEXT");
     }
   }, [channelType, form]);
 
-  const isLoading = form.formState.isSubmitting;
+  const isLoading = form?.formState?.isSubmitting || false;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -136,7 +136,7 @@ export function CreateChannelModal() {
         channelRoom.room_id
       );
 
-      form.reset();
+      form?.reset();
       router.refresh();
       onClose();
     } catch (error) {

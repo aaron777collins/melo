@@ -22,7 +22,7 @@ const VIEWPORT_SIZES = {
   mobile: { width: 375, height: 667 }
 } as const;
 
-const APP_URL = 'http://localhost:3000';
+const APP_URL = 'http://dev2.aaroncollins.info:3000';
 const SCREENSHOT_DIR = '/home/ubuntu/clawd/scheduler/validation/screenshots/melo-audit/s08';
 
 // Helper function to ensure screenshot directory exists

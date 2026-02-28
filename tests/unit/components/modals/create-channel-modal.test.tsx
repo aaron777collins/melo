@@ -11,39 +11,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CreateChannelModal } from '@/components/modals/create-channel-modal';
 
-// Create a mock submit function that we can control
+// Mock form submission function
 const mockFormSubmit = vi.fn();
-const mockHandleSubmit = vi.fn((onSubmit) => {
-  return (e?: any) => {
-    e?.preventDefault?.();
-    // Simulate calling the onSubmit with form values
-    onSubmit({ name: 'test-channel', type: 'TEXT' });
-  };
-});
-
-// Mock useForm hook
-vi.mock('react-hook-form', () => ({
-  useForm: vi.fn(() => ({
-    handleSubmit: mockHandleSubmit,
-    setValue: vi.fn(),
-    reset: vi.fn(),
-    formState: {
-      isSubmitting: false,
-      errors: {},
-      isValid: true,
-    },
-    control: {},
-    register: vi.fn(),
-    watch: vi.fn(),
-    trigger: vi.fn(),
-    getValues: vi.fn(),
-    setError: vi.fn(),
-    clearErrors: vi.fn(),
-    resetField: vi.fn(),
-    setFocus: vi.fn(),
-    getFieldState: vi.fn(),
-  })),
-}));
 
 // Mock hooks
 const mockOnClose = vi.fn();
@@ -94,16 +63,32 @@ vi.mock('@/components/ui/dialog', () => ({
 }));
 
 vi.mock('@/components/ui/form', () => ({
-  Form: ({ children, ...props }: any) => {
-    return <div data-form="true" {...props}>{children}</div>;
+  Form: ({ children }: any) => {
+    // Simple wrapper that doesn't pass any react-hook-form props to DOM
+    return <form data-form="true">{children}</form>;
   },
-  FormField: ({ render, control, name }: any) => {
+  FormField: ({ render, name }: any) => {
     const [value, setValue] = React.useState(name === 'type' ? 'TEXT' : '');
     return render({ 
       field: { 
         value, 
-        onChange: (val: any) => setValue(val?.target?.value || val) 
-      } 
+        onChange: (val: any) => setValue(val?.target?.value || val),
+        name,
+        onBlur: vi.fn(),
+        disabled: false,
+        ref: vi.fn()
+      },
+      fieldState: {
+        error: undefined,
+        invalid: false,
+        isDirty: false,
+        isTouched: false
+      },
+      formState: {
+        isSubmitting: false,
+        errors: {},
+        isValid: true
+      }
     });
   },
   FormItem: ({ children }: any) => <div>{children}</div>,
@@ -164,7 +149,6 @@ describe('CreateChannelModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFormSubmit.mockClear();
-    mockHandleSubmit.mockClear();
   });
 
   afterEach(() => {

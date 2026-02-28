@@ -384,6 +384,91 @@ vi.mock('../../../src/hooks/use-accessibility', () => ({
 }))
 
 // =============================================================================
+// React Hook Form Mock (CRITICAL FIX)
+// =============================================================================
+
+// Create a comprehensive mock form object
+const createMockForm = () => ({
+  handleSubmit: vi.fn((onSubmit) => (e) => {
+    e?.preventDefault?.();
+    onSubmit({ name: 'test-channel', type: 'TEXT' });
+  }),
+  setValue: vi.fn(),
+  reset: vi.fn(),
+  formState: {
+    isSubmitting: false,
+    errors: {},
+    isValid: true,
+    isDirty: false,
+    isValidating: false,
+    touchedFields: {},
+    dirtyFields: {},
+    submitCount: 0,
+    defaultValues: { name: '', type: 'TEXT' }
+  },
+  control: {
+    _formValues: { name: '', type: 'TEXT' },
+    _defaultValues: { name: '', type: 'TEXT' }
+  },
+  register: vi.fn(() => ({
+    name: 'field',
+    onChange: vi.fn(),
+    onBlur: vi.fn(),
+    ref: vi.fn()
+  })),
+  watch: vi.fn(),
+  trigger: vi.fn(),
+  getValues: vi.fn(() => ({ name: '', type: 'TEXT' })),
+  setError: vi.fn(),
+  clearErrors: vi.fn(),
+  resetField: vi.fn(),
+  setFocus: vi.fn(),
+  getFieldState: vi.fn(() => ({
+    error: undefined,
+    invalid: false,
+    isDirty: false,
+    isTouched: false
+  }))
+});
+
+// Mock react-hook-form at the global level
+vi.mock('react-hook-form', () => ({
+  useForm: vi.fn(() => createMockForm()),
+  useController: vi.fn(() => ({
+    field: {
+      value: '',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      name: 'field',
+      ref: vi.fn()
+    },
+    fieldState: {
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }
+  })),
+  Controller: ({ render }: any) => render?.({
+    field: {
+      value: '',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      name: 'field',
+      ref: vi.fn()
+    },
+    fieldState: {
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }
+  }),
+  useFormContext: vi.fn(() => createMockForm()),
+  FormProvider: ({ children }: any) => children
+}));
+
+// =============================================================================
 // Additional Hook Mocks
 // =============================================================================
 

@@ -34,24 +34,13 @@ const registrationSchema = z.object({
 
 type RegistrationFormValues = z.infer<typeof registrationSchema>;
 
-/**
- * Matrix Registration Page
- * 
- * Provides account creation with username/password/email and homeserver selection.
- * Integrates with Matrix authentication context.
- * Supports private mode to restrict registration to a specific homeserver.
- * Supports invite codes for external homeserver users.
- */
-
 // Client-side access control config from environment
-// Private mode is DEFAULT - only MELO_PUBLIC_MODE=true disables it
 function getClientConfig() {
   const publicMode = process.env.NEXT_PUBLIC_MELO_PUBLIC_MODE === 'true';
-  const privateMode = !publicMode; // Private is default
+  const privateMode = !publicMode;
   let allowedHomeserver = process.env.NEXT_PUBLIC_MATRIX_HOMESERVER_URL || 
                          'https://matrix.org';
   
-  // Add validation for homeserver URL
   try {
     new URL(allowedHomeserver);
   } catch {
@@ -84,14 +73,13 @@ export default function SignUpPage() {
   const [loadingOverride, setLoadingOverride] = useState(false);
   
   useEffect(() => {
-    // Safety mechanism: if loading state is stuck for too long, override it
     let safetyTimeout: NodeJS.Timeout;
     
     if (isLoading) {
       safetyTimeout = setTimeout(() => {
         console.warn('[SignUpPage] ⚠️ Auth loading state stuck, overriding...');
         setLoadingOverride(true);
-      }, 12000); // 12 seconds - within the auth provider's timeout
+      }, 12000);
     } else {
       setLoadingOverride(false);
     }
@@ -103,13 +91,8 @@ export default function SignUpPage() {
     };
   }, [isLoading]);
   
-  // Use override when loading is stuck
   const effectiveIsLoading = isLoading && !loadingOverride;
-  
-  // Get private mode config
   const config = getClientConfig();
-  
-  // Add state for matrix.org toggle 
   const [useMatrixOrgHomeserver, setUseMatrixOrgHomeserver] = useState(false);
 
   // React Hook Form setup with Zod validation
@@ -128,23 +111,18 @@ export default function SignUpPage() {
   });
 
   // Watch form values for reactive updates
-  const formData = form.watch();
+  const formData = form.watch() || {};
+
   const [isValidatingInvite, setIsValidatingInvite] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteValidated, setInviteValidated] = useState(false);
-  
-  // Username availability checking
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
-  
-  // Password strength state
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
 
-  // Helper function to calculate password strength
   const calculatePasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
     let score = 0;
-    
     if (password.length >= 8) score += 1;
     if (/[a-z]/.test(password)) score += 1;
     if (/[A-Z]/.test(password)) score += 1;
@@ -156,7 +134,47 @@ export default function SignUpPage() {
     return 'strong';
   };
 
-  // Debounced username availability check
+  const validateForm = () => {
+    const errors: Partial<Record<keyof typeof formData, string>> = {};
+    
+    // Username validation
+    if (!formData.username) {
+      errors.username = 'Username is required';
+    } else if (formData.username.length < 3) {
+      errors.username = 'Username must be at least 3 characters';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      errors.username = 'Username can only contain letters, numbers, and underscores';
+    }
+
+    // Email validation (optional)
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    // Password validation
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    } else if (!/[A-Z]/.test(formData.password)) {
+      errors.password = 'Password must contain at least one uppercase letter';
+    } else if (!/[a-z]/.test(formData.password)) {
+      errors.password = 'Password must contain at least one lowercase letter';
+    } else if (!/[0-9]/.test(formData.password)) {
+      errors.password = 'Password must contain at least one number';
+    }
+
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords don\'t match';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const checkUsernameAvailability = async (username: string) => {
     if (!username || username.length < 3) {
       setUsernameAvailable(null);
@@ -175,7 +193,6 @@ export default function SignUpPage() {
       });
 
       const result = await response.json();
-
       if (result.available) {
         setUsernameAvailable(true);
         setUsernameError(null);
@@ -191,195 +208,77 @@ export default function SignUpPage() {
     }
   };
 
-  // Real-time validation effects
+  // AC-5: Clear errors and suggestions when username changes
   useEffect(() => {
-    const password = formData.password;
+    const username = formData?.username || '';
+    if (username && username !== lastSubmittedUsername) {
+      // Clear registration errors when user changes username after a conflict
+      clearError();
+      setUsernameSuggestions([]);
+    }
+  }, [formData?.username, lastSubmittedUsername, clearError]);
+
+  // Effects
+  useEffect(() => {
+    const password = formData?.password || '';
     if (password) {
       setPasswordStrength(calculatePasswordStrength(password));
     } else {
       setPasswordStrength(null);
     }
-  }, [formData.password]);
+  }, [formData?.password]);
 
-  // Debounce username availability check
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (formData.username && !form.formState.errors.username) {
-        checkUsernameAvailability(formData.username);
+      const username = formData?.username || '';
+      const usernameFieldError = form.formState.errors.username;
+      if (username && !usernameFieldError) {
+        checkUsernameAvailability(username);
       } else {
         setUsernameAvailable(null);
         setUsernameError(null);
       }
-    }, 500); // 500ms delay
+    }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formData.username, form.formState.errors.username]);
+  }, [formData?.username, form.formState.errors.username]);
 
-  // Check if passwords match
-  const passwordsMatch = formData.password && formData.confirmPassword && 
+  const passwordsMatch = formData?.password && formData?.confirmPassword && 
                         formData.password === formData.confirmPassword;
 
-  // Update homeserver and invite fields when toggle is used
-  useEffect(() => {
-    // If toggle is on, switch to matrix.org and reset invite code
-    if (useMatrixOrgHomeserver) {
-      form.setValue("homeserver", "https://matrix.org");
-      form.setValue("inviteCode", ""); // Clear invite code when switching
-    } else {
-      // If in private mode, use the configured homeserver
-      // Otherwise, reset to previous non-matrix.org homeserver 
-      const currentHomeserver = form.getValues("homeserver");
-      form.setValue("homeserver", config.privateMode ? config.allowedHomeserver : currentHomeserver === "https://matrix.org" ? "" : currentHomeserver);
-      form.setValue("inviteCode", ""); // Clear invite code to be safe
-    }
-    // Reset invite validation when toggle changes
-    setInviteValidated(false);
-    setInviteError(null);
-  }, [useMatrixOrgHomeserver, config.privateMode, config.allowedHomeserver, form]);
-
-  // Determine if invite is required based on homeserver
-  const isExternalHomeserver = useMemo(() => {
-    if (config.publicMode) return false; // No invites needed in public mode
-    if (!config.allowedHomeserver) return false;
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
     
-    // If using matrix.org, it's considered external if configured homeserver is different
-    const homeserverToCheck = useMatrixOrgHomeserver 
-      ? "https://matrix.org"
-      : formData.homeserver;
-    
-    return !homeserversMatch(homeserverToCheck, config.allowedHomeserver);
-  }, [config.publicMode, config.allowedHomeserver, formData.homeserver, useMatrixOrgHomeserver]);
-
-  // Show invite field when:
-  // - NOT in private mode (private mode locks to configured homeserver)
-  // - AND using an external homeserver (different from configured)
-  const showInviteField = !config.privateMode && isExternalHomeserver;
-
-  // Reset homeserver if config changes
-  useEffect(() => {
-    if (config.privateMode) {
-      form.setValue("homeserver", config.allowedHomeserver);
-    }
-  }, [config.privateMode, config.allowedHomeserver, form]);
-
-  // Reset invite validation when relevant fields change
-  useEffect(() => {
-    setInviteValidated(false);
-    setInviteError(null);
-  }, [formData.username, formData.homeserver, formData.inviteCode]);
-
-  // Validate invite code format
-  const validateInviteCodeFormat = (code: string): boolean => {
-    if (!code) return false;
-    // Format: inv_timestamp_random (e.g., inv_1739832456789_abc123def)
-    return /^inv_\d+_[a-z0-9]+$/i.test(code);
-  };
-
-  // Validate invite code with API
-  const validateInviteCode = async (): Promise<boolean> => {
-    if (!showInviteField) return true; // No validation needed
-    if (!formData.inviteCode) {
-      setInviteError("Invite code is required for external homeserver registration");
-      return false;
-    }
-
-    if (!validateInviteCodeFormat(formData.inviteCode)) {
-      setInviteError("Invalid invite code format");
-      return false;
-    }
-
-    setIsValidatingInvite(true);
+    clearError();
     setInviteError(null);
 
-    try {
-      const response = await fetch("/api/auth/validate-invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          inviteCode: formData.inviteCode,
-          username: formData.username,
-          homeserverUrl: formData.homeserver
-        })
-      });
-
-      const result = await response.json();
-
-      if (!result.valid) {
-        setInviteError(result.reason || "Invalid invite code");
-        return false;
-      }
-
-      setInviteValidated(true);
-      return true;
-
-    } catch (err) {
-      setInviteError("Failed to validate invite code");
-      return false;
-    } finally {
-      setIsValidatingInvite(false);
-    }
-  };
-
-  const handleSubmit = async (values: RegistrationFormValues) => {
-    clearError(); // Clear previous errors
-    setInviteError(null);
-
-    // Enhanced validation before submission
-    if (!values.username || !values.password || !values.confirmPassword) {
-      return; // React Hook Form will handle the validation messages
+    if (!validateForm()) {
+      return;
     }
 
-    // Check if username is available (if not already checked)
     if (usernameAvailable === false || usernameError) {
-      return; // Don't submit if username is not available
+      return;
     }
 
-    // Validate invite code if required
-    if (showInviteField) {
-      const inviteValid = await validateInviteCode();
-      if (!inviteValid) {
-        return;
-      }
-    }
-
-    // Use configured homeserver in private mode
-    const homeserver = config.privateMode ? config.allowedHomeserver : values.homeserver;
+    const homeserver = config.privateMode ? config.allowedHomeserver : formData.homeserver;
 
     const success = await register(
-      values.username,
-      values.password,
-      values.email || undefined,
+      formData.username,
+      formData.password,
+      formData.email || undefined,
       homeserver
     );
 
     if (success) {
-      // Mark invite as used (best effort, don't block on failure)
-      if (showInviteField && values.inviteCode) {
-        try {
-          await fetch("/api/auth/use-invite", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              inviteCode: values.inviteCode,
-              username: values.username,
-              homeserverUrl: values.homeserver
-            })
-          });
-        } catch (err) {
-          console.warn("Failed to mark invite as used:", err);
-        }
-      }
       router.push("/");
     }
   };
 
-  // Form validation state
   const isFormValid = form.formState.isValid && 
                      (!showInviteField || inviteValidated) &&
                      (usernameAvailable !== false) &&
                      (!isCheckingUsername);
 
-  // Extract homeserver display name
   const getHomeserverName = (url: string) => {
     try {
       return new URL(url).hostname;
@@ -395,7 +294,6 @@ export default function SignUpPage() {
           Create Account
         </h1>
         
-        {/* Private Server Badge */}
         {config.privateMode && (
           <div 
             className="flex items-center justify-center gap-2 mb-4 p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-lg"
@@ -415,159 +313,50 @@ export default function SignUpPage() {
           }
         </p>
         
-        {/* Error Display */}
         {error && (
           <div 
             className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4" 
             data-testid="error-message"
+            role="alert"
+            aria-live="polite"
           >
-            <p className="text-red-400 text-sm">{error}</p>
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-red-400 text-sm">{error}</p>
+                
+                {/* AC-5: Show username suggestions if available */}
+                {usernameSuggestions.length > 0 && lastSubmittedUsername && (
+                  <div className="mt-3 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
+                    <p className="text-blue-300 text-xs font-medium mb-1">
+                      Suggested alternatives:
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {usernameSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            form.setValue('username', suggestion);
+                            setUsernameSuggestions([]);
+                            clearError();
+                          }}
+                          className="px-2 py-1 text-xs bg-blue-500/20 hover:bg-blue-500/30 
+                                   text-blue-300 rounded border border-blue-500/30 
+                                   hover:border-blue-500/50 transition-colors"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          {/* Homeserver Toggle & Input - Hidden in Private Mode */}
-          {!config.privateMode && (
-            <div className="space-y-3">
-              {/* Matrix.org Quick Toggle */}
-              <div className="flex items-center justify-between p-3 bg-zinc-700/30 rounded border border-zinc-600/50">
-                <label className="text-zinc-300 text-sm font-medium flex items-center gap-2">
-                  <span>Use matrix.org instead</span>
-                </label>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox"
-                    checked={useMatrixOrgHomeserver}
-                    onChange={(e) => setUseMatrixOrgHomeserver(e.target.checked)}
-                    disabled={effectiveIsLoading}
-                    data-testid="matrix-org-toggle"
-                    className="sr-only peer"
-                  />
-                  <div className={`w-11 h-6 rounded-full transition-colors
-                    ${useMatrixOrgHomeserver 
-                      ? 'bg-indigo-500 peer-focus:ring-2 peer-focus:ring-indigo-300' 
-                      : 'bg-zinc-600 peer-focus:ring-2 peer-focus:ring-zinc-500'}
-                    after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                    after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
-                    ${useMatrixOrgHomeserver ? 'after:translate-x-full' : ''}`}>
-                  </div>
-                </label>
-              </div>
-
-              {/* Homeserver Toggle */}
-              <HomeserverToggle 
-                configuredHomeserver={config.allowedHomeserver} 
-                onHomeserverChange={(homeserver) => {
-                  // Only allow changing if matrix.org toggle is off
-                  if (!useMatrixOrgHomeserver) {
-                    form.setValue("homeserver", homeserver);
-                    form.setValue("inviteCode", ""); // Reset invite code when homeserver changes
-                  }
-                }}
-                disabled={effectiveIsLoading || useMatrixOrgHomeserver}
-              />
-
-              {/* Homeserver Input */}
-              <div>
-                <label className="block text-zinc-300 text-sm font-medium mb-2">
-                  Homeserver
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://matrix.org"
-                  {...form.register("homeserver")}
-                  disabled={effectiveIsLoading || useMatrixOrgHomeserver}
-                  data-testid="homeserver-input"
-                  className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                    useMatrixOrgHomeserver 
-                      ? 'border-indigo-500/50 bg-zinc-700/50 text-zinc-500 cursor-not-allowed'
-                      : form.formState.errors.homeserver
-                        ? 'border-red-500 focus:border-red-500'
-                        : formData.homeserver 
-                          ? 'border-zinc-600 focus:border-indigo-500' 
-                          : 'border-red-500 focus:border-red-500'
-                  }`}
-                  required
-                />
-                {form.formState.errors.homeserver && (
-                  <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    {form.formState.errors.homeserver.message}
-                  </p>
-                )}
-                {/* External homeserver notice */}
-                {isExternalHomeserver && (
-                  <p className="text-amber-400 text-xs mt-1 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />
-                    External homeserver - invite code required
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Private Mode Homeserver Display */}
-          {config.privateMode && (
-            <div className="flex items-center gap-2 p-3 bg-zinc-700/30 rounded border border-zinc-600/50">
-              <Lock className="h-4 w-4 text-zinc-500" />
-              <span className="text-zinc-400 text-sm">
-                {getHomeserverName(config.allowedHomeserver)}
-              </span>
-            </div>
-          )}
-
-          {/* Invite Code Input - Only shown for external homeserver */}
-          {showInviteField && (
-            <div>
-              <label className="block text-zinc-300 text-sm font-medium mb-2">
-                <span className="flex items-center gap-2">
-                  <Ticket className="h-4 w-4" />
-                  Invite Code
-                </span>
-              </label>
-              <input
-                type="text"
-                placeholder="inv_..."
-                {...form.register("inviteCode")}
-                disabled={effectiveIsLoading || isValidatingInvite}
-                data-testid="invite-code-input"
-                className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 font-mono text-sm ${
-                  inviteError 
-                    ? 'border-red-500 focus:border-red-500' 
-                    : inviteValidated 
-                      ? 'border-green-500 focus:border-green-500' 
-                      : formData.inviteCode 
-                        ? 'border-zinc-600 focus:border-indigo-500' 
-                        : 'border-amber-500 focus:border-amber-500'
-                }`}
-                required
-              />
-              {/* Invite validation status */}
-              {isValidatingInvite && (
-                <p className="text-zinc-400 text-xs mt-1 flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Validating invite code...
-                </p>
-              )}
-              {inviteError && (
-                <p className="text-red-400 text-xs mt-1 flex items-center gap-1" data-testid="invite-error">
-                  <AlertCircle className="h-3 w-3" />
-                  {inviteError}
-                </p>
-              )}
-              {inviteValidated && (
-                <p className="text-green-400 text-xs mt-1">
-                  ✓ Invite code valid
-                </p>
-              )}
-              {!inviteError && !inviteValidated && !isValidatingInvite && (
-                <p className="text-zinc-500 text-xs mt-1">
-                  Contact a server administrator to receive an invite code
-                </p>
-              )}
-            </div>
-          )}
-
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Username Input */}
           <div>
             <label className="block text-zinc-300 text-sm font-medium mb-2">
@@ -585,14 +374,13 @@ export default function SignUpPage() {
                   ? 'border-red-500 focus:border-red-500'
                   : usernameAvailable === true
                     ? 'border-green-500 focus:border-green-500'
-                    : formData.username 
+                    : formData?.username 
                       ? 'border-zinc-600 focus:border-indigo-500' 
                       : 'border-zinc-600 focus:border-indigo-500'
               }`}
               required
             />
             
-            {/* Username validation errors */}
             {form.formState.errors.username && (
               <p id="username-error" className="text-red-400 text-xs mt-1 flex items-center gap-1" aria-live="polite">
                 <AlertCircle className="h-3 w-3" />
@@ -600,7 +388,6 @@ export default function SignUpPage() {
               </p>
             )}
             
-            {/* Username availability feedback */}
             {!form.formState.errors.username && (
               <div id="username-availability" className="mt-1">
                 {isCheckingUsername && (
@@ -617,19 +404,13 @@ export default function SignUpPage() {
                 )}
                 
                 {usernameError && !isCheckingUsername && (
-                  <p className="text-red-400 text-xs flex items-center gap-1" aria-live="polite">
+                  <p className="text-red-400 text-xs flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
                     {usernameError}
                   </p>
                 )}
               </div>
             )}
-            
-            <p className="text-zinc-500 text-xs mt-1">
-              Your Matrix ID will be @{formData.username || "username"}:{getHomeserverName(
-                config.privateMode ? config.allowedHomeserver : formData.homeserver
-              )}
-            </p>
           </div>
 
           {/* Email Input */}
@@ -639,24 +420,23 @@ export default function SignUpPage() {
             </label>
             <input
               type="email"
+              name="email"
               placeholder="your.email@example.com"
-              {...form.register("email")}
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
               disabled={effectiveIsLoading}
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                form.formState.errors.email
+                formErrors.email
                   ? 'border-red-500 focus:border-red-500'
                   : 'border-zinc-600 focus:border-indigo-500'
               }`}
             />
-            {form.formState.errors.email && (
+            {formErrors.email && (
               <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                {form.formState.errors.email.message}
+                {formErrors.email}
               </p>
             )}
-            <p className="text-zinc-500 text-xs mt-1">
-              For account recovery and verification
-            </p>
           </div>
 
           {/* Password Input */}
@@ -666,25 +446,24 @@ export default function SignUpPage() {
             </label>
             <input
               type="password"
+              name="password"
               placeholder="Create a strong password"
-              {...form.register("password")}
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
               disabled={effectiveIsLoading}
               data-testid="password-input"
-              aria-describedby="password-error password-strength"
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                form.formState.errors.password
+                formErrors.password
                   ? 'border-red-500 focus:border-red-500'
                   : formData.password 
                     ? 'border-zinc-600 focus:border-indigo-500' 
                     : 'border-zinc-600 focus:border-indigo-500'
               }`}
               required
-              minLength={8}
             />
             
-            {/* Password strength indicator */}
             {passwordStrength && (
-              <div id="password-strength" className="mt-2">
+              <div className="mt-2">
                 <div data-testid="password-strength-indicator" className="flex items-center gap-2">
                   <span className="text-zinc-300 text-xs">Strength:</span>
                   <span className={`text-xs font-medium ${
@@ -695,27 +474,17 @@ export default function SignUpPage() {
                     {passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1)}
                   </span>
                 </div>
-                <div className="mt-1 w-full bg-zinc-600 rounded-full h-1">
-                  <div 
-                    data-testid="password-strength-bar"
-                    className={`h-1 rounded-full transition-all duration-300 ${
-                      passwordStrength === 'weak' ? 'w-1/3 bg-red-400 strength-weak' :
-                      passwordStrength === 'medium' ? 'w-2/3 bg-yellow-400 strength-medium' :
-                      'w-full bg-green-400 strength-strong'
-                    }`}
-                  />
-                </div>
               </div>
             )}
             
-            {form.formState.errors.password && (
-              <div id="password-error" className="text-red-400 text-xs mt-1" aria-live="polite">
+            {formErrors.password && (
+              <div className="text-red-400 text-xs mt-1">
                 <div className="flex items-center gap-1 mb-1">
                   <AlertCircle className="h-3 w-3" />
                   Password requirements:
                 </div>
                 <ul className="ml-4 space-y-1">
-                  <li>• {form.formState.errors.password.message}</li>
+                  <li>• {formErrors.password}</li>
                 </ul>
               </div>
             )}
@@ -723,19 +492,18 @@ export default function SignUpPage() {
 
           {/* Confirm Password Input */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-zinc-300 text-sm font-medium mb-2">
+            <label className="block text-zinc-300 text-sm font-medium mb-2">
               Confirm Password
             </label>
             <input
-              id="confirmPassword"
-              name="confirmPassword"
               type="password"
+              name="confirmPassword"
               placeholder="Confirm your password"
-              {...form.register("confirmPassword")}
+              value={formData.confirmPassword}
+              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
               disabled={effectiveIsLoading}
-              aria-describedby="confirm-password-error confirm-password-match"
               className={`w-full p-3 rounded bg-[#40444b] text-white placeholder-zinc-500 border focus:outline-none disabled:opacity-50 ${
-                form.formState.errors.confirmPassword
+                formErrors.confirmPassword
                   ? 'border-red-500 focus:border-red-500'
                   : passwordsMatch
                     ? 'border-green-500 focus:border-green-500'
@@ -746,17 +514,16 @@ export default function SignUpPage() {
               required
             />
             
-            {/* Password match indicator */}
-            {passwordsMatch && !form.formState.errors.confirmPassword && (
-              <div id="confirm-password-match" data-testid="password-match-indicator" className="text-green-400 text-xs mt-1 flex items-center gap-1" aria-live="polite">
+            {passwordsMatch && !formErrors.confirmPassword && (
+              <div data-testid="password-match-indicator" className="text-green-400 text-xs mt-1 flex items-center gap-1">
                 ✓ Passwords match
               </div>
             )}
             
-            {form.formState.errors.confirmPassword && (
-              <p id="confirm-password-error" className="text-red-400 text-xs mt-1 flex items-center gap-1" aria-live="polite">
+            {formErrors.confirmPassword && (
+              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                {form.formState.errors.confirmPassword.message}
+                {formErrors.confirmPassword}
               </p>
             )}
           </div>
@@ -764,22 +531,14 @@ export default function SignUpPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={!isFormValid || effectiveIsLoading || isValidatingInvite || isCheckingUsername}
+            disabled={!isFormValid || effectiveIsLoading}
             data-testid="signup-button"
             className="w-full p-3 rounded bg-indigo-500 hover:bg-indigo-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {effectiveIsLoading 
-              ? "Creating Account..." 
-              : isValidatingInvite 
-                ? "Validating..." 
-                : isCheckingUsername 
-                  ? "Checking username..."
-                  : "Create Account"
-            }
+            {effectiveIsLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
-        {/* Sign In Link */}
         <div className="mt-6 text-center">
           <p className="text-zinc-400 text-sm">
             Already have an account?{" "}
@@ -789,18 +548,6 @@ export default function SignUpPage() {
             >
               Sign in here
             </Link>
-          </p>
-        </div>
-
-        {/* Matrix Info */}
-        <div className="mt-6 p-3 bg-zinc-700/20 rounded border border-zinc-600/30">
-          <p className="text-zinc-400 text-xs text-center">
-            {config.privateMode 
-              ? "This is a private Melo instance. Only accounts from the configured homeserver can be created."
-              : isExternalHomeserver
-                ? "You are registering with an external homeserver. An invite code from a server administrator is required."
-                : "Creating an account on the Matrix network allows you to communicate securely across any Matrix homeserver. Choose a server you trust or run your own."
-            }
           </p>
         </div>
       </div>

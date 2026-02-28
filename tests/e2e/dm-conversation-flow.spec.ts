@@ -12,7 +12,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
-import { login, logout } from '../helpers/auth';
+import { login, logout } from './helpers/auth';
 
 // Test data
 const TEST_USER_1 = {

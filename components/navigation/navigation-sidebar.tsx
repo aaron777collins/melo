@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { NavigationAction } from "@/components/navigation/navigation-action";
 import { NavigationItem } from "@/components/navigation/navigation-item";
+import { DMSidebarSection } from "@/components/navigation/dm-sidebar-section";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -48,6 +49,7 @@ export function NavigationSidebar() {
       <NavigationAction />
       <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mx-auto" />
       <ScrollArea className="flex-1 w-full">
+        {/* Servers Section */}
         {spaces.map((space) => (
           <div key={space.id} className="mb-4">
             <NavigationItem
@@ -59,6 +61,20 @@ export function NavigationSidebar() {
             />
           </div>
         ))}
+        
+        {/* DM Section */}
+        {spaces.length > 0 && (
+          <div className="mt-6">
+            <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mx-auto mb-4" />
+            <DMSidebarSection 
+              className="px-2" 
+              onNewDM={() => {
+                // Placeholder for new DM functionality
+                console.log('New DM button clicked');
+              }}
+            />
+          </div>
+        )}
       </ScrollArea>
       <div className="pb-3 mt-auto flex items-center flex-col gap-y-4">
         <ModeToggle />

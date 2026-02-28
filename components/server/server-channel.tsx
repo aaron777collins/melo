@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Edit, Hash, Lock, Mic, Trash, Video, UserPlus } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { ModalType, useModal } from "@/hooks/use-modal-store";
+import { ChannelContextMenu } from "@/components/navigation/channel-context-menu";
 
 // Matrix types
 import { SpaceChannel, ChannelType } from "@/lib/matrix/types/space";
@@ -42,6 +43,7 @@ export function ServerChannel({
   const { onOpen } = useModal();
   const params = useParams();
   const router = useRouter();
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   
   // Get room data for real-time updates
   const { room, isLoading, error } = useRoom(channel.id);
@@ -73,6 +75,16 @@ export function ServerChannel({
     });
   };
 
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu(null);
+  };
+
   // Check permissions for actions
   const canEdit = role === 'owner' || role === 'admin' || role === 'moderator';
   const canDelete = (role === 'owner' || role === 'admin') && channel.name !== "general";
@@ -90,13 +102,15 @@ export function ServerChannel({
   const isGeneralChannel = channel.name === "general";
 
   return (
-    <button
-      className={cn(
-        "group px-2 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 transition mb-1",
-        isActive && "bg-zinc-700/20 dark:bg-zinc-700"
-      )}
-      onClick={onClick}
-    >
+    <>
+      <button
+        className={cn(
+          "group px-2 py-2 rounded-md flex items-center gap-x-2 w-full hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50 transition mb-1",
+          isActive && "bg-zinc-700/20 dark:bg-zinc-700"
+        )}
+        onClick={onClick}
+        onContextMenu={handleRightClick}
+      >
       <Icon className={cn(
         "flex-shrink-0 w-5 h-5 text-zinc-500 dark:text-zinc-400",
         isActive && "text-primary dark:text-zinc-200"
@@ -163,5 +177,26 @@ export function ServerChannel({
         <Lock className="ml-auto w-4 h-4 text-zinc-500 dark:text-zinc-400" />
       )}
     </button>
+
+    {/* Channel Context Menu */}
+    {contextMenu && (
+      <ChannelContextMenu
+        isVisible={true}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        channel={{
+          id: channel.id,
+          name: channel.name,
+          type: channel.type
+        }}
+        server={{
+          id: server.id,
+          name: server.name
+        }}
+        canDelete={canDelete}
+        onClose={closeContextMenu}
+      />
+    )}
+  </>
   );
 }

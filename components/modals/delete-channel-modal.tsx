@@ -152,7 +152,7 @@ export function DeleteChannelModal() {
         <div className="px-6 py-4">
           <div className="space-y-4">
             <div className="text-sm text-zinc-300">
-              Type <span className="font-semibold text-white">"{channelName}"</span> to confirm deletion:
+              Type <span className="font-semibold text-white">&quot;{channelName}&quot;</span> to confirm deletion:
             </div>
             <Input
               placeholder="Type channel name to confirm"
@@ -165,7 +165,7 @@ export function DeleteChannelModal() {
             />
             {nameConfirmation && nameConfirmation !== channelName && (
               <div className="text-red-400 text-sm">
-                Channel name does not match. Please type "{channelName}" exactly.
+                Channel name does not match. Please type &quot;{channelName}&quot; exactly.
               </div>
             )}
           </div>

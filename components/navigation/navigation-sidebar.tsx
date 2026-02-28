@@ -62,19 +62,19 @@ export function NavigationSidebar() {
           </div>
         ))}
         
-        {/* DM Section */}
-        {spaces.length > 0 && (
-          <div className="mt-6">
+        {/* DM Section - Always visible for better UX */}
+        <div className="mt-6">
+          {spaces.length > 0 && (
             <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mx-auto mb-4" />
-            <DMSidebarSection 
-              className="px-2" 
-              onNewDM={() => {
-                // Placeholder for new DM functionality
-                console.log('New DM button clicked');
-              }}
-            />
-          </div>
-        )}
+          )}
+          <DMSidebarSection 
+            className="px-2" 
+            onNewDM={() => {
+              // Placeholder for new DM functionality
+              console.log('New DM button clicked');
+            }}
+          />
+        </div>
       </ScrollArea>
       <div className="pb-3 mt-auto flex items-center flex-col gap-y-4">
         <ModeToggle />

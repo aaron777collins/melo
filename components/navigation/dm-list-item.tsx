@@ -83,10 +83,15 @@ export function DMListItem({ dm, className }: DMListItemProps) {
         data-testid="dm-list-item"
         tabIndex={0}
         className={cn(
-          "flex items-center gap-3 p-2 mx-1 rounded-md cursor-pointer w-full text-left",
+          "flex items-center gap-3 p-3 mx-1 rounded-md cursor-pointer w-full text-left",
           "hover:bg-zinc-700/10 dark:hover:bg-zinc-700/50",
           "focus:bg-zinc-700/20 dark:focus:bg-zinc-700/70",
+          "active:bg-zinc-700/30 dark:active:bg-zinc-700/80", // Mobile touch feedback
           "transition-colors duration-200 group",
+          "min-h-[44px]", // Minimum touch target size for accessibility
+          // Mobile-specific enhancements
+          "touch-manipulation", // Optimize for touch
+          "select-none", // Prevent text selection on mobile
           className
         )}
       >

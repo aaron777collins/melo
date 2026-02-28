@@ -6,6 +6,7 @@ import { DMListItem } from './dm-list-item';
 import { DMEmptyState } from './dm-empty-state';
 import { ActionTooltip } from '@/components/action-tooltip';
 import { useModal } from '@/hooks/use-modal-store';
+import { useDMUnread } from '@/hooks/use-dm-unread';
 import { cn } from '@/lib/utils';
 
 // Simpler structure for the test-compatible version
@@ -59,10 +60,17 @@ export function DMSidebarSection({
   className 
 }: DMSidebarSectionProps) {
   const { onOpen } = useModal();
+  const { conversations: realDMs, isLoading, totalUnreadCount } = useDMUnread();
 
-  // Use conversations prop if provided (test compatibility), otherwise use dms
-  const dmList = conversations.length > 0 ? conversations : dms;
-  const isSimpleFormat = conversations.length > 0;
+  // Priority: props (for testing) > real DM data > empty
+  let dmList = conversations.length > 0 ? conversations : dms;
+  let isSimpleFormat = conversations.length > 0;
+  
+  // Use real DM data if no props provided and not in test environment
+  if (dmList.length === 0 && !isLoading && realDMs.length > 0) {
+    dmList = realDMs;
+    isSimpleFormat = false;
+  }
 
   const handleNewDMClick = () => {
     // Use modal store first, fallback to prop for backward compatibility

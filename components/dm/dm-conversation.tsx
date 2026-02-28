@@ -24,6 +24,7 @@ import { useChatScroll } from '@/hooks/use-chat-scroll';
 import { ChatItem } from '@/components/chat/chat-item';
 import { EmojiPicker } from '@/components/emoji-picker';
 import { useModal } from '@/hooks/use-modal-store';
+import { useDMReadReceipt } from '@/hooks/use-dm-unread';
 
 interface DMConversationProps {
   roomId: string;
@@ -59,6 +60,9 @@ export function DMConversation({
 }: DMConversationProps) {
   const { client, isReady } = useMatrixClient();
   const { onOpen } = useModal();
+  
+  // Mark DM as read when component mounts/roomId changes
+  useDMReadReceipt(roomId);
 
   // Matrix room messages
   const { 
@@ -320,8 +324,8 @@ export function DMConversation({
         <div ref={bottomRef} />
       </div>
 
-      {/* Message Input */}
-      <div className="p-4 border-t border-zinc-200 dark:border-zinc-700">
+      {/* Message Input - Mobile optimized */}
+      <div className="p-4 border-t border-zinc-200 dark:border-zinc-700 pb-safe-area-inset-bottom">
         <form onSubmit={handleFormSubmit}>
           <div className="relative">
             {/* File attachment button */}
@@ -339,12 +343,17 @@ export function DMConversation({
               data-testid="dm-message-input"
               placeholder={`Message @${recipientName}`}
               disabled={isSendingMessage || !isReady}
-              className="pl-12 pr-20 py-3 bg-zinc-100 dark:bg-zinc-700 border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-900 dark:text-zinc-100"
+              className="pl-12 pr-20 py-3 bg-zinc-100 dark:bg-zinc-700 border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-900 dark:text-zinc-100 touch-manipulation min-h-[44px]"
               value={messageContent}
               onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               aria-label={`Type message for ${recipientName}`}
               autoComplete="off"
+              // Mobile-specific attributes
+              autoCapitalize="sentences"
+              autoCorrect="on"
+              spellCheck="true"
+              inputMode="text"
             />
 
             {/* Right side controls */}
@@ -378,7 +387,7 @@ export function DMConversation({
                 type="submit"
                 size="sm"
                 disabled={isSendingMessage || !messageContent.trim() || !isReady}
-                className="h-6 w-6 p-0 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-400 transition-colors"
+                className="h-8 w-8 p-0 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-400 transition-colors touch-manipulation active:scale-95 min-h-[32px] min-w-[32px]"
                 aria-label={`Send message to ${recipientName}`}
               >
                 {isSendingMessage ? (

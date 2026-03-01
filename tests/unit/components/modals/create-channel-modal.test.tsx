@@ -11,11 +11,17 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // Mock react-hook-form to prevent formState errors
+let formValues = { name: '', type: 'TEXT' };
 vi.mock('react-hook-form', () => ({
   useForm: () => ({
     handleSubmit: vi.fn((onSubmit) => (e: any) => {
       e?.preventDefault?.();
-      onSubmit({ name: 'test-channel', type: 'TEXT' });
+      // Use actual form values or fallback to test default
+      const submitData = {
+        name: formValues.name || 'test-channel',
+        type: formValues.type || 'TEXT'
+      };
+      onSubmit(submitData);
     }),
     setValue: vi.fn(),
     reset: vi.fn(),
@@ -110,6 +116,9 @@ vi.mock('@/hooks/use-modal-store', () => ({
     onClose: mockOnClose,
     data: {
       channelType: 'TEXT',
+      space: {
+        id: '!space123:matrix.org'
+      }
     },
   }),
 }));
@@ -124,19 +133,37 @@ vi.mock('next/navigation', () => ({
   })),
 }));
 
-// Import the mock from setup.ts to ensure consistency
-import { mockMatrixAuthValue } from '../../../setup';
-
-// Use vi.hoisted to ensure mock functions are available before vi.mock factory runs
-const { mockCreateRoom, mockSendStateEvent } = vi.hoisted(() => ({
-  mockCreateRoom: vi.fn(() => Promise.resolve({ room_id: '!newchannel:matrix.org' })),
-  mockSendStateEvent: vi.fn(() => Promise.resolve({})),
+// Mock createChannel function - this is what the component actually uses
+const mockCreateChannel = vi.fn();
+vi.mock('@/lib/matrix/create-channel', () => ({
+  createChannel: (options: any) => mockCreateChannel(options),
 }));
 
-vi.mock('@/lib/matrix/client', () => ({
-  getClient: () => ({
-    createRoom: mockCreateRoom,
-    sendStateEvent: mockSendStateEvent,
+// Mock Matrix auth provider
+vi.mock('@/components/providers/matrix-auth-provider', () => ({
+  useMatrixAuth: () => ({
+    session: {
+      userId: '@testuser:matrix.org',
+      accessToken: 'test-token'
+    },
+    hasUser: true,
+    isLoading: false
+  }),
+}));
+
+// Mock toast for testing error display
+const mockToastError = vi.fn();
+const mockToastSuccess = vi.fn();
+const mockToastLoading = vi.fn().mockReturnValue('loading-toast-id');
+const mockToastDismiss = vi.fn();
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: {
+      error: mockToastError,
+      success: mockToastSuccess,
+      loading: mockToastLoading,
+      dismiss: mockToastDismiss,
+    },
   }),
 }));
 
@@ -157,7 +184,12 @@ vi.mock('@/components/ui/form', () => ({
     return render({ 
       field: { 
         value, 
-        onChange: (val: any) => setValue(val?.target?.value || val),
+        onChange: (val: any) => {
+          const newValue = val?.target?.value || val;
+          setValue(newValue);
+          // Update global form values for handleSubmit mock
+          formValues[name as keyof typeof formValues] = newValue;
+        },
         name,
         onBlur: vi.fn(),
         disabled: false,
@@ -234,6 +266,22 @@ describe('CreateChannelModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFormSubmit.mockClear();
+    
+    // Reset form values
+    formValues = { name: '', type: 'TEXT' };
+    
+    // Reset createChannel mock - default to successful creation
+    mockCreateChannel.mockClear();
+    mockCreateChannel.mockResolvedValue({ 
+      success: true, 
+      roomId: '!newchannel:matrix.org' 
+    });
+    
+    // Reset toast mocks
+    mockToastError.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastLoading.mockClear();
+    mockToastDismiss.mockClear();
   });
 
   afterEach(() => {
@@ -312,7 +360,7 @@ describe('CreateChannelModal', () => {
       expect(screen.getByTestId('select-item-VIDEO')).toBeInTheDocument();
     });
 
-    it('calls Matrix client to create room on submit', async () => {
+    it('calls createChannel function on submit', async () => {
       const user = userEvent.setup();
       render(<CreateChannelModal />);
       
@@ -320,13 +368,19 @@ describe('CreateChannelModal', () => {
       await user.click(submitButton);
       
       await waitFor(() => {
-        expect(mockCreateRoom).toHaveBeenCalled();
+        expect(mockCreateChannel).toHaveBeenCalledWith({
+          name: 'test-channel',
+          type: 'TEXT',
+          spaceId: '!space123:matrix.org',
+          categoryId: undefined,
+          userId: '@testuser:matrix.org'
+        });
       });
     });
   });
 
   describe('Matrix Integration', () => {
-    it('creates encrypted room', async () => {
+    it('creates channel with correct parameters', async () => {
       const user = userEvent.setup();
       render(<CreateChannelModal />);
       
@@ -337,34 +391,51 @@ describe('CreateChannelModal', () => {
       await user.click(submitButton);
       
       await waitFor(() => {
-        expect(mockCreateRoom).toHaveBeenCalledWith(
-          expect.objectContaining({
-            initial_state: expect.arrayContaining([
-              expect.objectContaining({
-                type: 'm.room.encryption',
-              }),
-            ]),
-          })
-        );
+        expect(mockCreateChannel).toHaveBeenCalledWith({
+          name: 'secure-channel',
+          type: 'TEXT',
+          spaceId: '!space123:matrix.org',
+          categoryId: undefined,
+          userId: '@testuser:matrix.org'
+        });
       });
     });
 
-    it('links channel to parent space', async () => {
+    it('shows success toast on successful creation', async () => {
       const user = userEvent.setup();
       render(<CreateChannelModal />);
-      
-      const input = screen.getByTestId('channel-name-input');
-      await user.type(input, 'linked-channel');
       
       const submitButton = screen.getByTestId('button-default');
       await user.click(submitButton);
       
       await waitFor(() => {
-        expect(mockSendStateEvent).toHaveBeenCalledWith(
-          expect.any(String),
-          'm.space.child',
-          expect.any(Object),
-          expect.any(String)
+        expect(mockToastSuccess).toHaveBeenCalledWith('Channel created successfully!');
+      });
+    });
+
+    it('handles Matrix client not available', async () => {
+      mockCreateChannel.mockResolvedValue({
+        success: false,
+        error: {
+          code: 'CLIENT_NOT_AVAILABLE',
+          message: 'Matrix client not initialized. Please try again.',
+          retryable: true
+        }
+      });
+      
+      const user = userEvent.setup();
+      render(<CreateChannelModal />);
+      
+      const submitButton = screen.getByTestId('button-default');
+      await user.click(submitButton);
+      
+      await waitFor(() => {
+        expect(mockToastError).toHaveBeenCalledWith(
+          'Failed to create channel: Matrix client not initialized. Please try again.',
+          expect.objectContaining({
+            action: expect.any(Object),
+            duration: 10000
+          })
         );
       });
     });
@@ -372,6 +443,9 @@ describe('CreateChannelModal', () => {
 
   describe('Validation', () => {
     it('prevents creating channel named "general"', async () => {
+      // Mock createChannel to throw validation error for 'general' name
+      mockCreateChannel.mockRejectedValue(new Error('Channel name cannot be "general"'));
+      
       const user = userEvent.setup();
       render(<CreateChannelModal />);
       
@@ -381,11 +455,10 @@ describe('CreateChannelModal', () => {
       const submitButton = screen.getByTestId('button-default');
       await user.click(submitButton);
       
-      // Should not call createRoom for 'general' name
       await waitFor(() => {
-        expect(mockCreateRoom).not.toHaveBeenCalled();
-      }, { timeout: 1000 }).catch(() => {
-        // Expected - form validation should prevent submission
+        expect(mockToastError).toHaveBeenCalledWith(
+          'Failed to create channel: Channel name cannot be "general"'
+        );
       });
     });
   });

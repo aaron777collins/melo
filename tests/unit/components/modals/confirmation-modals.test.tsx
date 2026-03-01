@@ -19,6 +19,36 @@ import { useModal } from '@/hooks/use-modal-store';
 const mockOnClose = vi.fn();
 const mockPush = vi.fn();
 const mockRefresh = vi.fn();
+
+// Mock leaveServer function - this is what the component actually uses
+const mockLeaveServer = vi.fn();
+vi.mock('@/lib/matrix/leave-server', () => ({
+  leaveServer: (options: any) => mockLeaveServer(options),
+}));
+
+// Mock deleteRoom function  
+const mockDeleteRoom = vi.fn();
+vi.mock('@/lib/matrix/delete-room', () => ({
+  deleteRoom: (options: any) => mockDeleteRoom(options),
+}));
+
+// Mock toast for testing error display
+const mockToastError = vi.fn();
+const mockToastSuccess = vi.fn();
+const mockToastLoading = vi.fn().mockReturnValue('loading-toast-id');
+const mockToastDismiss = vi.fn();
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: {
+      error: mockToastError,
+      success: mockToastSuccess,
+      loading: mockToastLoading,
+      dismiss: mockToastDismiss,
+    },
+  }),
+}));
+
+// Mock Matrix client with proper initialization status
 const mockLeave = vi.fn(() => Promise.resolve({}));
 const mockKick = vi.fn(() => Promise.resolve({}));
 const mockSendStateEvent = vi.fn(() => Promise.resolve({}));
@@ -28,6 +58,31 @@ const mockGetRoom = vi.fn(() => ({
   },
   getJoinedMembers: vi.fn(() => []),
 }));
+
+// Mock the Matrix client to return a proper initialized client
+const mockClient = {
+  leave: mockLeave,
+  kick: mockKick,
+  sendStateEvent: mockSendStateEvent,
+  getRoom: mockGetRoom,
+  getUserId: () => '@user:matrix.org',
+};
+
+vi.mock('@/lib/matrix/client', () => ({
+  getClient: vi.fn(() => mockClient),
+}));
+
+// Mock createInviteService for InviteModal
+const mockCreateInvite = vi.fn();
+const mockInviteService = {
+  createInvite: mockCreateInvite,
+};
+vi.mock('@/lib/matrix/invites', () => ({
+  createInviteService: () => mockInviteService, // Return the service directly
+}));
+
+// Create a variable to store clipboard mock for access in tests
+let mockWriteText: any;
 
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(() => ({
@@ -40,26 +95,12 @@ vi.mock('next/navigation', () => ({
   })),
 }));
 
+// Mock the Matrix client with proper return value
 vi.mock('@/lib/matrix/client', () => ({
-  getClient: vi.fn(() => ({
-    leave: mockLeave,
-    kick: mockKick,
-    sendStateEvent: mockSendStateEvent,
-    getRoom: mockGetRoom,
-    getUserId: () => '@user:matrix.org',
-  })),
+  getClient: () => mockClient, // Return the mock client directly
 }));
 
-vi.mock('@/lib/matrix/invites', () => ({
-  createInviteService: vi.fn(() => ({
-    createInvite: vi.fn(() => Promise.resolve({
-      success: true,
-      invite: {
-        url: 'https://melo.app/invite/abc123',
-      },
-    })),
-  })),
-}));
+// Already mocked above
 
 // Mock UI components
 vi.mock('@/components/ui/dialog', () => ({
@@ -102,6 +143,29 @@ vi.mock('@/components/ui/label', () => ({
 describe('LeaveServerModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Reset navigation mocks
+    mockPush.mockClear();
+    mockRefresh.mockClear();
+    
+    // Reset leaveServer mock - default to successful operation
+    mockLeaveServer.mockClear();
+    mockLeaveServer.mockResolvedValue({ 
+      success: true 
+    });
+    
+    // Reset toast mocks
+    mockToastError.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastLoading.mockClear();
+    mockToastDismiss.mockClear();
+    
+    // Reset Matrix client mocks
+    mockLeave.mockClear();
+    mockKick.mockClear();
+    mockSendStateEvent.mockClear();
+    mockGetRoom.mockClear();
+    
     vi.mocked(useModal).mockReturnValue({
       isOpen: true,
       type: 'leaveServer',
@@ -155,18 +219,18 @@ describe('LeaveServerModal', () => {
   });
 
   describe('Discord-clone Visual Parity', () => {
-    it('uses white background', () => {
+    it('uses Discord dark background', () => {
       render(<LeaveServerModal />);
       
-      const content = screen.getByTestId('dialog').querySelector('[class*="bg-white"]');
+      const content = screen.getByTestId('dialog').querySelector('[class*="bg-[#313338]"]');
       expect(content).toBeInTheDocument();
     });
 
-    it('uses gray footer', () => {
+    it('uses Discord dark footer', () => {
       render(<LeaveServerModal />);
       
       const footer = screen.getByTestId('dialog').querySelector('footer');
-      expect(footer?.className).toContain('bg-gray-100');
+      expect(footer?.className).toContain('bg-[#2B2D31]');
     });
 
     it('buttons are arranged with space between', () => {
@@ -187,14 +251,53 @@ describe('LeaveServerModal', () => {
       expect(mockOnClose).toHaveBeenCalled();
     });
 
-    it('calls leave function when Confirm is clicked', async () => {
+    it('calls leaveServer function when Confirm is clicked', async () => {
       const user = userEvent.setup();
       render(<LeaveServerModal />);
       
       await user.click(screen.getByText('Confirm'));
       
       await waitFor(() => {
-        expect(mockLeave).toHaveBeenCalled();
+        expect(mockLeaveServer).toHaveBeenCalledWith({
+          serverId: '!server:matrix.org'
+        });
+      });
+    });
+
+    it('shows success toast on successful leave', async () => {
+      const user = userEvent.setup();
+      render(<LeaveServerModal />);
+      
+      await user.click(screen.getByText('Confirm'));
+      
+      await waitFor(() => {
+        expect(mockToastSuccess).toHaveBeenCalledWith('Successfully left server');
+      });
+    });
+
+    it('handles Matrix client not available', async () => {
+      mockLeaveServer.mockResolvedValue({
+        success: false,
+        error: {
+          code: 'CLIENT_NOT_AVAILABLE',
+          message: 'Matrix client not initialized. Please try again.',
+          retryable: true
+        }
+      });
+      
+      const user = userEvent.setup();
+      render(<LeaveServerModal />);
+      
+      await user.click(screen.getByText('Confirm'));
+      
+      await waitFor(() => {
+        expect(mockToastError).toHaveBeenCalledWith(
+          'Failed to leave server: Matrix client not initialized. Please try again.',
+          expect.objectContaining({
+            action: expect.any(Object),
+            duration: 10000
+          })
+        );
       });
     });
 
@@ -204,9 +307,17 @@ describe('LeaveServerModal', () => {
       
       await user.click(screen.getByText('Confirm'));
       
+      // Wait for the service call first
+      await waitFor(() => {
+        expect(mockLeaveServer).toHaveBeenCalledWith({
+          serverId: '!server:matrix.org'
+        });
+      }, { timeout: 5000 });
+      
+      // Then wait for navigation 
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith('/');
-      });
+      }, { timeout: 5000 });
     });
   });
 });
@@ -218,6 +329,18 @@ describe('LeaveServerModal', () => {
 describe('DeleteServerModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Reset navigation mocks
+    mockPush.mockClear();
+    mockRefresh.mockClear();
+    
+    // Reset Matrix client mocks  
+    mockLeave.mockClear();
+    mockKick.mockClear();
+    mockSendStateEvent.mockClear();
+    mockGetRoom.mockClear();
+    mockLeave.mockResolvedValue({}); // Set default successful resolution
+    
     vi.mocked(useModal).mockReturnValue({
       isOpen: true,
       type: 'deleteServer',
@@ -246,11 +369,11 @@ describe('DeleteServerModal', () => {
   });
 
   describe('Discord-clone Visual Parity', () => {
-    it('highlights server name in indigo', () => {
+    it('highlights server name in red', () => {
       render(<DeleteServerModal />);
       
       const serverName = screen.getByText('Test Server');
-      expect(serverName.className).toContain('text-indigo-500');
+      expect(serverName.className).toContain('text-red-400');
     });
   });
 
@@ -262,8 +385,9 @@ describe('DeleteServerModal', () => {
       await user.click(screen.getByText('Confirm'));
       
       await waitFor(() => {
-        expect(mockLeave).toHaveBeenCalled();
-      });
+        // The component decodes the serverId and passes it to client.leave()
+        expect(mockLeave).toHaveBeenCalledWith('!server:matrix.org');
+      }, { timeout: 5000 });
     });
   });
 });
@@ -317,6 +441,32 @@ describe('DeleteChannelModal', () => {
 describe('InviteModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Reset Matrix client and service mocks
+    mockLeave.mockClear();
+    mockKick.mockClear();
+    mockSendStateEvent.mockClear();
+    mockGetRoom.mockClear();
+    mockCreateInvite.mockClear();
+    
+    // Set up default successful invite creation
+    mockCreateInvite.mockResolvedValue({
+      success: true,
+      invite: {
+        url: 'http://localhost:3000/invite/!server%3Amatrix.org',
+      },
+    });
+    
+    // Mock navigator.clipboard for clipboard tests
+    mockWriteText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: mockWriteText,
+      },
+      writable: true,
+      configurable: true,
+    });
+    
     vi.mocked(useModal).mockReturnValue({
       isOpen: true,
       type: 'invite',
@@ -360,10 +510,10 @@ describe('InviteModal', () => {
   });
 
   describe('Discord-clone Visual Parity', () => {
-    it('uses white background', () => {
+    it('uses Discord dark background', () => {
       render(<InviteModal />);
       
-      const content = screen.getByTestId('dialog').querySelector('[class*="bg-white"]');
+      const content = screen.getByTestId('dialog').querySelector('[class*="bg-[#313338]"]');
       expect(content).toBeInTheDocument();
     });
 
@@ -378,25 +528,34 @@ describe('InviteModal', () => {
 
   describe('User Interaction', () => {
     it('copies link to clipboard when copy button clicked', async () => {
-      const mockClipboard = {
-        writeText: vi.fn(() => Promise.resolve()),
-      };
-      Object.assign(navigator, { clipboard: mockClipboard });
-
       const user = userEvent.setup();
       render(<InviteModal />);
       
-      // Find the copy button (icon button)
-      const buttons = screen.getAllByRole('button');
-      const copyButton = buttons.find(btn => btn.querySelector('svg'));
+      // Wait for the modal to render and the invite to be generated
+      await waitFor(() => {
+        expect(screen.getByTestId('input')).toBeInTheDocument();
+      });
       
-      if (copyButton) {
-        await user.click(copyButton);
-        
-        await waitFor(() => {
-          expect(mockClipboard.writeText).toHaveBeenCalled();
-        });
+      // Get all buttons and find the one with the copy icon (size="icon" button)
+      const buttons = screen.getAllByRole('button');
+      
+      // The copy button should have the copy SVG (rect element)
+      let copyButton = null;
+      for (const button of buttons) {
+        const rect = button.querySelector('rect');
+        if (rect) {
+          copyButton = button;
+          break;
+        }
       }
+      
+      expect(copyButton).toBeInTheDocument();
+      
+      await user.click(copyButton!);
+      
+      await waitFor(() => {
+        expect(mockWriteText).toHaveBeenCalledWith('http://localhost:3000/invite/!server%3Amatrix.org');
+      }, { timeout: 2000 });
     });
   });
 });

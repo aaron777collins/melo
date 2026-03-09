@@ -13,11 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
-import { getClient } from "@/lib/matrix/client";
+import { leaveServer } from "@/lib/matrix/leave-server";
+import { useToast } from "@/hooks/use-toast";
 
 export function LeaveServerModal() {
   const { isOpen, onClose, type, data } = useModal();
   const router = useRouter();
+  const { toast } = useToast();
 
   const isModalOpen = isOpen && type === "leaveServer";
   const { server, space } = data;
@@ -29,43 +31,48 @@ export function LeaveServerModal() {
   const [isLoading, setIsLoading] = useState(false);
 
   const onClick = async () => {
-    if (!serverId) return;
+    if (!serverId) {
+      toast.error("No server ID found");
+      return;
+    }
+    
+    setIsLoading(true);
+    const loadingToast = toast.loading("Leaving server...");
     
     try {
-      setIsLoading(true);
+      const result = await leaveServer({
+        serverId: serverId
+      });
 
-      const client = getClient();
-      if (!client) {
-        throw new Error("Matrix client not initialized");
-      }
+      toast.dismiss(loadingToast);
 
-      const decodedServerId = decodeURIComponent(serverId);
-      
-      // Leave the Matrix space/room
-      await client.leave(decodedServerId);
-
-      // Also leave all child rooms if this is a space
-      const room = client.getRoom(decodedServerId);
-      if (room) {
-        const spaceChildEvents = room.currentState.getStateEvents("m.space.child");
-        for (const event of spaceChildEvents) {
-          const childRoomId = event.getStateKey();
-          if (childRoomId) {
-            try {
-              await client.leave(childRoomId);
-            } catch (e) {
-              // Ignore errors leaving child rooms
-              console.warn("Failed to leave child room:", childRoomId, e);
-            }
-          }
+      if (result.success) {
+        if (result.warning) {
+          toast.error(`Left server but with warnings: ${result.warning}`, {
+            duration: 10000
+          });
+        } else {
+          toast.success("Successfully left server");
         }
+        
+        onClose();
+        router.refresh();
+        router.push("/");
+      } else {
+        const errorMessage = result.error?.message || "Failed to leave server";
+        const retryAction = result.error?.retryable ? {
+          label: "Retry",
+          onClick: () => onClick()
+        } : undefined;
+        
+        toast.error(`Failed to leave server: ${errorMessage}`, {
+          action: retryAction,
+          duration: 10000
+        });
       }
-
-      onClose();
-      router.refresh();
-      router.push("/");
     } catch (error) {
-      console.error(error);
+      toast.dismiss(loadingToast);
+      toast.error(`Failed to leave server: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }

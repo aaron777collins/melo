@@ -14,7 +14,7 @@ import userEvent from '@testing-library/user-event';
 let formValues = { name: '', type: 'TEXT' };
 vi.mock('react-hook-form', () => ({
   useForm: () => ({
-    handleSubmit: vi.fn((onSubmit) => (e: any) => {
+    handleSubmit: vi.fn((onSubmit) => (e) => {
       e?.preventDefault?.();
       // Use actual form values or fallback to test default
       const submitData = {

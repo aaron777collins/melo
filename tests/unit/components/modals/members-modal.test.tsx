@@ -214,15 +214,26 @@ describe('MembersModal', () => {
         expect(screen.getAllByTestId('dropdown-trigger').length).toBeGreaterThan(0);
       });
 
-      // Find and click a kick button
+      // Click the dropdown trigger first to open the menu
+      const dropdownTrigger = screen.getAllByTestId('dropdown-trigger')[0];
+      await user.click(dropdownTrigger);
+
+      // Wait for dropdown menu to appear and find kick option
+      await waitFor(() => {
+        const kickButtons = screen.getAllByText('Kick');
+        expect(kickButtons.length).toBeGreaterThan(0);
+      });
+
+      // Click the first kick button
       const kickButtons = screen.getAllByText('Kick');
-      if (kickButtons.length > 0) {
-        await user.click(kickButtons[0]);
-        
-        await waitFor(() => {
-          expect(mockKick).toHaveBeenCalled();
-        });
-      }
+      await user.click(kickButtons[0]);
+      
+      await waitFor(() => {
+        expect(mockModalOnOpen).toHaveBeenCalledWith('kickUser', expect.objectContaining({
+          targetUser: expect.any(Object),
+          serverId: '!testspace:matrix.org'
+        }));
+      });
     });
 
     it('calls ban function when ban option is selected', async () => {
@@ -233,15 +244,26 @@ describe('MembersModal', () => {
         expect(screen.getAllByTestId('dropdown-trigger').length).toBeGreaterThan(0);
       });
 
-      // Find and click a ban button
+      // Click the dropdown trigger first to open the menu
+      const dropdownTrigger = screen.getAllByTestId('dropdown-trigger')[0];
+      await user.click(dropdownTrigger);
+
+      // Wait for dropdown menu to appear and find ban option
+      await waitFor(() => {
+        const banButtons = screen.getAllByText('Ban');
+        expect(banButtons.length).toBeGreaterThan(0);
+      });
+
+      // Click the first ban button
       const banButtons = screen.getAllByText('Ban');
-      if (banButtons.length > 0) {
-        await user.click(banButtons[0]);
-        
-        await waitFor(() => {
-          expect(mockBan).toHaveBeenCalled();
-        });
-      }
+      await user.click(banButtons[0]);
+      
+      await waitFor(() => {
+        expect(mockModalOnOpen).toHaveBeenCalledWith('banUser', expect.objectContaining({
+          targetUser: expect.any(Object),
+          serverId: '!testspace:matrix.org'
+        }));
+      });
     });
   });
 

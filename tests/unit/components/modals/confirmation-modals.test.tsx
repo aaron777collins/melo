@@ -23,13 +23,19 @@ const mockRefresh = vi.fn();
 // Mock leaveServer function - this is what the component actually uses
 const mockLeaveServer = vi.fn();
 vi.mock('@/lib/matrix/leave-server', () => ({
-  leaveServer: (options: any) => mockLeaveServer(options),
+  leaveServer: (options) => mockLeaveServer(options),
 }));
 
 // Mock deleteRoom function  
 const mockDeleteRoom = vi.fn();
 vi.mock('@/lib/matrix/delete-room', () => ({
-  deleteRoom: (options: any) => mockDeleteRoom(options),
+  deleteRoom: (options) => mockDeleteRoom(options),
+}));
+
+// Mock deleteServer function - this is what the component actually uses
+const mockDeleteServer = vi.fn();
+vi.mock('@/lib/matrix/delete-server', () => ({
+  deleteServer: (options: any) => mockDeleteServer(options),
 }));
 
 // Mock toast for testing error display
@@ -334,12 +340,17 @@ describe('DeleteServerModal', () => {
     mockPush.mockClear();
     mockRefresh.mockClear();
     
-    // Reset Matrix client mocks  
-    mockLeave.mockClear();
-    mockKick.mockClear();
-    mockSendStateEvent.mockClear();
-    mockGetRoom.mockClear();
-    mockLeave.mockResolvedValue({}); // Set default successful resolution
+    // Reset deleteServer mock - default to successful deletion
+    mockDeleteServer.mockClear();
+    mockDeleteServer.mockResolvedValue({ 
+      success: true 
+    });
+    
+    // Reset toast mocks
+    mockToastError.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastLoading.mockClear();
+    mockToastDismiss.mockClear();
     
     vi.mocked(useModal).mockReturnValue({
       isOpen: true,
@@ -378,16 +389,71 @@ describe('DeleteServerModal', () => {
   });
 
   describe('User Interaction', () => {
-    it('leaves all rooms on delete', async () => {
+    it('calls deleteServer function when Confirm is clicked', async () => {
       const user = userEvent.setup();
       render(<DeleteServerModal />);
       
       await user.click(screen.getByText('Confirm'));
       
       await waitFor(() => {
-        // The component decodes the serverId and passes it to client.leave()
-        expect(mockLeave).toHaveBeenCalledWith('!server:matrix.org');
-      }, { timeout: 5000 });
+        expect(mockDeleteServer).toHaveBeenCalledWith({
+          serverId: '!server:matrix.org'
+        });
+      });
+    });
+
+    it('shows success toast on successful delete', async () => {
+      const user = userEvent.setup();
+      render(<DeleteServerModal />);
+      
+      await user.click(screen.getByText('Confirm'));
+      
+      await waitFor(() => {
+        expect(mockToastSuccess).toHaveBeenCalledWith('Successfully deleted server');
+      });
+    });
+
+    it('handles Matrix client not available', async () => {
+      mockDeleteServer.mockResolvedValue({
+        success: false,
+        error: {
+          code: 'CLIENT_NOT_AVAILABLE',
+          message: 'Matrix client not initialized. Please try again.',
+          retryable: true
+        }
+      });
+      
+      const user = userEvent.setup();
+      render(<DeleteServerModal />);
+      
+      await user.click(screen.getByText('Confirm'));
+      
+      await waitFor(() => {
+        expect(mockToastError).toHaveBeenCalledWith(
+          'Failed to delete server: Matrix client not initialized. Please try again.',
+          expect.objectContaining({
+            action: expect.any(Object),
+            duration: 10000
+          })
+        );
+      });
+    });
+
+    it('navigates to home after deleting', async () => {
+      const user = userEvent.setup();
+      render(<DeleteServerModal />);
+      
+      await user.click(screen.getByText('Confirm'));
+      
+      await waitFor(() => {
+        expect(mockDeleteServer).toHaveBeenCalledWith({
+          serverId: '!server:matrix.org'
+        });
+      });
+      
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/');
+      });
     });
   });
 });

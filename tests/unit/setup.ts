@@ -8,6 +8,18 @@ expect.extend(matchers)
 // Clean up after each test
 afterEach(() => {
   cleanup()
+  
+  // Reset modal mock to default state after each test to prevent test pollution
+  mockUseModal.mockImplementation(() => {
+    const store = defaultModalStore();
+    return {
+      isOpen: store.isOpen ?? false,
+      type: store.type ?? null,
+      data: store.data ?? {},
+      onOpen: store.onOpen ?? vi.fn(),
+      onClose: store.onClose ?? vi.fn()
+    };
+  });
 })
 
 // Mock environment variables if needed
@@ -132,23 +144,34 @@ vi.mock('next/navigation', () => ({
 }))
 
 // =============================================================================
-// Modal Store Mock (Zustand) - Fixed to work with test overrides
+// Modal Store Mock (Zustand) - Enhanced to prevent destructuring errors
 // =============================================================================
 
 export const mockModalOnOpen = vi.fn()
 export const mockModalOnClose = vi.fn()
 
-// Create the default modal store configuration
+// Create the default modal store configuration with all required properties
 export const defaultModalStore = () => ({
-  isOpen: true,  // Default to open for testing
-  type: 'createChannel' as const,  // Default modal type
+  isOpen: false,  // Default to closed for testing (individual tests can override)
+  type: null as const,  // Default modal type (null when closed)
   data: {},
   onOpen: mockModalOnOpen,
   onClose: mockModalOnClose
 })
 
-// Create a flexible mock function that returns the default but can be overridden
-export const mockUseModal = vi.fn(() => defaultModalStore())
+// Create a robust mock function that always returns a valid object
+// This prevents "Cannot destructure property 'isOpen' of 'useModal(...)' as it is undefined" errors
+export const mockUseModal = vi.fn(() => {
+  const store = defaultModalStore();
+  // Ensure the mock always returns a valid object even if overridden incorrectly
+  return {
+    isOpen: store.isOpen ?? false,
+    type: store.type ?? null,
+    data: store.data ?? {},
+    onOpen: store.onOpen ?? vi.fn(),
+    onClose: store.onClose ?? vi.fn()
+  };
+})
 
 vi.mock('@/hooks/use-modal-store', () => ({
   useModal: mockUseModal
@@ -159,8 +182,46 @@ vi.mock('../../hooks/use-modal-store', () => ({
   useModal: mockUseModal
 }))
 
-// Note: Individual test files can override this by calling:
-// mockUseModal.mockReturnValue({ isOpen: true, type: 'specificType', data: {...}, onOpen: vi.fn(), onClose: vi.fn() })
+// Additional path variations to catch all possible imports
+vi.mock('../hooks/use-modal-store', () => ({
+  useModal: mockUseModal
+}))
+
+vi.mock('hooks/use-modal-store', () => ({
+  useModal: mockUseModal
+}))
+
+// =============================================================================
+// Modal Test Utilities
+// =============================================================================
+
+// Utility function for tests to safely configure modal state
+export const configureModalMock = (overrides: Partial<{
+  isOpen: boolean;
+  type: string | null;
+  data: Record<string, any>;
+  onOpen: () => void;
+  onClose: () => void;
+}>) => {
+  const defaultStore = defaultModalStore();
+  mockUseModal.mockReturnValue({
+    isOpen: overrides.isOpen ?? defaultStore.isOpen,
+    type: overrides.type ?? defaultStore.type,
+    data: overrides.data ?? defaultStore.data,
+    onOpen: overrides.onOpen ?? defaultStore.onOpen,
+    onClose: overrides.onClose ?? defaultStore.onClose,
+  });
+};
+
+// Utility to reset modal mock to closed state
+export const resetModalMock = () => {
+  configureModalMock({ isOpen: false, type: null, data: {} });
+};
+
+// Note: Individual test files can use:
+// - configureModalMock({ isOpen: true, type: 'createChannel', data: { serverId: 'test' } })
+// - resetModalMock() to reset to default closed state
+// The mock is now robust and will always provide valid default values even if partially overridden
 
 // =============================================================================
 // MatrixAuthProvider Mock
@@ -301,6 +362,64 @@ vi.mock('livekit-client', () => ({
 }))
 
 // =============================================================================
+// Matrix Client Module Mock (for direct imports)
+// =============================================================================
+
+const mockMatrixClientInstance = {
+  sendMessage: vi.fn().mockResolvedValue({ event_id: 'test-event-id' }),
+  createRoom: vi.fn().mockResolvedValue({ room_id: '!test-room:matrix.test.com' }),
+  joinRoom: vi.fn().mockResolvedValue({}),
+  leaveRoom: vi.fn().mockResolvedValue({}),
+  leave: vi.fn().mockResolvedValue({}),
+  getUserId: vi.fn().mockReturnValue('@testuser:matrix.test.com'),
+  sendStateEvent: vi.fn().mockResolvedValue({}),
+  on: vi.fn(),
+  off: vi.fn(),
+  removeListener: vi.fn(),
+  isInitialized: true
+}
+
+// Mock the Matrix client module (used by direct imports like in leave-server.ts)
+// Using multiple path variations to ensure the mock is picked up
+vi.mock('@/lib/matrix/client', () => ({
+  getClient: vi.fn(() => mockMatrixClientInstance),
+  initializeClient: vi.fn().mockResolvedValue(mockMatrixClientInstance),
+  destroyClient: vi.fn(),
+  isClientInitialized: vi.fn(() => true),
+  getCryptoState: vi.fn(() => ({ status: 'ready', isEncryptionSupported: true })),
+  isCryptoReady: vi.fn(() => true)
+}))
+
+// Also mock without alias in case of path resolution issues
+vi.mock('../../lib/matrix/client', () => ({
+  getClient: vi.fn(() => mockMatrixClientInstance),
+  initializeClient: vi.fn().mockResolvedValue(mockMatrixClientInstance),
+  destroyClient: vi.fn(),
+  isClientInitialized: vi.fn(() => true),
+  getCryptoState: vi.fn(() => ({ status: 'ready', isEncryptionSupported: true })),
+  isCryptoReady: vi.fn(() => true)
+}))
+
+// Additional fallback path
+vi.mock('../../../lib/matrix/client', () => ({
+  getClient: vi.fn(() => mockMatrixClientInstance),
+  initializeClient: vi.fn().mockResolvedValue(mockMatrixClientInstance),
+  destroyClient: vi.fn(),
+  isClientInitialized: vi.fn(() => true),
+  getCryptoState: vi.fn(() => ({ status: 'ready', isEncryptionSupported: true })),
+  isCryptoReady: vi.fn(() => true)
+}))
+
+// Also mock common Matrix utility functions that might throw "Matrix client not initialized"
+vi.mock('@/lib/matrix/leave-server', () => ({
+  leaveServer: vi.fn().mockResolvedValue({ success: true })
+}))
+
+vi.mock('@/lib/matrix/delete-room', () => ({
+  deleteRoom: vi.fn().mockResolvedValue({ success: true })
+}))
+
+// =============================================================================
 // Matrix Client Hook Mock
 // =============================================================================
 
@@ -384,56 +503,20 @@ vi.mock('../../../src/hooks/use-accessibility', () => ({
 }))
 
 // =============================================================================
-// React Hook Form Mock (CRITICAL FIX)
+// React Hook Form Mock (DOM-CONNECTED FOR PROPER TEST INTEGRATION)
 // =============================================================================
 
-// Create a comprehensive mock form object
-const createMockForm = () => ({
-  handleSubmit: vi.fn((onSubmit) => (e) => {
-    e?.preventDefault?.();
-    onSubmit({ name: 'test-channel', type: 'TEXT' });
-  }),
-  setValue: vi.fn(),
-  reset: vi.fn(),
-  formState: {
-    isSubmitting: false,
-    errors: {},
-    isValid: true,
-    isDirty: false,
-    isValidating: false,
-    touchedFields: {},
-    dirtyFields: {},
-    submitCount: 0,
-    defaultValues: { name: '', type: 'TEXT' }
-  },
-  control: {
-    _formValues: { name: '', type: 'TEXT' },
-    _defaultValues: { name: '', type: 'TEXT' }
-  },
-  register: vi.fn(() => ({
-    name: 'field',
-    onChange: vi.fn(),
-    onBlur: vi.fn(),
-    ref: vi.fn()
-  })),
-  watch: vi.fn(),
-  trigger: vi.fn(),
-  getValues: vi.fn(() => ({ name: '', type: 'TEXT' })),
-  setError: vi.fn(),
-  clearErrors: vi.fn(),
-  resetField: vi.fn(),
-  setFocus: vi.fn(),
-  getFieldState: vi.fn(() => ({
-    error: undefined,
-    invalid: false,
-    isDirty: false,
-    isTouched: false
-  }))
-});
+import { createDOMConnectedFormMock, setupDOMFormIntegration } from './setup-dom-form-bridge';
 
-// Mock react-hook-form at the global level
+// Setup DOM integration early
+setupDOMFormIntegration();
+
+// Create a global form instance
+const globalFormInstance = createDOMConnectedFormMock();
+
+// Mock react-hook-form with DOM-connected implementation
 vi.mock('react-hook-form', () => ({
-  useForm: vi.fn(() => createMockForm()),
+  useForm: vi.fn(() => globalFormInstance),
   useController: vi.fn(() => ({
     field: {
       value: '',
@@ -464,7 +547,7 @@ vi.mock('react-hook-form', () => ({
       isTouched: false
     }
   }),
-  useFormContext: vi.fn(() => createMockForm()),
+  useFormContext: vi.fn(() => globalFormInstance),
   FormProvider: ({ children }: any) => children
 }));
 
@@ -497,4 +580,6 @@ vi.mock('@/hooks/use-room-messages', () => ({
 // Export mock values for test customization
 // =============================================================================
 
-export { mockMatrixAuthValue, mockMatrixValue, mockMatrixClient, mockRoom }
+// Form mock utilities are now available from ./react-hook-form-mock
+
+export { mockMatrixAuthValue, mockMatrixValue, mockMatrixClient, mockRoom, mockMatrixClientInstance }

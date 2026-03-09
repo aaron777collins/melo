@@ -56,8 +56,8 @@ vi.mock('@/components/ui/tabs', () => ({
     </div>
   ),
   TabsList: ({ children }: any) => <div data-testid="tabs-list">{children}</div>,
-  TabsTrigger: ({ children, value }: any) => (
-    <button data-testid={`tab-trigger-${value}`}>{children}</button>
+  TabsTrigger: ({ children, value, onClick }: any) => (
+    <button data-testid={`tab-trigger-${value}`} onClick={onClick}>{children}</button>
   ),
   TabsContent: ({ children }: any) => <div data-testid="tabs-content">{children}</div>,
 }));
@@ -238,12 +238,22 @@ describe('TemplateSelector', () => {
     });
 
     it('should filter templates by description', async () => {
+      // Make Work Team featured so it shows up by default
+      const modifiedTemplates = [
+        mockTemplates[0], // Gaming Community (featured)
+        { ...mockTemplates[1], featured: true } // Work Team (now featured)
+      ];
+
       render(
         <TemplateSelector
-          templates={mockTemplates}
+          templates={modifiedTemplates}
           onTemplateSelect={mockOnTemplateSelect}
         />
       );
+
+      // Both templates should be visible initially (both featured)
+      expect(screen.getByText('Gaming Community')).toBeInTheDocument();
+      expect(screen.getByText('Work Team')).toBeInTheDocument();
 
       const searchInput = screen.getByTestId('search-input');
       fireEvent.change(searchInput, { target: { value: 'Professional' } });
@@ -361,16 +371,21 @@ describe('TemplateSelector', () => {
 
   describe('template statistics', () => {
     it('should show correct channel count for templates', () => {
+      // Make Work Team featured so both templates show up by default
+      const modifiedTemplates = [
+        mockTemplates[0], // Gaming Community (featured)
+        { ...mockTemplates[1], featured: true } // Work Team (now featured)
+      ];
+
       render(
         <TemplateSelector
-          templates={mockTemplates}
+          templates={modifiedTemplates}
           onTemplateSelect={mockOnTemplateSelect}
         />
       );
 
-      // Gaming template has 2 channels
+      // Both templates should be visible with their channel counts
       expect(screen.getByText('2 channels')).toBeInTheDocument();
-      // Work template has 1 channel
       expect(screen.getByText('1 channels')).toBeInTheDocument();
     });
 

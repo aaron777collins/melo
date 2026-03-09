@@ -62,13 +62,15 @@ const formSchema = z.object({
 });
 
 export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps) {
-  const modalHook = useModal() || {};
-  const { onOpen = () => {} } = modalHook;
+  const modal = useModal();
+  const onOpen = modal?.onOpen || (() => {});
   const router = useRouter();
-  const matrixClientHook = useMatrixClient() || {};
-  const { client = null, isReady = false } = matrixClientHook;
-  const accessibilityHook = useAccessibility() || {};
-  const { announce = () => {}, effectivePreferences = {} } = accessibilityHook;
+  const matrixClient = useMatrixClient();
+  const client = matrixClient?.client;
+  const isReady = matrixClient?.isReady || false;
+  const accessibility = useAccessibility();
+  const announce = accessibility?.announce || (() => {});
+  const effectivePreferences = accessibility?.effectivePreferences || {};
   
   // Generate unique IDs for accessibility
   const inputId = useId();
@@ -76,25 +78,40 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
   const gifButtonId = useId();
   const sendButtonId = useId();
   
-  // Mentions functionality (only if roomId provided) - defensive
-  const mentionsHook = useMentions(roomId || "") || {};
-  const mentions = {
+  // Mentions functionality (only if roomId provided)
+  const mentionsHook = useMentions(roomId || "");
+  const mentions = mentionsHook || {
     filteredMembers: [],
     filteredRooms: [],
     selectedMentionIndex: -1,
     handleMentionSelect: () => {},
     handleMentionKeyDown: () => {},
-    ...mentionsHook
+    handleInputChange: () => {},
+    parseMentions: (text: string) => ({ text, mentions: [] }),
+    closeAutocomplete: () => {},
+    members: [],
+    rooms: [],
+    mentionQuery: '',
+    showAutocomplete: false,
+    autocompletePosition: { top: 0, left: 0 },
+    currentMentionRange: null,
+    handleUserSelect: () => {},
+    handleChannelSelect: () => {}
   };
   
-  // Emoji autocomplete functionality - defensive
-  const emojiAutocompleteHook = useEmojiAutocomplete() || {};
-  const emojiAutocomplete = {
+  // Emoji autocomplete functionality
+  const emojiAutocompleteHook = useEmojiAutocomplete();
+  const emojiAutocomplete = emojiAutocompleteHook || {
     emojiSuggestions: [],
     selectedEmojiIndex: -1,
     handleEmojiSelect: () => {},
     handleEmojiKeyDown: () => {},
-    ...emojiAutocompleteHook
+    handleInputChange: () => {},
+    filteredEmojis: [],
+    emojiQuery: '',
+    showAutocomplete: false,
+    autocompletePosition: { top: 0, left: 0 },
+    closeAutocomplete: () => {}
   };
   
   // Form state
@@ -114,13 +131,13 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
     // Update form state
     form.setValue("content", value);
     
-    // Handle mention detection (only if Matrix-based and handler exists)
-    if (roomId && inputRef.current && typeof mentions.handleInputChange === 'function') {
+    // Handle mention detection (only if Matrix-based)
+    if (roomId && inputRef.current && mentions.handleInputChange) {
       mentions.handleInputChange(value, selectionStart, inputRef.current);
     }
     
-    // Handle emoji detection (if handler exists)
-    if (inputRef.current && typeof emojiAutocomplete.handleInputChange === 'function') {
+    // Handle emoji detection
+    if (inputRef.current && emojiAutocomplete.handleInputChange) {
       emojiAutocomplete.handleInputChange(value, selectionStart, inputRef.current);
     }
   }, [form, roomId, mentions, emojiAutocomplete]);
@@ -358,8 +375,8 @@ export function ChatInput({ roomId, apiUrl, query, name, type }: ChatInputProps)
                             const newValue = `${field.value} ${emoji}`;
                             form.setValue("content", newValue);
                             
-                            // Update mentions if in Matrix mode and handler exists
-                            if (roomId && inputRef.current && typeof mentions.handleInputChange === 'function') {
+                            // Update mentions if in Matrix mode
+                            if (roomId && inputRef.current && mentions.handleInputChange) {
                               inputRef.current.value = newValue;
                               mentions.handleInputChange(newValue, newValue.length, inputRef.current);
                             }

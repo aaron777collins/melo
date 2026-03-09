@@ -13,11 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
-import { getClient } from "@/lib/matrix/client";
+import { deleteServer } from "@/lib/matrix/delete-server";
+import { useToast } from "@/hooks/use-toast";
 
 export function DeleteServerModal() {
   const { isOpen, onClose, type, data } = useModal();
   const router = useRouter();
+  const { toast } = useToast();
 
   const isModalOpen = isOpen && type === "deleteServer";
   const { server, space } = data;
@@ -29,67 +31,48 @@ export function DeleteServerModal() {
   const [isLoading, setIsLoading] = useState(false);
 
   const onClick = async () => {
-    if (!serverId) return;
+    if (!serverId) {
+      toast.error("No server ID found");
+      return;
+    }
+    
+    setIsLoading(true);
+    const loadingToast = toast.loading("Deleting server...");
     
     try {
-      setIsLoading(true);
+      const result = await deleteServer({
+        serverId: serverId
+      });
 
-      const client = getClient();
-      if (!client) {
-        throw new Error("Matrix client not initialized");
-      }
+      toast.dismiss(loadingToast);
 
-      const decodedServerId = decodeURIComponent(serverId);
-      
-      // For Matrix, we need to remove all users and mark the room as "dead"
-      // Since we can't truly delete a Matrix room, we'll leave it
-      // First, kick all other members if we have permission
-      const room = client.getRoom(decodedServerId);
-      if (room) {
-        const userId = client.getUserId();
+      if (result.success) {
+        if (result.warning) {
+          toast.error(`Server deleted but with warnings: ${result.warning}`, {
+            duration: 10000
+          });
+        } else {
+          toast.success("Successfully deleted server");
+        }
         
-        // Get all child rooms and leave/delete them too
-        const spaceChildEvents = room.currentState.getStateEvents("m.space.child");
-        for (const event of spaceChildEvents) {
-          const childRoomId = event.getStateKey();
-          if (childRoomId) {
-            try {
-              // Remove child from space first
-              await client.sendStateEvent(
-                decodedServerId,
-                "m.space.child" as any,
-                {},
-                childRoomId
-              );
-              // Then leave the child room
-              await client.leave(childRoomId);
-            } catch (e) {
-              console.warn("Failed to remove child room:", childRoomId, e);
-            }
-          }
-        }
-
-        // Try to kick all other members (requires admin power level)
-        const members = room.getJoinedMembers();
-        for (const member of members) {
-          if (member.userId !== userId) {
-            try {
-              await client.kick(decodedServerId, member.userId, "Server deleted");
-            } catch (e) {
-              // Ignore if we can't kick
-            }
-          }
-        }
+        onClose();
+        router.refresh();
+        router.push("/");
+      } else {
+        const errorMessage = result.error?.message || "Failed to delete server";
+        const retryAction = result.error?.retryable ? {
+          label: "Retry",
+          onClick: () => onClick()
+        } : undefined;
+        
+        toast.error(`Failed to delete server: ${errorMessage}`, {
+          action: retryAction,
+          duration: 10000
+        });
       }
-
-      // Finally leave the space ourselves
-      await client.leave(decodedServerId);
-
-      onClose();
-      router.refresh();
-      router.push("/");
     } catch (error) {
-      console.error(error);
+      toast.dismiss(loadingToast);
+      toast.error(`Failed to delete server: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }

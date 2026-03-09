@@ -32,7 +32,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
 import { useMatrixAuth } from "@/components/providers/matrix-auth-provider";
-import { getClient } from "@/lib/matrix/client";
+import { createChannel } from "@/lib/matrix/create-channel";
+import { useToast } from "@/hooks/use-toast";
 import { ChannelType } from "@/lib/melo-types";
 
 const channelTypes = Object.values(ChannelType) as string[];
@@ -52,6 +53,7 @@ export function CreateChannelModal() {
   const router = useRouter();
   const params = useParams();
   const { session } = useMatrixAuth();
+  const { toast } = useToast();
 
   const isModalOpen = isOpen && type === "createChannel";
   const { channelType, categoryId, space } = data;
@@ -78,69 +80,54 @@ export function CreateChannelModal() {
   const isLoading = form?.formState?.isSubmitting || false;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const loadingToast = toast.loading("Creating channel...");
+    
     try {
-      const client = getClient();
-      if (!client) {
-        throw new Error("Matrix client not initialized");
-      }
-
       // Get the server/space ID from params or data
       const serverId = space?.id || (params?.serverId as string);
       if (!serverId) {
-        throw new Error("No server ID found");
+        toast.dismiss(loadingToast);
+        toast.error("No server ID found");
+        return;
       }
 
-      // Decode the server ID if it's URL encoded
-      const decodedServerId = decodeURIComponent(serverId);
-
-      // Create the channel room
-      const channelRoom = await client.createRoom({
+      const result = await createChannel({
         name: values.name,
-        topic: `${values.type.toLowerCase()} channel`,
-        visibility: "private" as any,
-        preset: "private_chat" as any,
-        initial_state: [
-          // E2EE is MANDATORY - all rooms must be encrypted
-          {
-            type: "m.room.encryption",
-            state_key: "",
-            content: { algorithm: "m.megolm.v1.aes-sha2" }
-          },
-          // Link to parent space
-          {
-            type: "m.space.parent",
-            state_key: decodedServerId,
-            content: {
-              via: [session?.userId?.split(":")[1] || "matrix.org"],
-              canonical: true
-            }
-          },
-          // Set channel type in custom state event
-          {
-            type: "melo.channel.type",
-            state_key: "",
-            content: { type: values.type }
-          }
-        ]
+        type: values.type,
+        spaceId: serverId,
+        categoryId: categoryId,
+        userId: session?.userId
       });
 
-      // Add the channel to the space
-      await client.sendStateEvent(
-        decodedServerId,
-        "m.space.child" as any,
-        {
-          via: [session?.userId?.split(":")[1] || "matrix.org"],
-          suggested: true,
-          order: categoryId || ""
-        },
-        channelRoom.room_id
-      );
+      toast.dismiss(loadingToast);
 
-      form?.reset();
-      router.refresh();
-      onClose();
+      if (result.success) {
+        if (result.warning) {
+          toast.error(`Channel created but with warning: ${result.warning}`, {
+            duration: 10000
+          });
+        } else {
+          toast.success("Channel created successfully!");
+        }
+        
+        form?.reset();
+        router.refresh();
+        onClose();
+      } else {
+        const errorMessage = result.error?.message || "Failed to create channel";
+        const retryAction = result.error?.retryable ? {
+          label: "Retry",
+          onClick: () => onSubmit(values)
+        } : undefined;
+        
+        toast.error(`Failed to create channel: ${errorMessage}`, {
+          action: retryAction,
+          duration: 10000
+        });
+      }
     } catch (error) {
-      console.error(error);
+      toast.dismiss(loadingToast);
+      toast.error(`Failed to create channel: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

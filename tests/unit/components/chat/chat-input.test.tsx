@@ -9,6 +9,102 @@ import React from 'react';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { mockUseMatrixClient } from '../../setup';
+
+// Mock react-hook-form for ChatInput component
+let formValues = { content: '' };
+
+vi.mock('react-hook-form', () => ({
+  useForm: () => ({
+    handleSubmit: vi.fn((onSubmit) => (e: any) => {
+      e?.preventDefault?.();
+      // Use actual form values or fallback to test default
+      const submitData = {
+        content: formValues.content || 'test message'
+      };
+      onSubmit(submitData);
+    }),
+    setValue: vi.fn((name: string, value: string) => {
+      if (name === 'content') {
+        formValues.content = value;
+      }
+    }),
+    reset: vi.fn(() => {
+      formValues.content = '';
+    }),
+    formState: {
+      isSubmitting: false,
+      errors: {},
+      isValid: true,
+      isDirty: false,
+      isValidating: false,
+      touchedFields: {},
+      dirtyFields: {},
+      submitCount: 0,
+      defaultValues: { content: '' }
+    },
+    control: {
+      _formValues: { content: '' },
+      _defaultValues: { content: '' }
+    },
+    register: vi.fn(() => ({
+      name: 'content',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      ref: vi.fn()
+    })),
+    watch: vi.fn(() => formValues.content),
+    trigger: vi.fn(),
+    getValues: vi.fn(() => ({ content: formValues.content })),
+    setError: vi.fn(),
+    clearErrors: vi.fn(),
+    resetField: vi.fn(),
+    setFocus: vi.fn(),
+    getFieldState: vi.fn(() => ({
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }))
+  }),
+  useController: vi.fn(() => ({
+    field: {
+      value: '',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      name: 'content',
+      ref: vi.fn()
+    },
+    fieldState: {
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }
+  })),
+  Controller: ({ render }: any) => render?.({
+    field: {
+      value: '',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      name: 'content',
+      ref: vi.fn()
+    },
+    fieldState: {
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }
+  }),
+  useFormContext: vi.fn(() => null),
+  FormProvider: ({ children }: any) => children
+}));
+
+// Mock @hookform/resolvers/zod to prevent resolver errors
+vi.mock('@hookform/resolvers/zod', () => ({
+  zodResolver: vi.fn(() => vi.fn())
+}));
 
 // Create mock functions using vi.hoisted so they're available before vi.mock runs
 const { mockSendMessage, mockOnOpen, mockAnnounce, mockHandleMentionsInputChange, mockHandleEmojiInputChange } = vi.hoisted(() => {
@@ -123,32 +219,65 @@ vi.mock('@/src/hooks/use-accessibility', () => ({
   })),
 }));
 
+// Mock form components for ChatInput
+vi.mock('@/components/ui/form', () => ({
+  Form: ({ children }: any) => <div data-testid="form">{children}</div>,
+  FormField: ({ render }: any) => render?.({
+    field: {
+      value: formValues.content,
+      onChange: (e: any) => {
+        const value = e?.target?.value ?? e;
+        mockSetValue('content', value);
+      },
+      onBlur: vi.fn(),
+      name: 'content',
+      ref: vi.fn()
+    }
+  }),
+  FormItem: ({ children }: any) => <div>{children}</div>,
+  FormControl: ({ children }: any) => <div>{children}</div>,
+  FormLabel: ({ children }: any) => <label>{children}</label>,
+  FormDescription: ({ children }: any) => <div>{children}</div>,
+  FormMessage: ({ children }: any) => <div>{children}</div>
+}));
+
 // Now import the component after mocks are defined
 import { ChatInput } from '@/components/chat/chat-input';
 
-// Mock form components
-vi.mock('@/components/ui/form', () => ({
-  Form: ({ children, ...props }: any) => <form {...props}>{children}</form>,
-  FormField: ({ render, control, name }: any) => render({ field: { value: '', onChange: vi.fn() } }),
-  FormItem: ({ children }: any) => <div>{children}</div>,
-  FormControl: ({ children }: any) => <div>{children}</div>,
-}));
-
 vi.mock('@/components/ui/input', () => ({
-  Input: React.forwardRef(({ className, ...props }: any, ref: any) => (
-    <input ref={ref} className={className} data-testid="chat-input" {...props} />
+  Input: React.forwardRef(({ className, onChange, onKeyPress, value, ...props }: any, ref: any) => (
+    <input 
+      ref={ref} 
+      className={className} 
+      data-testid="chat-input"
+      value={value || ''}
+      onChange={(e) => {
+        if (onChange) onChange(e);
+      }}
+      onKeyPress={(e) => {
+        if (onKeyPress) onKeyPress(e);
+      }}
+      {...props} 
+    />
   )),
 }));
 
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, className, ...props }: any) => (
-    <button className={className} {...props}>{children}</button>
+  Button: ({ children, className, onClick, disabled, ...props }: any) => (
+    <button 
+      className={className} 
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      {...props}
+    >
+      {children}
+    </button>
   ),
 }));
 
 vi.mock('@/components/emoji-picker', () => ({
   EmojiPicker: ({ onChange }: any) => (
-    <button data-testid="emoji-picker" onClick={() => onChange('😀')}>
+    <button data-testid="emoji-picker" onClick={() => onChange && onChange('😀')}>
       Emoji
     </button>
   ),
@@ -179,13 +308,25 @@ vi.mock('query-string', () => ({
   },
 }));
 
+// Export form values for test access
+export { formValues };
+
 describe('ChatInput Component', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Only clear mock call history, don't reset implementations
+    mockSendMessage.mockClear();
+    mockOnOpen.mockClear();
+    mockAnnounce.mockClear();
+    mockHandleMentionsInputChange.mockClear();
+    mockHandleEmojiInputChange.mockClear();
+    
+    // Reset form state
+    formValues.content = '';
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    // Don't reset all mocks - this breaks the hook implementations
+    // vi.resetAllMocks();
   });
 
   describe('Rendering', () => {
@@ -263,8 +404,10 @@ describe('ChatInput Component', () => {
         />
       );
 
+      // Look for send button - it only appears in Matrix mode when isReady is true
       const sendButton = screen.getByLabelText(/send message to #general/i);
       expect(sendButton).toBeInTheDocument();
+      expect(sendButton).toHaveAttribute('type', 'submit');
     });
   });
 

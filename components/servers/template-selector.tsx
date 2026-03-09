@@ -91,6 +91,13 @@ function TemplateCard({ template, isSelected, onSelect, disabled }: TemplateCard
         disabled && "opacity-50 cursor-not-allowed"
       )}
       onClick={disabled ? undefined : onSelect}
+      tabIndex={disabled ? -1 : 0}
+      onKeyDown={(e) => {
+        if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">

@@ -36,6 +36,157 @@ vi.mock('@/components/auth/homeserver-toggle', () => ({
   ),
 }));
 
+// Mock Zod - provide the schema object mock
+vi.mock('zod', () => {
+  const zodString = () => ({
+    min: vi.fn(() => zodString()),
+    regex: vi.fn(() => zodString()),
+    url: vi.fn(() => zodString()),
+    refine: vi.fn(() => zodString()),
+    optional: vi.fn(() => zodString())
+  });
+  
+  const zodObject = () => ({
+    refine: vi.fn(() => zodObject())
+  });
+
+  return {
+    z: {
+      object: vi.fn(() => zodObject()),
+      string: vi.fn(() => zodString())
+    }
+  };
+});
+
+// Mock Zod resolver
+vi.mock('@hookform/resolvers/zod', () => ({
+  zodResolver: vi.fn(() => vi.fn(() => ({ values: {}, errors: {} })))
+}));
+
+// Mock React Hook Form to fix useForm issues
+vi.mock('react-hook-form', () => ({
+  useForm: vi.fn(() => ({
+    handleSubmit: vi.fn((onSubmit) => (e) => {
+      e?.preventDefault?.();
+      onSubmit({ name: 'test-channel', type: 'TEXT' });
+    }),
+    setValue: vi.fn(),
+    reset: vi.fn(),
+    formState: {
+      isSubmitting: false,
+      errors: {},
+      isValid: true,
+      isDirty: false,
+      isValidating: false,
+      touchedFields: {},
+      dirtyFields: {},
+      submitCount: 0,
+      defaultValues: { 
+        username: '', 
+        email: '', 
+        password: '', 
+        confirmPassword: '', 
+        homeserver: 'https://matrix.test.com',
+        inviteCode: ''
+      }
+    },
+    control: {
+      _formValues: { 
+        username: '', 
+        email: '', 
+        password: '', 
+        confirmPassword: '', 
+        homeserver: 'https://matrix.test.com',
+        inviteCode: ''
+      },
+      _defaultValues: { 
+        username: '', 
+        email: '', 
+        password: '', 
+        confirmPassword: '', 
+        homeserver: 'https://matrix.test.com',
+        inviteCode: ''
+      }
+    },
+    register: vi.fn(() => ({
+      name: 'field',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      ref: vi.fn()
+    })),
+    watch: vi.fn((fieldName) => {
+      if (!fieldName) {
+        return { 
+          username: '', 
+          email: '', 
+          password: '', 
+          confirmPassword: '', 
+          homeserver: 'https://matrix.test.com',
+          inviteCode: ''
+        };
+      }
+      return '';
+    }),
+    trigger: vi.fn(),
+    getValues: vi.fn(() => ({ 
+      username: '', 
+      email: '', 
+      password: '', 
+      confirmPassword: '', 
+      homeserver: 'https://matrix.test.com',
+      inviteCode: ''
+    })),
+    setError: vi.fn(),
+    clearErrors: vi.fn(),
+    resetField: vi.fn(),
+    setFocus: vi.fn(),
+    getFieldState: vi.fn(() => ({
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }))
+  })),
+  useController: vi.fn(() => ({
+    field: {
+      value: '',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      name: 'field',
+      ref: vi.fn()
+    },
+    fieldState: {
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }
+  })),
+  Controller: ({ render }: any) => render?.({
+    field: {
+      value: '',
+      onChange: vi.fn(),
+      onBlur: vi.fn(),
+      name: 'field',
+      ref: vi.fn()
+    },
+    fieldState: {
+      error: undefined,
+      invalid: false,
+      isDirty: false,
+      isTouched: false
+    }
+  }),
+  useFormContext: vi.fn(() => ({
+    handleSubmit: vi.fn(),
+    setValue: vi.fn(),
+    watch: vi.fn(() => ({})),
+    formState: { errors: {} },
+    register: vi.fn(() => ({ name: 'field', onChange: vi.fn(), onBlur: vi.fn() }))
+  })),
+  FormProvider: ({ children }: any) => children
+}));
+
 // Mock fetch for username availability and password strength
 global.fetch = vi.fn();
 

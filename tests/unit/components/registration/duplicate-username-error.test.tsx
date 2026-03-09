@@ -55,6 +55,110 @@ vi.mock('@/hooks/use-onboarding', () => ({
 // Mock fetch for username availability
 global.fetch = vi.fn();
 
+// FIXED: Simple React Hook Form mock that creates proper per-component instances
+vi.mock('react-hook-form', () => {
+  const createFormInstance = (options: any = {}) => {
+    const formValues: Record<string, any> = { ...options.defaultValues };
+    
+    const register = vi.fn((name: string, fieldOptions?: any) => {
+      // Create handlers that capture fieldOptions at registration time
+      const customOnChange = fieldOptions?.onChange;
+      
+      return {
+        name,
+        onChange: vi.fn((event: any) => {
+          const value = event?.target?.value ?? event;
+          formValues[name] = value;
+          // Call custom onChange if provided
+          if (customOnChange) {
+            customOnChange(event);
+          }
+        }),
+        onBlur: vi.fn(),
+        ref: vi.fn((element: HTMLInputElement | null) => {
+          if (element) {
+            // Set initial value
+            element.value = formValues[name] || '';
+            
+            // Listen for DOM events and sync to form state
+            const handleInput = (e: Event) => {
+              formValues[name] = (e.target as HTMLInputElement).value;
+              // Call custom onChange if provided
+              if (customOnChange) {
+                customOnChange(e);
+              }
+            };
+            
+            const handleChange = (e: Event) => {
+              formValues[name] = (e.target as HTMLInputElement).value;
+              // Call custom onChange if provided
+              if (customOnChange) {
+                customOnChange(e);
+              }
+            };
+            
+            element.addEventListener('input', handleInput);
+            element.addEventListener('change', handleChange);
+            
+            // Store cleanup function as property instead of returning it
+            (element as any)._cleanup = () => {
+              element.removeEventListener('input', handleInput);
+              element.removeEventListener('change', handleChange);
+            };
+          }
+          // Don't return anything - refs should not return functions
+        })
+      };
+    });
+    
+    return {
+      register,
+      handleSubmit: vi.fn((onValid: (data: any) => void) => {
+        return vi.fn(async (e?: Event) => {
+          e?.preventDefault?.();
+          await onValid(formValues);
+        });
+      }),
+      watch: vi.fn((fieldName?: string) => {
+        if (!fieldName) return { ...formValues };
+        return formValues[fieldName] ?? '';
+      }),
+      getValues: vi.fn((fieldName?: string) => {
+        if (!fieldName) return { ...formValues };
+        return formValues[fieldName] ?? '';
+      }),
+      setValue: vi.fn((name: string, value: any) => {
+        formValues[name] = value;
+      }),
+      formState: {
+        get errors() { return {}; },
+        get isSubmitting() { return false; },
+        get isValid() { return true; },
+        get isDirty() { return Object.keys(formValues).length > 0; },
+      },
+      reset: vi.fn(() => {
+        Object.keys(formValues).forEach(key => {
+          formValues[key] = options.defaultValues?.[key] ?? '';
+        });
+      }),
+    };
+  };
+
+  return {
+    useForm: vi.fn((options?: any) => createFormInstance(options)),
+    useController: vi.fn(() => ({
+      field: { value: '', onChange: vi.fn(), onBlur: vi.fn(), name: 'field', ref: vi.fn() },
+      fieldState: { error: undefined, invalid: false, isDirty: false, isTouched: false }
+    })),
+    Controller: ({ render }: any) => render?.({
+      field: { value: '', onChange: vi.fn(), onBlur: vi.fn(), name: 'field', ref: vi.fn() },
+      fieldState: { error: undefined, invalid: false, isDirty: false, isTouched: false }
+    }),
+  };
+});
+
+// Use standard userEvent - the fixed React Hook Form mock will handle DOM sync
+
 describe('AC-5: Duplicate Username Error Handling', () => {
   const user = userEvent.setup();
 
@@ -91,21 +195,32 @@ describe('AC-5: Duplicate Username Error Handling', () => {
       // Override the mock to return error state
       const { rerender } = render(<SignUpPage />);
       
-      // Fill out the form with valid data
-      await user.type(screen.getByTestId('username-input'), 'testuser123');
-      await user.type(screen.getByTestId('password-input'), 'ValidPassword123');
-      await user.type(screen.getByLabelText(/confirm password/i), 'ValidPassword123');
+      // Fill out the form with valid data - use fireEvent for more direct control
+      const usernameInput = screen.getByTestId('username-input');
+      const passwordInput = screen.getByTestId('password-input');
+      const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+      
+      // Type and fire change events to trigger state updates
+      fireEvent.change(usernameInput, { target: { value: 'testuser123' } });
+      fireEvent.change(passwordInput, { target: { value: 'ValidPassword123' } });
+      fireEvent.change(confirmPasswordInput, { target: { value: 'ValidPassword123' } });
 
-      // Wait for username availability check
+      // Wait for username availability check (500ms debounce + network time)
       await waitFor(() => {
         expect(screen.getByText('✓ Username available')).toBeVisible();
-      });
+      }, { timeout: 2000 });
+
+      // Verify submit button is enabled
+      const submitButton = screen.getByTestId('signup-button');
+      expect(submitButton).not.toBeDisabled();
 
       // Submit the form
-      await user.click(screen.getByTestId('signup-button'));
+      fireEvent.submit(screen.getByRole('form') || submitButton.closest('form')!);
 
-      // Verify register was called
-      expect(mockRegister).toHaveBeenCalled();
+      // Wait for async registration to complete
+      await waitFor(() => {
+        expect(mockRegister).toHaveBeenCalled();
+      });
     });
 
     it('should preserve form state except password fields when username conflict occurs', async () => {

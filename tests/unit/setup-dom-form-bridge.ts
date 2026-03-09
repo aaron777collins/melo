@@ -1,13 +1,18 @@
 /**
  * DOM Form Bridge - Connects DOM input events to react-hook-form mock
  * 
- * This integrates userEvent.type() changes with the form mock state
+ * FIXED: [2026-03-09] Phoenix - Fixed ref callback return value and improved event handling
+ * 
+ * This integrates userEvent.type() and fireEvent changes with the form mock state
  */
 
 import { vi } from 'vitest';
 
 // Global form state that the mock and DOM bridge will share
-const formState: Record<string, any> = {};
+let formState: Record<string, any> = {};
+
+// Track registered elements for cleanup
+const registeredElements: Map<string, HTMLInputElement> = new Map();
 
 // Set form value (used by mock and bridge)
 export const setFormValue = (name: string, value: any) => {
@@ -15,7 +20,7 @@ export const setFormValue = (name: string, value: any) => {
 };
 
 export const getFormValue = (name: string) => {
-  return formState[name] || '';
+  return formState[name] ?? '';
 };
 
 export const getAllFormValues = () => {
@@ -23,48 +28,71 @@ export const getAllFormValues = () => {
 };
 
 export const resetFormState = () => {
-  Object.keys(formState).forEach(key => delete formState[key]);
+  // Clear the form state object
+  formState = {
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    homeserver: 'https://matrix.test.com',
+    inviteCode: ''
+  };
+  
+  // Also clear registered element values
+  registeredElements.forEach((element, name) => {
+    try {
+      element.value = '';
+    } catch (e) {
+      // Element may have been removed
+    }
+  });
+  registeredElements.clear();
 };
 
 // Enhanced register function that creates DOM-connected inputs
 const createRegisterFunction = () => {
   return (name: string, options?: any) => {
+    const handleChange = (event: any) => {
+      const value = event?.target?.value ?? event;
+      setFormValue(name, value);
+      // Call custom onChange if provided
+      if (options?.onChange) {
+        options.onChange(event);
+      }
+    };
+
     return {
       name,
-      onChange: vi.fn((event: any) => {
-        const value = event?.target?.value ?? event;
-        setFormValue(name, value);
-      }),
+      onChange: vi.fn(handleChange),
       onBlur: vi.fn(),
-      value: getFormValue(name),
       ref: vi.fn((element: HTMLInputElement | null) => {
         if (element) {
-          // Connect DOM changes to form state
-          const handleChange = () => {
-            setFormValue(name, element.value);
+          // Track the element
+          registeredElements.set(name, element);
+          
+          // Set initial value from form state
+          if (formState[name] !== undefined) {
+            element.value = formState[name];
+          }
+          
+          // Create event handlers that update form state
+          const inputHandler = (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            setFormValue(name, target.value);
           };
           
-          // Listen for input events from userEvent
-          element.addEventListener('input', handleChange);
-          element.addEventListener('change', handleChange);
+          // Add event listeners
+          element.addEventListener('input', inputHandler);
+          element.addEventListener('change', inputHandler);
           
-          // Update DOM when form state changes
-          const updateDOM = () => {
-            if (element.value !== getFormValue(name)) {
-              element.value = getFormValue(name);
-            }
-          };
-          
-          // Setup interval to sync form state to DOM
-          const syncInterval = setInterval(updateDOM, 10);
-          
-          // Cleanup function
-          return () => {
-            element.removeEventListener('input', handleChange);
-            element.removeEventListener('change', handleChange);
-            clearInterval(syncInterval);
+          // Store cleanup info as data attribute (not as return value!)
+          (element as any).__formBridgeCleanup = () => {
+            element.removeEventListener('input', inputHandler);
+            element.removeEventListener('change', inputHandler);
+            registeredElements.delete(name);
           };
         }
+        // CRITICAL: Don't return anything from ref callback!
       })
     };
   };
@@ -108,12 +136,21 @@ export const createDOMConnectedFormMock = () => {
     }),
     setValue: vi.fn((name: string, value: any) => {
       setFormValue(name, value);
+      // Also update DOM element if it exists
+      const element = registeredElements.get(name);
+      if (element) {
+        element.value = value;
+      }
     }),
     formState: {
       get isSubmitting() { return false; },
       get errors() { return {}; },
       get isValid() { return true; },
-      get isDirty() { return Object.keys(formState).length > 0; },
+      get isDirty() { 
+        // Check if any values are non-empty
+        const values = getAllFormValues();
+        return Object.values(values).some(v => v && v !== 'https://matrix.test.com');
+      },
       touchedFields: {},
       isValidating: false,
       submitCount: 0,
@@ -141,27 +178,26 @@ export const createDOMConnectedFormMock = () => {
 // Setup DOM event capture for better integration
 export const setupDOMFormIntegration = () => {
   // Initialize default form values for signup
-  setFormValue('username', '');
-  setFormValue('email', '');
-  setFormValue('password', '');
-  setFormValue('confirmPassword', '');
-  setFormValue('homeserver', 'https://matrix.test.com');
-  setFormValue('inviteCode', '');
+  formState = {
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    homeserver: 'https://matrix.test.com',
+    inviteCode: ''
+  };
   
-  // Intercept input events globally to sync with form state
+  // Global event listener for document-level capture
   if (typeof document !== 'undefined') {
-    document.addEventListener('input', (event) => {
+    // Use capture phase to ensure we catch events before React
+    const captureInputEvent = (event: Event) => {
       const target = event.target as HTMLInputElement;
-      if (target && target.name) {
+      if (target && target.name && target.tagName === 'INPUT') {
         setFormValue(target.name, target.value);
       }
-    });
+    };
     
-    document.addEventListener('change', (event) => {
-      const target = event.target as HTMLInputElement;
-      if (target && target.name) {
-        setFormValue(target.name, target.value);
-      }
-    });
+    document.addEventListener('input', captureInputEvent, true);
+    document.addEventListener('change', captureInputEvent, true);
   }
 };

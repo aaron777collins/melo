@@ -9,6 +9,7 @@ import { fileProcessingHandler } from "./file-processing";
 import { notificationHandler } from "./notification";
 import { cleanupHandler } from "./cleanup";
 import { matrixHandler } from "./matrix";
+import { handleTranscriptionJob, TRANSCRIPTION_JOB_TYPE } from "./transcription";
 
 export type JobHandler<T = any> = (
   payload: T,
@@ -42,6 +43,9 @@ export const jobHandlers: Record<string, JobHandler> = {
   "cleanup:expired-invites": cleanupHandler.cleanupExpiredInvites,
   "cleanup:audit-logs": cleanupHandler.cleanupAuditLogs,
   "cleanup:job-logs": cleanupHandler.cleanupJobLogs,
+  
+  // Transcription operations
+  [TRANSCRIPTION_JOB_TYPE]: handleTranscriptionJob,
 };
 
 // Register a new job handler
